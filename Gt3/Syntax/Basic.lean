@@ -256,132 +256,6 @@ theorem Tm.lsv_open {k : ℕ} (t : Tm (k + 1)) (x : String) (v : Tm 0) (hx : x �
     simp [fvs] at hx
     simp [lsv, lst, «open», *]
 
-inductive OTm : Type
-  | fv (x : String) : OTm
-  | bv (i : ℕ) : OTm
-  | univ (ℓ : ℕ) : OTm
-  | empty : OTm
-  | unit : OTm
-  | null : OTm
-  | eqn (a b : OTm) : OTm
-  | pi (A B : OTm) : OTm
-  | abs (A : OTm) (b : OTm) : OTm
-  | app (f a : OTm) : OTm
-  | invalid : OTm
-
-def Tm.erase {k : ℕ} : Tm k → OTm
-  | .fv x => .fv x
-  | .bv i => .bv i
-  | .univ ℓ => .univ ℓ
-  | .empty => .empty
-  | .unit => .unit
-  | .null => .null
-  | .eqn a b => .eqn a.erase b.erase
-  | .pi A B => .pi A.erase B.erase
-  | .abs A b => .abs A.erase b.erase
-  | .app f a => .app f.erase a.erase
-  | .invalid => .invalid
-
-def OTm.clamp (k : ℕ) : OTm → Tm k
-  | .fv x => .fv x
-  | .bv i => if h : i < k then .bv ⟨i, h⟩ else .invalid
-  | .univ ℓ => .univ ℓ
-  | .empty => .empty
-  | .unit => .unit
-  | .null => .null
-  | .eqn a b => .eqn (a.clamp k) (b.clamp k)
-  | .pi A B => .pi (A.clamp k) (B.clamp (k + 1))
-  | .abs A b => .abs (A.clamp k) (b.clamp (k + 1))
-  | .app f a => .app (f.clamp k) (a.clamp k)
-  | .invalid => .invalid
-
-@[simp]
-theorem Tm.clamp_erase {k : ℕ} (t : Tm k) : t.erase.clamp k = t
-  := by induction t <;> simp [OTm.clamp, erase, *]
-
-instance Tm.erase_leftInverse {k : ℕ} : Function.HasLeftInverse (Tm.erase (k := k))
-  := ⟨OTm.clamp k, fun t => t.clamp_erase⟩
-
-instance Tm.erase_injective {k : ℕ} : Function.Injective (Tm.erase (k := k))
-  := erase_leftInverse.injective
-
-@[simp]
-theorem Tm.erase_castLE {n m : ℕ} (h : n ≤ m) (t : Tm n) : (t.castLE h).erase = t.erase
-  := by induction t generalizing m <;> simp [erase, castLE, *]
-
-@[simp]
-theorem Tm.erase_castAdd {k : ℕ} (t : Tm k) (n : ℕ) : (t.castAdd n).erase = t.erase
-  := t.erase_castLE _
-
-@[simp]
-theorem Tm.erase_castSucc {k : ℕ} (t : Tm k) : t.castSucc.erase = t.erase
-  := t.erase_castLE _
-
-def OTm.fvs : OTm → Finset String
-  | .fv x => {x}
-  | .eqn a b => a.fvs ∪ b.fvs
-  | .pi A B => A.fvs ∪ B.fvs
-  | .abs A b => A.fvs ∪ b.fvs
-  | .app f a => f.fvs ∪ a.fvs
-  | _ => ∅
-
-@[simp]
-theorem Tm.fvs_erase {k : ℕ} (t : Tm k) : t.erase.fvs = t.fvs
-  := by induction t <;> simp [erase, fvs, OTm.fvs, *]
-
-@[simp]
-theorem OTm.fvs_clamp (k : ℕ) (t : OTm) : (t.clamp k).fvs = t.fvs
-  := by induction t generalizing k with
-  | bv i => simp only [clamp]; split <;> rfl
-  | _ => simp [clamp, fvs, Tm.fvs, *]
-
-def Tm.bvi {k : ℕ} : Tm k → ℕ
-  | .bv i => i + 1
-  | .eqn a b => a.bvi ⊔ b.bvi
-  | .pi A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A b => A.bvi ⊔ (b.bvi - 1)
-  | .app f a => f.bvi ⊔ a.bvi
-  | _ => 0
-
-def OTm.bvi : OTm → ℕ
-  | .bv i => i + 1
-  | .eqn a b => a.bvi ⊔ b.bvi
-  | .pi A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A b => A.bvi ⊔ (b.bvi - 1)
-  | .app f a => f.bvi ⊔ a.bvi
-  | _ => 0
-
-theorem Tm.bvi_le {k : ℕ} (t : Tm k) : t.bvi ≤ k
-  := by induction t <;> simp only [bvi, sup_le_iff] <;> omega
-
-theorem Tm.bvi_erase {k : ℕ} (t : Tm k) : t.erase.bvi = t.bvi
-  := by induction t <;> simp [bvi, erase, OTm.bvi, *]
-
-theorem OTm.clamp_bvi_le_clamp (k : ℕ) (t : OTm) : (t.clamp k).bvi ≤ k
-  := by induction t generalizing k with
-  | bv => simp only [clamp]; split <;> simp only [Tm.bvi] <;> omega
-  | _ => simp [clamp, Tm.bvi, *]
-
-theorem OTm.clamp_bvi_le_bvi (k : ℕ) (t : OTm) : (t.clamp k).bvi ≤ t.bvi
-  := by induction t generalizing k with
-  | bv => simp only [clamp]; split <;> simp only [Tm.bvi, bvi] <;> omega
-  | _ =>
-    simp only [clamp, Tm.bvi, bvi, le_refl, max_le_iff, *] <;>
-    simp only [le_max_iff, Nat.sub_le_iff_le_add, Nat.sub_add_eq_max, *] <;>
-    simp
-
-theorem OTm.erase_clamp_bvi_le (k : ℕ) (t : OTm) (h : t.bvi ≤ k) : (t.clamp k).erase = t
-  := by induction t generalizing k with
-  | bv =>
-    simp only [bvi] at h
-    simp only [clamp]
-    split
-    · rfl
-    · omega
-  | _ =>
-    simp [bvi] at h
-    simp [clamp, Tm.erase, *]
-
 -- def Tm.bwkn {k : ℕ} (n : ℕ) : Tm (k + n) → Tm (k + n + 1)
 --   | .fv x => .fv x
 --   | .bv i => (i.cast (Nat.add_comm k n)).addCases
@@ -396,3 +270,135 @@ theorem OTm.erase_clamp_bvi_le (k : ℕ) (t : OTm) (h : t.bvi ≤ k) : (t.clamp 
 --   | .abs A b => .abs (A.bwkn n) (b.bwkn (n + 1))
 --   | .app f a => .app (f.bwkn n) (a.bwkn n)
 --   | .invalid => .invalid
+
+def Tm.depth {k : ℕ} : Tm k → ℕ
+  | .eqn a b => (a.depth ⊔ b.depth) + 1
+  | .pi A B => (A.depth ⊔ B.depth) + 1
+  | .abs A b => (A.depth ⊔ b.depth) + 1
+  | .app f a => (f.depth ⊔ a.depth) + 1
+  | _ => 0
+
+@[simp]
+theorem Tm.depth_open {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.open x).depth = t.depth
+  := by induction t using succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [«open», depth]
+  | _ => simp [depth, «open», *]
+
+@[simp]
+theorem Tm.depth_close {k : ℕ} (t : Tm k) (x : String) : (t.close x).depth = t.depth
+  := by induction t with
+  | fv => simp only [close, depth]; split <;> rfl
+  | _ => simp [close, depth, *]
+
+@[simp]
+theorem Tm.depth_castLE {n m : ℕ} (h : n ≤ m) (t : Tm n) : (t.castLE h).depth = t.depth
+  := by induction t generalizing m <;> simp [castLE, depth, *]
+
+@[simp]
+theorem Tm.depth_castAdd {k : ℕ} (t : Tm k) (n : ℕ) : (t.castAdd n).depth = t.depth
+  := t.depth_castLE _
+
+@[simp]
+theorem Tm.depth_castSucc {k : ℕ} (t : Tm k) : t.castSucc.depth = t.depth
+  := t.depth_castLE _
+
+theorem Tm.depth_lst_le {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : (t.lst v).depth ≤ t.depth + v.depth
+  := by induction t using succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [lst, depth]
+  | _ => simp only [lst, depth]; omega
+
+theorem Tm.le_depth_lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0)
+  : t.depth ≤ (t.lst v).depth
+  := by induction t using succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [lst, depth]
+  | _ => simp only [lst, depth]; omega
+
+theorem Tm.depth_lsv_le {k : ℕ} (t : Tm k) (x : String) (v : Tm 0)
+  : (t.lsv x v).depth ≤ t.depth + v.depth
+  := by induction t with
+  | fv => simp only [lsv, depth]; split <;> simp [depth]
+  | _ => simp only [lsv, depth]; omega
+
+theorem Tm.le_depth_lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0)
+  : t.depth ≤ (t.lsv x v).depth
+  := by induction t with
+  | fv => simp only [lsv, depth]; split <;> simp [depth]
+  | _ => simp only [lsv, depth]; omega
+
+def Tm.lcIndCof (L : Finset String)
+  {motive : Tm 0 → Sort*}
+  (fv : ∀ (x : String), motive (.fv x))
+  (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
+  (empty : motive .empty)
+  (unit : motive .unit)
+  (null : motive .null)
+  (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
+  (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) → motive (.pi A B))
+  (abs : ∀ (A : Tm 0) (b : Tm 1), motive A → (∀ x ∉ L, motive (b.open x)) → motive (.abs A b))
+  (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
+  (invalid : motive .invalid)
+  (t : Tm 0) : motive t
+  := match t with
+  | .fv x => fv x
+  | .univ ℓ => univ ℓ
+  | .empty => empty
+  | .unit => unit
+  | .null => null
+  | .eqn a b =>
+    eqn a b
+      (a.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+  | .pi A B =>
+    pi A B
+      (A.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+  | .abs A b =>
+    abs A b
+      (A.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (fun x _ => (b.open x).lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+  | .app a b =>
+    app a b
+      (a.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+  | .invalid => invalid
+  termination_by depth t
+  decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
+
+def Tm.lcIndFvs
+  {motive : Tm 0 → Sort*}
+  (fv : ∀ (x : String), motive (.fv x))
+  (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
+  (empty : motive .empty)
+  (unit : motive .unit)
+  (null : motive .null)
+  (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
+  (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) → motive (.pi A B))
+  (abs : ∀ (A : Tm 0) (b : Tm 1), motive A → (∀ x ∉ b.fvs, motive (b.open x)) → motive (.abs A b))
+  (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
+  (invalid : motive .invalid)
+  (t : Tm 0) : motive t
+  := match t with
+  | .fv x => fv x
+  | .univ ℓ => univ ℓ
+  | .empty => empty
+  | .unit => unit
+  | .null => null
+  | .eqn a b =>
+    eqn a b
+      (a.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+  | .pi A B =>
+    pi A B
+      (A.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+  | .abs A b =>
+    abs A b
+      (A.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (fun x _ => (b.open x).lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+  | .app a b =>
+    app a b
+      (a.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+  | .invalid => invalid
+  termination_by depth t
+  decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
