@@ -43,6 +43,8 @@ theorem Tm.castAdd_zero {k : ℕ} (t : Tm k) : t.castAdd 0 = t := t.castLE_refl
 
 def Tm.castSucc {k : ℕ} (t : Tm k) : Tm (k + 1) := t.castAdd 1
 
+prefix:1000 "↑₊" => Tm.castSucc
+
 -- instance Tm.coeSucc {k : ℕ} : Coe (Tm k) (Tm (k + 1)) where
 --   coe := castSucc
 
