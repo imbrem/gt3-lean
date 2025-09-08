@@ -4,17 +4,21 @@ inductive Ctx : Type
 | nil : Ctx
 | cons (Γ : Ctx) (x : String) (A : Tm 0) : Ctx
 
+@[simp]
 def Ctx.len : Ctx → ℕ
 | .nil => 0
 | .cons Γ _ _ => len Γ + 1
 
+@[simp]
 def Ctx.dv : Ctx → Finset String
 | .nil => ∅
 | .cons Γ x _ => {x} ∪ dv Γ
 
+theorem Ctx.dv_nil : nil.dv = ∅ := rfl
+
 theorem Ctx.card_dv (Γ : Ctx) : Γ.dv.card ≤ Γ.len := by
   induction Γ with
-  | nil => simp [len, dv]
+  | nil => simp
   | cons Γ x A =>
     simp only [dv, Finset.singleton_union, len]
     have hΓ := Γ.dv.card_insert_le x
@@ -37,10 +41,10 @@ theorem Ctx.NoDup.of_card_dv {Γ : Ctx} (h : Γ.dv.card = Γ.len) : Ctx.NoDup Γ
   | cons Γ x A I =>
     if hx : x ∈ Γ.dv then
       have hΓ := Γ.card_dv
-      simp [dv, len, Finset.card_insert_of_mem hx] at h
+      simp [Finset.card_insert_of_mem hx] at h
       omega
     else
-      simp [dv, len, Finset.card_insert_of_notMem hx] at h
+      simp [Finset.card_insert_of_notMem hx] at h
       exact .cons _ _ _ (I h) hx
 
 theorem Ctx.card_dv_eq_iff {Γ : Ctx} : Γ.dv.card = Γ.len ↔ Ctx.NoDup Γ
@@ -107,6 +111,8 @@ inductive Ctx.Lookup : Ctx → String → Tm 0 → Prop
   | there (Γ : Ctx) (x : String) (y : String) (A B : Tm 0) :
      Lookup Γ x A → x ≠ y → Lookup (Ctx.cons Γ y B) x A
 
+attribute [simp] Ctx.Lookup.here
+
 theorem Ctx.LookupT.toProp {Γ : Ctx} {x : String} {A : Tm 0}
   (h : Ctx.LookupT Γ x A) : Ctx.Lookup Γ x A
   := by induction h <;> constructor <;> assumption
@@ -154,12 +160,23 @@ theorem Ctx.Lookup.tail {Γ : Ctx} {x y : String} {A B : Tm 0}
   | here => simp at hx
   | there => assumption
 
-def Ctx.Lookup.choose {Γ : Ctx} {x A} (h : Ctx.Lookup Γ x A) : Ctx.LookupT Γ x A
+def Ctx.Lookup.choose {Γ x A} (h : Lookup Γ x A) : Ctx.LookupT Γ x A
   := match Γ, h with
   | .cons Γ y B, h => if hx : x = y then
       hx ▸ (h.head' hx) ▸ .here _ _ _
     else
       .there Γ x y A B (choose (h.tail hx)) hx
+
+theorem Ctx.Lookup.exists_of_mem {Γ : Ctx} {x} (hx : x ∈ Γ.dv) : ∃ A, Lookup Γ x A := by
+  induction Γ with
+  | nil => simp at hx
+  | cons Γ y A I =>
+    if hy : x = y then
+      cases hy; exact ⟨_, .here _ _ _⟩
+    else
+      simp [Ctx.dv, hy] at hx
+      have ⟨B, I⟩ := I hx;
+      exact ⟨B, I.there _ _ _ _ _ hy⟩
 
 def Ctx.LSub (Γ Δ : Ctx) : Prop := ∀x A, Ctx.Lookup Δ x A → Ctx.Lookup Γ x A
 
@@ -167,6 +184,24 @@ theorem Ctx.LSub.refl (Γ : Ctx) : Ctx.LSub Γ Γ := by intro x A h; exact h
 
 theorem Ctx.LSub.trans {Γ Δ Θ : Ctx} (hΓΔ : Ctx.LSub Γ Δ) (hΔΘ : Ctx.LSub Δ Θ) : Ctx.LSub Γ Θ
   := by intro x A h; exact hΓΔ x A (hΔΘ x A h)
+
+theorem Ctx.LSub.dv {Γ Δ} (h : LSub Γ Δ) : Δ.dv ⊆ Γ.dv := fun x hx =>
+  have ⟨A, hA⟩ := Lookup.exists_of_mem hx
+  (h x A hA).dv
+
+theorem Ctx.LSub.cons {Γ Δ} (h : LSub Γ Δ) (x A) : LSub (Γ.cons x A) (Δ.cons x A)
+  := fun y B hB => if hy : y = x then by cases hy; cases hB.head; constructor
+  else by cases hB with
+  | here => simp at hy
+  | there _ _ _ _ _ w => exact .there _ _ _ _ _ (h _ _ w) hy
+
+theorem Ctx.LSub.skip {Γ Δ} (h : LSub Γ Δ) {x} (hx : x ∉ Δ.dv) (A) : LSub (Γ.cons x A) Δ
+  := fun y B hB => if hy : y = x then by
+    cases hy; exact (hx hB.dv).elim
+  else by
+    apply Lookup.there
+    · apply h; assumption
+    · assumption
 
 def Ctx.LEqv (Γ Δ : Ctx) : Prop := ∀x A, Ctx.Lookup Γ x A ↔ Ctx.Lookup Δ x A
 
@@ -182,6 +217,8 @@ theorem Ctx.LEqv.le {Γ Δ : Ctx} (h : Ctx.LEqv Γ Δ) : Ctx.LSub Γ Δ := by
 
 theorem Ctx.LEqv.ge {Γ Δ : Ctx} (h : Ctx.LEqv Γ Δ) : Ctx.LSub Δ Γ := by
   intro x A hΔ; exact (h x A).mp hΔ
+
+theorem Ctx.LEqv.dv {Γ Δ} (h : LEqv Γ Δ) : Γ.dv = Δ.dv := le_antisymm h.ge.dv h.le.dv
 
 theorem Ctx.LSub.antisymm {Γ Δ : Ctx}
   (hΓΔ : Ctx.LSub Γ Δ) (hΔΓ : Ctx.LSub Δ Γ) : Ctx.LEqv Γ Δ := by
