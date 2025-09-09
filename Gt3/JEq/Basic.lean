@@ -161,18 +161,6 @@ theorem Ctx.JEq.null {Γ} (h : Ok Γ) : JEq Γ .unit .null .null := by
 
 theorem Ctx.Ok.iff_null {Γ} : JEq Γ .unit .null .null ↔ Ok Γ := ⟨JEq.ok, JEq.null⟩
 
-theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ (.null h)⟩
-
-theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty (.null h)⟩
-
-theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit (.null h)⟩
-
-@[simp] theorem Ctx.IsTy.univ_iff {Γ ℓ} : IsTy Γ (.univ ℓ) ↔ Ok Γ := ⟨IsTy.ok, IsTy.univ⟩
-
-@[simp] theorem Ctx.IsTy.empty_iff {Γ} : IsTy Γ .empty ↔ Ok Γ := ⟨IsTy.ok, IsTy.empty⟩
-
-@[simp] theorem Ctx.IsTy.unit_iff {Γ} : IsTy Γ .unit ↔ Ok Γ := ⟨IsTy.ok, IsTy.unit⟩
-
 theorem Finset.cof_eq_or.{u} {α : Type u} [Infinite α] {L : Finset α} (x : α) (P : α → Prop)
   (h : ∀ y ∉ L, x = y ∨ P x) : P x := by
   open Classical in
