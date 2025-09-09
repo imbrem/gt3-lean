@@ -134,3 +134,33 @@ theorem Ctx.JEq.ls1 {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b} (h : JEq Δ A a b
 theorem Ctx.SEq.clamp_iff {Γ σ τ Δ}
   : SEq Γ (σ.clamp Δ.dv) (τ.clamp Δ.dv) Δ ↔ SEq Γ σ τ Δ
   := ⟨unclamp, clamp⟩
+
+theorem Ctx.SEq.one {Γ} (hΓ : Ok Γ) : SEq Γ 1 1 Γ := by
+  induction hΓ with
+  | nil => constructor; constructor
+  | cons hΓ hx hA =>
+    have hA' := hA.wk0 hx hA
+    have hΓxA := hΓ.cons hx hA
+    constructor <;> first | simp [JEq.top_var_iff, *] | apply SEq.wk0 <;> assumption
+
+theorem Ctx.SEq.one_iff {Γ} : SEq Γ 1 1 Γ ↔ Ok Γ := ⟨SEq.src_ok, SEq.one⟩
+
+theorem Ctx.IsTy.wk0_lset {Γ x A B} (hA : IsTy Γ A) (hx : x ∉ Γ.dv) (hB : IsTy Γ B) (t : Tm 0)
+  : IsTy (Γ.cons x B) ((t.lset x) • A) := by
+  convert hA.wk0 hx hB; rw [Tm.ls_eqOn_fvs, Tm.ls_one]
+  intro z hz; simp [Tm.get_lset]; intro h; cases h
+  exact (hx (hA.scoped hz)).elim
+
+theorem Ctx.SEq.rename_top {Γ x y A} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hA : IsTy Γ A)
+  : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y A) :=
+  have hxA := hA.wk0 hx hA;
+  have hxA' := hxA.ok;
+  have hy' := Finset.not_mem_subset hA.scoped hy;
+  have hAy := Tm.ls_lset_not_mem (hx := hy')
+  by
+    apply SEq.cons' (.wk0
+      ((SEq.one hA.ok).castEqOn
+        (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
+        (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
+      ) hx hA)
+    <;> simp [Tm.get_lset, JEq.top_var_iff, *]

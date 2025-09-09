@@ -1,5 +1,6 @@
 import Mathlib.Data.Nat.Lattice
 import Mathlib.Data.Finset.Lattice.Basic
+import Mathlib.Algebra.Group.Action.Defs
 
 inductive Tm : ℕ → Type
   | fv {k : ℕ} (x : String) : Tm k
@@ -79,6 +80,55 @@ def Tm.open {k : ℕ} (t : Tm (k + 1)) (x : String) : Tm k := match t with
   | .abs A b => .abs (A.open x) (b.open x)
   | .app f a => .app (f.open x) (a.open x)
   | .invalid => .invalid
+
+@[simp]
+theorem Tm.open_fv {k : ℕ} {y x : String} : (Tm.fv (k := (k + 1)) y).open x = .fv y
+  := by simp [«open»]
+
+theorem Tm.open_bv {k : ℕ} (i : Fin (k + 1)) (x : String)
+  : (Tm.bv (k := (k + 1)) i).open x = i.lastCases (.fv x) .bv
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_univ {k : ℕ} (ℓ : ℕ) (x : String)
+  : (Tm.univ (k := (k + 1)) ℓ).open x = .univ ℓ
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_null {k : ℕ} (x : String) : (Tm.null (k := (k + 1))).open x = .null
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_empty {k : ℕ} (x : String) : (Tm.empty (k := (k + 1))).open x = .empty
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_unit {k : ℕ} (x : String) : (Tm.unit (k := (k + 1))).open x = .unit
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_eqn {k : ℕ} (a b : Tm (k + 1)) (x : String)
+  : (Tm.eqn (k := (k + 1)) a b).open x = .eqn (a.open x) (b.open x)
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_pi {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (x : String)
+  : (Tm.pi (k := (k + 1)) A B).open x = .pi (A.open x) (B.open x)
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_abs {k : ℕ} (A : Tm (k + 1)) (b : Tm (k + 2)) (x : String)
+  : (Tm.abs (k := (k + 1)) A b).open x = .abs (A.open x) (b.open x)
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_app {k : ℕ} (f a : Tm (k + 1)) (x : String)
+  : (Tm.app (k := (k + 1)) f a).open x = .app (f.open x) (a.open x)
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_invalid {k : ℕ} (x : String) : (Tm.invalid (k := (k + 1))).open x = .invalid
+  := by simp [«open»]
 
 def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .fv y => .fv y
@@ -204,8 +254,8 @@ def Tm.fvs {k : ℕ} : Tm k → Finset String
 
 theorem Tm.close_open {k : ℕ} (t : Tm (k + 1)) (x : String) (h : x ∉ t.fvs)
   : (t.open x).close x = t := by induction t using succIndOn with
-  | fv => convert h using 0; simp [Tm.open, close]
-  | bv i => cases i using Fin.lastCases <;> simp [Tm.open, close]
+  | fv => convert h using 0; simp [close]
+  | bv i => cases i using Fin.lastCases <;> simp [open_bv, close]
   | _ => simp at h; grind [Tm.open, close]
 
 theorem Tm.fvs_open {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.open x).fvs ⊆ insert x t.fvs
@@ -257,11 +307,16 @@ theorem Tm.lsv_open {k : ℕ} (t : Tm (k + 1)) (x : String) (v : Tm 0) (hx : x �
   | bv i => cases i using Fin.lastCases <;> simp [lsv, lst, «open»]
   | _ =>
     simp at hx
-    simp [lsv, lst, «open», *]
+    simp [lsv, lst, *]
 
 def Tm.VSubst : Type := String → Tm 0
 
+instance Tm.VSubst.instOne : One VSubst where one := .fv
+
 def Tm.VSubst.get {k : ℕ} (v : VSubst) (x : String) : Tm k := (v x).castLE (by omega)
+
+@[simp]
+theorem Tm.VSubst.get_one {k : ℕ} (x : String) : get (k := k) 1 x = .fv x := rfl
 
 @[simp]
 theorem Tm.VSubst.castLE_get {lo hi : ℕ} (h : lo ≤ hi) (v : VSubst) (x : String)
@@ -329,8 +384,45 @@ theorem Tm.smul_app {v : VSubst} {k f a}
 @[simp]
 theorem Tm.smul_invalid {v : VSubst} {k} : v • Tm.invalid (k := k) = .invalid := rfl
 
+theorem Tm.ls_one {k : ℕ} (t : Tm k) : (1 : VSubst) • t = t := by induction t <;> simp [*]
+
 theorem Tm.ls_lset {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) : (v.lset x) • t = t.lsv x v
   := by induction t <;> simp [lsv, Tm.get_lset, *]
+
+theorem Tm.lsv_not_mem {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) (hx : x ∉ t.fvs)
+  : t.lsv x v = t := by induction t with
+  | _ => simp at hx; simp [lsv, *]
+
+theorem Tm.ls_lset_not_mem {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) (hx : x ∉ t.fvs)
+  : (v.lset x) • t = t
+  := by rw [ls_lset, lsv_not_mem (hx := hx)]
+
+instance Tm.VSubst.instMul : Mul VSubst where mul v₁ v₂ := fun x => v₁ • (v₂.get x)
+
+theorem Tm.castLE_ls {lo hi : ℕ} (h : lo ≤ hi) (t : Tm lo) (v : VSubst)
+  : (v • t).castLE h = v • t.castLE h
+  := by induction t generalizing hi <;> simp [castLE, *]
+
+@[simp]
+theorem Tm.VSubst.get_mul {k} (v₁ v₂ : VSubst) (x : String)
+  : (v₁ * v₂).get (k := k) x = v₁ • (v₂.get x)
+  := by simp [HMul.hMul, Mul.mul, get, castLE_ls]
+
+theorem Tm.ls_ls {k : ℕ} (t : Tm k) (v₁ v₂ : VSubst) : v₁ • (v₂ • t) = (v₁ * v₂) • t
+  := by induction t <;> simp [*]
+
+@[ext]
+theorem Tm.VSubst.ext {v1 v2 : VSubst} (h : ∀ x, v1.get (k := 0) x = v2.get x) : v1 = v2
+  := by funext x; convert h x using 1 <;> simp [get]
+
+instance Tm.VSubst.instMonoid : Monoid VSubst where
+  mul_assoc v₁ v₂ v₃ := by ext x; simp [Tm.ls_ls]
+  one_mul v := by ext x; simp [ls_one]
+  mul_one v := by ext x; simp
+
+instance Tm.VSubst.instMulAction {k} : MulAction VSubst (Tm k) where
+  one_smul t := t.ls_one
+  mul_smul v v' t := by simp [ls_ls]
 
 def Tm.VSubst.EqOn (L : Finset String) (v v' : Tm.VSubst) : Prop
   := ∀ x ∈ L, v.get (k := 0) x = v'.get x
@@ -511,7 +603,7 @@ def Tm.depth {k : ℕ} : Tm k → ℕ
 theorem Tm.depth_open {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.open x).depth = t.depth
   := by induction t using succIndOn with
   | bv i => cases i using Fin.lastCases <;> simp [«open», depth]
-  | _ => simp [depth, «open», *]
+  | _ => simp [depth, *]
 
 @[simp]
 theorem Tm.depth_close {k : ℕ} (t : Tm k) (x : String) : (t.close x).depth = t.depth

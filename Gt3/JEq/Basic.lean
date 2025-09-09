@@ -197,7 +197,7 @@ theorem Tm.scoped_of_cf {k} {L V : Finset String} {a : Tm (k + 1)}
   (h : ∀ x ∉ L, (a.open x).fvs ⊆ insert x V)
   : a.fvs ⊆ V := by induction a using succIndOn with
   | fv =>
-    simp [«open», Finset.cof_eq_or_iff] at h
+    simp [Finset.cof_eq_or_iff] at h
     simp [h]
   | _ =>
     simp only [fvs, «open», Finset.union_subset_iff, forall_and] at h
@@ -246,3 +246,13 @@ theorem Ctx.Cmp.trans {Γ A a b c} (h : Cmp Γ A a b) (h' : Cmp Γ A b c) : Cmp 
   := ⟨h.left, h'.right⟩
 
 theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := ⟨h.lhs_ty', h.rhs_ty'⟩
+
+theorem Ctx.JEq.var {Γ} (h : Ok Γ) {x A} (hx : Lookup Γ x A) : JEq Γ A (.fv x) (.fv x)
+  := .fv (.null h) hx
+
+theorem Ctx.JEq.top_var {Γ : Ctx} {x A} (h : Ok (Γ.cons x A)) : JEq (Γ.cons x A) A (.fv x) (.fv x)
+  := .var h (.here _ _ _)
+
+theorem Ctx.JEq.top_var_iff {Γ : Ctx} {x A}
+  : JEq (Γ.cons x A) A (.fv x) (.fv x) ↔ Ok (Γ.cons x A)
+  := ⟨JEq.ok, JEq.top_var⟩

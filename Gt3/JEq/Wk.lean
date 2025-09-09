@@ -77,26 +77,3 @@ theorem Ctx.IsTy.wk0 {Γ A} (hA : IsTy Γ A) {x B} (hx : x ∉ Γ.dv) (hB : Γ.I
 
 theorem Ctx.Ok.lookup {Γ x A} (h : Ok Γ) (hA : Lookup Γ x A) : IsTy Γ A
   := by induction hA <;> cases h <;> apply IsTy.wk0 <;> apply_assumption; assumption
-
--- theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by induction h with
---   | fv hΓ hA => exact hΓ.ok.lookup hA
---   | abs =>
---     --TODO: we need _substitution_ here
---     sorry
---   | cons_ok =>
---     simp only [IsTy.unit_iff, Ok.cons_iff, not_false_eq_true, true_and, *]
---     constructor
---     · apply JEq.ok; assumption
---     · apply JEq.rhs_is_ty; assumption
---   | _ =>
---     first | assumption
---           | (simp [*] <;> apply Ctx.IsTy.ok <;> assumption)
---           | apply JEq.rhs_is_ty; assumption
-
--- theorem Ctx.JEq.cast_cmp {Γ A B a b} (h : JEq Γ A a b) (h' : Cmp Γ B a b) : JEq Γ B a b := by
---   induction h generalizing B with
---   | fv => exact h'.left
---   | univ => exact h'.left
---   | eqn =>
---     sorry
---   | _ => sorry
