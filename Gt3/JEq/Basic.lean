@@ -2,14 +2,14 @@ import Gt3.Ctx
 
 inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   -- Congruence rules
-  | fv {Γ : Ctx} {x : String} {A : Tm 0}
+  | fv' {Γ : Ctx} {x : String} {A : Tm 0}
     (hΓ : JEq Γ .unit .null .null)
     (hx : Ctx.Lookup Γ x A)
     : JEq Γ A (Tm.fv x) (Tm.fv x)
-  | univ {Γ : Ctx} {ℓ}
+  | univ' {Γ : Ctx} {ℓ}
     : JEq Γ .unit .null .null → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
-  | empty {Γ : Ctx} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .empty .empty
-  | unit {Γ : Ctx} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .unit .unit
+  | empty' {Γ : Ctx} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .empty .empty
+  | unit' {Γ : Ctx} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .unit .unit
   | eqn {Γ : Ctx} {A a a' b b' : Tm 0} {ℓ : ℕ}
     (ha : JEq Γ A a a')
     (hb : JEq Γ A b b')
@@ -23,7 +23,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hA : JEq Γ (.univ m) A A')
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
     : JEq Γ (A.pi B) (A.abs b) (A'.abs b')
-  | app {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ}
+  | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ}
     (hf : JEq Γ (A.pi B) f f')
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
@@ -55,7 +55,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | cast_level {Γ : Ctx} {A A' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     : JEq Γ (.univ (ℓ + 1)) A A'
-  | cast {Γ : Ctx} {A A' a a' : Tm 0} {ℓ : ℕ}
+  | cast' {Γ : Ctx} {A A' a a' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     (ha : JEq Γ A a a')
     : JEq Γ A' a a'
@@ -74,8 +74,8 @@ theorem Ctx.WfEq.rhs {Γ a b} (h : WfEq Γ a b) : IsWf Γ b := h.symm.lhs
 
 def Ctx.TyEq (Γ : Ctx) (A B : Tm 0) : Prop := ∃ℓ, JEq Γ (.univ ℓ) A B
 
-theorem Ctx.TyEq.cast {Γ A B} (h : TyEq Γ A B) {a b} (hab : JEq Γ A a b)
-  : JEq Γ B a b := have ⟨_, h⟩ := h; h.cast hab
+theorem Ctx.JEq.cast {Γ A B} (h : TyEq Γ A B) {a b} (hab : JEq Γ A a b)
+  : JEq Γ B a b := have ⟨_, h⟩ := h; h.cast' hab
 
 theorem Ctx.TyEq.symm {Γ A B} (h : TyEq Γ A B) : TyEq Γ B A :=
   have ⟨ℓ, h⟩ := h; ⟨ℓ, h.symm⟩
@@ -100,7 +100,7 @@ theorem Ctx.TyEq.lhs {Γ A B} (h : TyEq Γ A B) : IsTy Γ A := h.trans h.symm
 
 theorem Ctx.TyEq.rhs {Γ A B} (h : TyEq Γ A B) : IsTy Γ B := h.symm.lhs
 
-def Ctx.IsUniv (Γ : Ctx) (A : Tm 0) : Prop := ∃ℓ, TyEq Γ (.univ ℓ) A
+def Ctx.IsUniv (Γ : Ctx) (A : Tm 0) : Prop := ∃ℓ, TyEq Γ A (.univ ℓ)
 
 def Ctx.HasTy' (Γ : Ctx) (A : Tm 0) (a : Tm 0) : Prop := JEq Γ A a a
 
@@ -121,6 +121,9 @@ theorem Ctx.HasTy'.is_wf {Γ A a} (h : HasTy' Γ A a) : IsWf Γ a := ⟨A, h⟩
 theorem Ctx.JEq.lhs_is_wf {Γ A a b} (h : JEq Γ A a b) : IsWf Γ a := h.lhs_ty'.is_wf
 
 theorem Ctx.JEq.rhs_is_wf {Γ A a b} (h : JEq Γ A a b) : IsWf Γ b := h.rhs_ty'.is_wf
+
+theorem Ctx.HasTy'.has_ty_univ {Γ U A} (h : HasTy' Γ U A) (hU : IsUniv Γ U) : IsTy Γ A
+  := have ⟨ℓ, hU⟩ := hU; ⟨ℓ, h.cast hU⟩
 
 inductive Ctx.Ok : Ctx → Prop
   | nil : Ok .nil
@@ -158,6 +161,35 @@ theorem Ctx.JEq.null {Γ} (h : Ok Γ) : JEq Γ .unit .null .null := by
   induction h with
   | nil => exact .nil_ok
   | cons _ _ hA => cases hA; constructor <;> assumption
+
+theorem Ctx.JEq.fv {Γ x A} (h : Ok Γ) (hx : Ctx.Lookup Γ x A) : JEq Γ A (.fv x) (.fv x)
+  := .fv' (.null h) hx
+
+theorem Ctx.JEq.unit {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ ℓ) .unit .unit := .unit' (.null h)
+
+theorem Ctx.JEq.empty {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ ℓ) .empty .empty := .empty' (.null h)
+
+theorem Ctx.JEq.univ {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
+  := .univ' (.null h)
+
+theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
+  (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
+  : JEq Γ Ba (f.app a) (f'.app a') := have ⟨_, hBa⟩ := hBa; .app' hf ha hBa
+
+syntax "jeq_congr" : tactic
+
+macro_rules
+  | `(tactic| jeq_congr) => `(tactic| first
+    | apply Ctx.JEq.fv
+    | apply Ctx.JEq.univ
+    | apply Ctx.JEq.empty
+    | apply Ctx.JEq.unit
+    | apply Ctx.JEq.null
+    | apply Ctx.JEq.eqn
+    | apply Ctx.JEq.pi
+    | apply Ctx.JEq.abs
+    | apply Ctx.JEq.app
+  )
 
 theorem Ctx.Ok.iff_null {Γ} : JEq Γ .unit .null .null ↔ Ok Γ := ⟨JEq.ok, JEq.null⟩
 
@@ -225,21 +257,8 @@ theorem Ctx.JEq.rhs_scoped {Γ A a b} (h : JEq Γ A a b) : b.fvs ⊆ Γ.dv
 
 theorem Ctx.IsTy.scoped {Γ A} (h : IsTy Γ A) : A.fvs ⊆ Γ.dv := have ⟨_, h⟩ := h; h.lhs_scoped
 
-def Ctx.Cmp (Γ : Ctx) (A a b : Tm 0) : Prop := HasTy' Γ A a ∧ HasTy' Γ A b
-
-theorem Ctx.Cmp.symm {Γ A a b} (h : Cmp Γ A a b) : Cmp Γ A b a
-  := ⟨h.right, h.left⟩
-
-theorem Ctx.Cmp.trans {Γ A a b c} (h : Cmp Γ A a b) (h' : Cmp Γ A b c) : Cmp Γ A a c
-  := ⟨h.left, h'.right⟩
-
-theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := ⟨h.lhs_ty', h.rhs_ty'⟩
-
-theorem Ctx.JEq.var {Γ} (h : Ok Γ) {x A} (hx : Lookup Γ x A) : JEq Γ A (.fv x) (.fv x)
-  := .fv (.null h) hx
-
 theorem Ctx.JEq.top_var {Γ : Ctx} {x A} (h : Ok (Γ.cons x A)) : JEq (Γ.cons x A) A (.fv x) (.fv x)
-  := .var h (.here _ _ _)
+  := .fv h (.here _ _ _)
 
 theorem Ctx.JEq.top_var_iff {Γ : Ctx} {x A}
   : JEq (Γ.cons x A) A (.fv x) (.fv x) ↔ Ok (Γ.cons x A)

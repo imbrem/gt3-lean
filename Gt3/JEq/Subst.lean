@@ -9,6 +9,8 @@ inductive Ctx.SEq (Γ : Ctx) (σ τ : Tm.VSubst) : Ctx → Prop
       → JEq Γ (τ • A) (σ.get x) (τ.get x)
       → SEq Γ σ τ (Δ.cons x A)
 
+def Ctx.PSEq (Γ Δ : Ctx) : Prop := SEq Γ 1 1 Δ
+
 theorem Ctx.SEq.src_ok {Γ σ τ Δ} (h : SEq Γ σ τ Δ) : Ok Γ := by induction h <;> assumption
 
 theorem Ctx.SEq.trg_ok {Γ σ τ Δ} (h : SEq Γ σ τ Δ) : Ok Δ
@@ -76,9 +78,9 @@ def Ctx.SEq.trg {Γ σ τ Δ} (_ : SEq Γ σ τ Δ) : Ctx := Δ
 theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b}
   (h : JEq Δ A a b) (hK : σ.Clamped K)
   : JEq Γ (σ • A) (σ • a) (σ • b) := by induction h generalizing Γ with
-  | fv _ hx _ => exact (hx.sjeq hσ).left
+  | fv' _ hx _ => exact (hx.sjeq hσ).left
   | cast_level => apply cast_level; apply_assumption; assumption
-  | cast => apply cast <;> apply_assumption <;> assumption
+  | cast' => apply cast' <;> apply_assumption <;> assumption
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption
   | nil_ok => exact .null hσ.src_ok
@@ -125,7 +127,7 @@ theorem Ctx.SEq.unclamp {Γ σ τ Δ}
   : SEq Γ σ τ Δ
   := hσ.castEqOn (σ.clamp_eqOn Δ.dv) (τ.clamp_eqOn Δ.dv)
 
-theorem Ctx.JEq.ls1 {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b} (h : JEq Δ A a b)
+theorem Ctx.JEq.ls1' {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b} (h : JEq Δ A a b)
   : JEq Γ (σ • A) (σ • a) (σ • b) := by
   convert (h.ls1_clamped hσ.clamp (Tm.VSubst.clamped _ _)) using 1 <;>
   rw [Tm.ls_clamp_sub_fvs] <;>
@@ -151,16 +153,35 @@ theorem Ctx.IsTy.wk0_lset {Γ x A B} (hA : IsTy Γ A) (hx : x ∉ Γ.dv) (hB : I
   intro z hz; simp [Tm.get_lset]; intro h; cases h
   exact (hx (hA.scoped hz)).elim
 
-theorem Ctx.SEq.rename_top {Γ x y A} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hA : IsTy Γ A)
-  : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y A) :=
-  have hxA := hA.wk0 hx hA;
-  have hxA' := hxA.ok;
-  have hy' := Finset.not_mem_subset hA.scoped hy;
-  have hAy := Tm.ls_lset_not_mem (hx := hy')
+theorem Ctx.SEq.rename_top' {Γ x y A B} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hAB : TyEq Γ A B)
+  : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y B) :=
+  have hABt := hAB.top_var hx;
+  have hxA := hAB.lhs.wk0 hx hAB.lhs
+  have hxB := hAB.rhs.wk0 hx hAB.lhs
+  have hAy := Finset.not_mem_subset hAB.lhs.scoped hy;
+  have hBy := Finset.not_mem_subset hAB.rhs.scoped hy;
+  have hAy' := Tm.ls_lset_not_mem (hx := hAy)
+  have hBy' := Tm.ls_lset_not_mem (hx := hBy)
   by
     apply SEq.cons' (.wk0
-      ((SEq.one hA.ok).castEqOn
+      ((SEq.one hAB.ok).castEqOn
         (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
         (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
-      ) hx hA)
-    <;> simp [Tm.get_lset, JEq.top_var_iff, *]
+      ) hx hAB.lhs)
+    <;> simp [hAB.rhs, *]
+
+theorem Ctx.SEq.rename_top {Γ x y A} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hA : IsTy Γ A)
+  : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y A) := rename_top' hx hy hA
+
+theorem Ctx.JEq.ps {Γ Δ} (hσ : PSEq Γ Δ) {A a b} (h : JEq Δ A a b)
+  : JEq Γ A a b := by convert h.ls1' hσ <;> simp
+
+theorem Ctx.PSEq.retype_top {Γ x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A B)
+  : PSEq (Γ.cons x A) (Γ.cons x B)
+  := by convert (SEq.rename_top' hx hx hAB) using 0; simp [Ctx.PSEq]
+
+theorem Ctx.JEq.cast_top {Γ x A B C a b} (hAB : TyEq Γ A B) (h : JEq (Γ.cons x B) C a b)
+  : JEq (Γ.cons x A) C a b := h.ps (.retype_top h.ok.var hAB)
+
+theorem Ctx.JEq.cast_top' {Γ x ℓ A B C a b} (hAB : JEq Γ (.univ ℓ) A B) (h : JEq (Γ.cons x B) C a b)
+  : JEq (Γ.cons x A) C a b := h.cast_top hAB.ty_eq

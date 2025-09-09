@@ -26,7 +26,7 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
   induction hab generalizing Γ with
   | nil_ok | cons_ok => exact .null h.left_ok
   | cast_level => apply cast_level; apply_assumption; assumption
-  | cast => apply cast <;> apply_assumption <;> assumption
+  | cast' => apply cast' <;> apply_assumption <;> assumption
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption
   | _ =>
@@ -70,6 +70,10 @@ theorem Ctx.JEq.wk0 {Γ A a b} (hab : JEq Γ A a b) {x B} (hx : x ∉ Γ.dv) (hB
 theorem Ctx.TyEq.wk0 {Γ A B} (hAB : TyEq Γ A B) {x C} (hx : x ∉ Γ.dv) (hC : Γ.IsTy C)
   : TyEq (Γ.cons x C) A B
   := hAB.psub (hAB.ok.psub.skip hx hC)
+
+theorem Ctx.TyEq.top_var {Γ : Ctx} {x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A B)
+  : JEq (Γ.cons x A) B (.fv x) (.fv x)
+  := .cast (hAB.wk0 hx hAB.lhs) (.fv (hAB.ok.cons hx hAB.lhs) (.here _ _ _))
 
 theorem Ctx.IsTy.wk0 {Γ A} (hA : IsTy Γ A) {x B} (hx : x ∉ Γ.dv) (hB : Γ.IsTy B)
   : IsTy (Γ.cons x B) A

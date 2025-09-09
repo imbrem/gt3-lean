@@ -4,3 +4,7 @@ import Gt3.JEq.Basic
 import Gt3.JEq.Wk
 import Gt3.JEq.Subst
 import Gt3.JEq.Regular
+import Gt3.HasTy.Basic
+import Gt3.HasTy.Wk
+import Gt3.HasTy.Subst
+import Gt3.HasTy.Regular

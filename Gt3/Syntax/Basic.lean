@@ -329,6 +329,11 @@ theorem Tm.get_lset {k} (t : Tm 0) (x y : String)
   : (t.lset x).get (k := k) y = if x = y then t.castLE (Nat.zero_le _) else .fv y
   := by simp only [lset, VSubst.get]; split <;> rfl
 
+@[simp]
+theorem Tm.get_lset_self {k} (t : Tm 0) (x : String)
+  : (t.lset x).get (k := k) x = t.castLE (Nat.zero_le _)
+  := by simp [Tm.get_lset]
+
 def Tm.ls {k : ℕ} (t : Tm k) (v : VSubst) : Tm k := match t with
   | .fv y => v.get y
   | .bv i => .bv i
@@ -414,6 +419,9 @@ theorem Tm.ls_ls {k : ℕ} (t : Tm k) (v₁ v₂ : VSubst) : v₁ • (v₂ • 
 @[ext]
 theorem Tm.VSubst.ext {v1 v2 : VSubst} (h : ∀ x, v1.get (k := 0) x = v2.get x) : v1 = v2
   := by funext x; convert h x using 1 <;> simp [get]
+
+@[simp]
+theorem Tm.lset_var (x : String) : (Tm.fv x).lset x = 1 := by ext y; simp [Tm.get_lset]
 
 instance Tm.VSubst.instMonoid : Monoid VSubst where
   mul_assoc v₁ v₂ v₃ := by ext x; simp [Tm.ls_ls]

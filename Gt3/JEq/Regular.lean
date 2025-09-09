@@ -5,7 +5,7 @@ theorem Ctx.JEq.to_cf {Γ : Ctx} {x} {A} {B a b : Tm 1}
   (hB : x ∉ B.fvs) (ha : x ∉ a.fvs) (hb : x ∉ b.fvs)
   : ∀ y ∉ Γ.dv , JEq (Γ.cons y A) (B.open y) (a.open y) (b.open y) := by
   intro y hy
-  convert h.ls1 (SEq.rename_top hy h.ok.var h.ok.ty)
+  convert h.ls1' (SEq.rename_top hy h.ok.var h.ok.ty)
   <;> rw [Tm.ls_lset, Tm.lsv_open (hx := ‹_›), Tm.lst_fv]
 
 theorem Ctx.JEq.to_cf_univ {Γ : Ctx} {x} {A ℓ} {a b : Tm 1}
@@ -26,11 +26,11 @@ theorem Ctx.JEq.to_cf_u {Γ : Ctx} {x} {A} {B a b : Tm 1}
   : ∀ y ∉ Γ.dv , JEq (Γ.cons y A) (B.open y) (a.open y) (b.open y) := by
   simp only [Finset.notMem_union] at hx; apply h.to_cf <;> simp [*]
 
-theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ (.null h)⟩
+theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
 
-theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty (.null h)⟩
+theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty h⟩
 
-theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit (.null h)⟩
+theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit h⟩
 
 @[simp] theorem Ctx.IsTy.univ_iff {Γ ℓ} : IsTy Γ (.univ ℓ) ↔ Ok Γ := ⟨IsTy.ok, IsTy.univ⟩
 
@@ -60,7 +60,7 @@ macro_rules
   )
 
 theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by induction h with
-  | fv hΓ hA => exact hΓ.ok.lookup hA
+  | fv' hΓ hA => exact hΓ.ok.lookup hA
   | nil_ok => simp [*]
   | cons_ok =>
     simp only [IsTy.unit_iff, Ok.cons_iff, not_false_eq_true, true_and, *]
