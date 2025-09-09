@@ -155,7 +155,7 @@ theorem Ctx.IsTy.wk0_lset {Γ x A B} (hA : IsTy Γ A) (hx : x ∉ Γ.dv) (hB : I
 
 theorem Ctx.SEq.rename_top' {Γ x y A B} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hAB : TyEq Γ A B)
   : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y B) :=
-  have hABt := hAB.top_var hx;
+  have hABt := hAB.top_var' hx;
   have hxA := hAB.lhs.wk0 hx hAB.lhs
   have hxB := hAB.rhs.wk0 hx hAB.lhs
   have hAy := Finset.not_mem_subset hAB.lhs.scoped hy;

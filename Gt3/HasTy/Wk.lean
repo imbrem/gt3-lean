@@ -22,3 +22,7 @@ theorem Ctx.HasTy.psub {Γ Δ} (h : PSub Γ Δ) {A a : Tm 0} (hab : HasTy Δ A a
 theorem Ctx.HasTy.wk0 {Γ A a} (ha : HasTy Γ A a) {x B} (hx : x ∉ Γ.dv) (hB : Γ.IsTy B)
   : HasTy (Γ.cons x B) A a
   := ha.psub (ha.ok.psub.skip hx hB)
+
+theorem Ctx.TyEq.top_var {Γ : Ctx} {x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A B)
+  : HasTy (Γ.cons x A) B (.fv x)
+  := .cast (hAB.wk0 hx hAB.lhs) (.fv (hAB.ok.cons hx hAB.lhs) (.here _ _ _))

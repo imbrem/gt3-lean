@@ -37,39 +37,14 @@ theorem Ctx.HasTy.refl {Γ A a} (h : HasTy Γ A a) : JEq Γ A a a := by inductio
   | cast hA _ Ia => exact Ia.cast hA
   | _ => jeq_congr <;> assumption
 
+theorem Ctx.HasTy.scoped_all {Γ A a} (h : HasTy Γ A a)
+  : Scoped Γ ∧ A.fvs ⊆ Γ.dv ∧ a.fvs ⊆ Γ.dv := by simp [h.refl.scoped_all]
+
 theorem Ctx.HasTy.is_ty {Γ ℓ A} (h : HasTy Γ (.univ ℓ) A) : IsTy Γ A := h.refl.lhs_is_ty
 
-def Ctx.Cmp (Γ : Ctx) (A a b : Tm 0) : Prop := HasTy Γ A a ∧ HasTy Γ A b
+theorem Ctx.HasTy.top_var {Γ : Ctx} {x A} (h : Ok (Γ.cons x A)) : HasTy (Γ.cons x A) A (.fv x)
+  := .fv h (.here _ _ _)
 
-theorem Ctx.Cmp.cast_level {Γ ℓ A B} (h : Cmp Γ (.univ ℓ) A B) : Cmp Γ (.univ (ℓ + 1)) A B
-  := ⟨h.left.cast_level, h.right.cast_level⟩
-
-theorem Ctx.Cmp.cast' {Γ ℓ A A' a b} (hA : JEq Γ (.univ ℓ) A A') (hab : Cmp Γ A a b)
-  : Cmp Γ A' a b := ⟨hab.left.cast' hA, hab.right.cast' hA⟩
-
-theorem Ctx.Cmp.symm {Γ A a b} (h : Cmp Γ A a b) : Cmp Γ A b a
-  := ⟨h.right, h.left⟩
-
-theorem Ctx.Cmp.trans {Γ A a b c} (h : Cmp Γ A a b) (h' : Cmp Γ A b c) : Cmp Γ A a c
-  := ⟨h.left, h'.right⟩
-
--- theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction h with
---   | nil_ok => sorry
---   | cons_ok => sorry
---   | cast_level => apply Cmp.cast_level; assumption
---   | cast' => apply Cmp.cast' <;> assumption
---   | symm => apply Cmp.symm; assumption
---   | trans => apply Cmp.trans <;> assumption
---   | _ =>
---     simp only [Ctx.Cmp, forall_and] at *
---     casesm* _ ∧ _
---     apply And.intro <;>
---     first
---     | assumption
---     | {
---         constructor <;> first
---         | assumption
---         | (apply Ctx.JEq.ok ; assumption)
---         | intros <;> apply JEq.cast_top' <;> apply_assumption
---         | sorry
---       }
+theorem Ctx.HasTy.top_var_iff {Γ : Ctx} {x A}
+  : HasTy (Γ.cons x A) A (.fv x) ↔ Ok (Γ.cons x A)
+  := ⟨HasTy.ok, HasTy.top_var⟩

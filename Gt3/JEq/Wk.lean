@@ -71,7 +71,7 @@ theorem Ctx.TyEq.wk0 {Γ A B} (hAB : TyEq Γ A B) {x C} (hx : x ∉ Γ.dv) (hC :
   : TyEq (Γ.cons x C) A B
   := hAB.psub (hAB.ok.psub.skip hx hC)
 
-theorem Ctx.TyEq.top_var {Γ : Ctx} {x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A B)
+theorem Ctx.TyEq.top_var' {Γ : Ctx} {x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A B)
   : JEq (Γ.cons x A) B (.fv x) (.fv x)
   := .cast (hAB.wk0 hx hAB.lhs) (.fv (hAB.ok.cons hx hAB.lhs) (.here _ _ _))
 
