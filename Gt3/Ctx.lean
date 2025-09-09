@@ -12,15 +12,17 @@ def Ctx.len : Ctx → ℕ
 @[simp]
 def Ctx.dv : Ctx → Finset String
 | .nil => ∅
-| .cons Γ x _ => {x} ∪ dv Γ
+| .cons Γ x _ => insert x (dv Γ)
 
 theorem Ctx.dv_nil : nil.dv = ∅ := rfl
+
+theorem Ctx.head_mem_dv {Γ : Ctx} {x A} : x ∈ (Γ.cons x A).dv := by simp
 
 theorem Ctx.card_dv (Γ : Ctx) : Γ.dv.card ≤ Γ.len := by
   induction Γ with
   | nil => simp
   | cons Γ x A =>
-    simp only [dv, Finset.singleton_union, len]
+    simp only [dv, len]
     have hΓ := Γ.dv.card_insert_le x
     omega
 
@@ -28,11 +30,13 @@ inductive Ctx.NoDup : Ctx → Prop
 | nil : NoDup .nil
 | cons (Γ : Ctx) (x : String) (A : Tm 0) : NoDup Γ → x ∉ dv Γ → NoDup (Ctx.cons Γ x A)
 
+attribute [simp] Ctx.NoDup.nil
+
 theorem Ctx.NoDup.card_dv {Γ : Ctx} (h : Ctx.NoDup Γ) : Γ.dv.card = Γ.len := by
   induction h with
   | nil => simp [len, dv]
   | cons Γ x A hnd hnotin ih =>
-    simp only [dv, Finset.singleton_union, len]
+    simp only [dv, len]
     rw [Finset.card_insert_of_notMem hnotin, ih]
 
 theorem Ctx.NoDup.of_card_dv {Γ : Ctx} (h : Γ.dv.card = Γ.len) : Ctx.NoDup Γ := by
@@ -53,6 +57,17 @@ theorem Ctx.card_dv_eq_iff {Γ : Ctx} : Γ.dv.card = Γ.len ↔ Ctx.NoDup Γ
 inductive Ctx.Scoped : Ctx → Prop
 | nil : Scoped .nil
 | cons (Γ : Ctx) (x : String) (A : Tm 0) : Scoped Γ → A.fvs ⊆ dv Γ → Scoped (Ctx.cons Γ x A)
+
+attribute [simp] Ctx.Scoped.nil
+
+theorem Ctx.Scoped.tail {Γ x A} (h : Ctx.Scoped (Ctx.cons Γ x A)) : Ctx.Scoped Γ := by
+  cases h; assumption
+
+theorem Ctx.Scoped.head {Γ x A} (h : Ctx.Scoped (Ctx.cons Γ x A)) : A.fvs ⊆ Γ.dv := by
+  cases h; assumption
+
+theorem Ctx.Scoped.cons_iff {Γ x A} : Scoped (Ctx.cons Γ x A) ↔ Scoped Γ ∧ A.fvs ⊆ Γ.dv
+  := ⟨fun h => ⟨h.tail, h.head⟩, fun ⟨hΓ, hA⟩ => hΓ.cons _ _ _ hA⟩
 
 def Ctx.append : Ctx → Ctx → Ctx
 | Γ, .nil => Γ
@@ -178,6 +193,13 @@ theorem Ctx.Lookup.exists_of_mem {Γ : Ctx} {x} (hx : x ∈ Γ.dv) : ∃ A, Look
       have ⟨B, I⟩ := I hx;
       exact ⟨B, I.there _ _ _ _ _ hy⟩
 
+theorem Ctx.Scoped.lookup {Γ} (hΓ : Scoped Γ) {x A} (h : Lookup Γ x A) : A.fvs ⊆ Γ.dv := by
+  induction h
+  <;> cases hΓ
+  <;> apply Finset.Subset.trans _ (Finset.subset_insert _ _)
+  <;> apply_assumption
+  assumption
+
 def Ctx.LSub (Γ Δ : Ctx) : Prop := ∀x A, Ctx.Lookup Δ x A → Ctx.Lookup Γ x A
 
 theorem Ctx.LSub.refl (Γ : Ctx) : Ctx.LSub Γ Γ := by intro x A h; exact h
@@ -252,7 +274,7 @@ theorem Ctx.SubT.toProp {Γ Δ : Ctx} (h : Ctx.SubT Γ Δ) : Ctx.Sub Γ Δ
 theorem Ctx.Sub.dv {Γ Δ : Ctx} (h : Ctx.Sub Γ Δ) : Δ.dv ⊆ Γ.dv := by
   induction h with
   | skip =>
-    simp only [Ctx.dv, Finset.singleton_union]
+    simp only [Ctx.dv]
     rw [Finset.subset_insert_iff_of_notMem]
     · assumption
     apply Finset.not_mem_subset <;> assumption

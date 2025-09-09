@@ -19,12 +19,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
-  | abs {Γ : Ctx} {A A' : Tm 0} {B B' b b' : Tm 1} {t t' : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs {Γ : Ctx} {A A' : Tm 0} {B b b' : Tm 1} {m : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
-    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
     : JEq Γ (A.pi B) (A.abs b) (A'.abs b')
-  | app {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ} {L : Finset String}
+  | app {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ}
     (hf : JEq Γ (A.pi B) f f')
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
@@ -37,7 +36,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hA : JEq Γ (.univ ℓ) A A)
     : JEq (Γ.cons x A) .unit .null .null
   -- Reduction
-  | beta_app {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0} {n : ℕ} {L : Finset String}
+  | beta_app {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
     (hf : JEq Γ (A.pi B) (A.abs b) (A.abs b))
     (ha : JEq Γ A a a)
     (hba : JEq Γ Ba (b.lst a) ba)
@@ -173,6 +172,70 @@ theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit (.null h)�
 @[simp] theorem Ctx.IsTy.empty_iff {Γ} : IsTy Γ .empty ↔ Ok Γ := ⟨IsTy.ok, IsTy.empty⟩
 
 @[simp] theorem Ctx.IsTy.unit_iff {Γ} : IsTy Γ .unit ↔ Ok Γ := ⟨IsTy.ok, IsTy.unit⟩
+
+theorem Finset.cof_eq_or.{u} {α : Type u} [Infinite α] {L : Finset α} (x : α) (P : α → Prop)
+  (h : ∀ y ∉ L, x = y ∨ P x) : P x := by
+  open Classical in
+  have ⟨y, hy⟩ := L.exists_notMem;
+  have hy' := h y hy
+  cases hy' with
+  | inr hy' => exact hy'
+  | inl hy' =>
+  cases hy'
+  have ⟨z, hz⟩ := (insert x L).exists_notMem
+  simp at hz
+  have hx := h z hz.right
+  cases hx with
+  | inr hx => exact hx
+  | inl hx => cases hx; exact (hz.left rfl).elim
+
+theorem Finset.cof_eq_or_iff.{u}
+  {α : Type u} [Infinite α] {L : Finset α} (x : α) (P : α → Prop)
+  : (∀ y ∉ L, x = y ∨ P x) ↔ P x := ⟨cof_eq_or x P, fun h => by simp [h]⟩
+
+theorem Tm.scoped_of_cf {k} {L V : Finset String} {a : Tm (k + 1)}
+  (h : ∀ x ∉ L, (a.open x).fvs ⊆ insert x V)
+  : a.fvs ⊆ V := by induction a using succIndOn with
+  | fv =>
+    simp [«open», Finset.cof_eq_or_iff] at h
+    simp [h]
+  | _ =>
+    simp only [fvs, «open», Finset.union_subset_iff, forall_and] at h
+    simp only [fvs, Finset.union_subset_iff, Finset.empty_subset]
+    <;> (try constructorm* _ ∧ _)
+    <;> (try casesm* _ ∧ _)
+    <;> apply_assumption
+    <;> assumption
+
+theorem Tm.cf_scoped_iff {k} (L V : Finset String) (a : Tm (k + 1))
+  : (∀ x ∉ L, (a.open x).fvs ⊆ insert x V) ↔ a.fvs ⊆ V
+  := ⟨fun h => scoped_of_cf h,
+      fun h x _ => Finset.Subset.trans (a.fvs_open x) (Finset.insert_subset_insert _ h)⟩
+
+theorem Ctx.JEq.scoped_all {Γ A a b} (h : JEq Γ A a b)
+  : Scoped Γ ∧ A.fvs ⊆ Γ.dv ∧ a.fvs ⊆ Γ.dv ∧ b.fvs ⊆ Γ.dv := by induction h with
+  | _ =>
+    (try simp only [forall_and, Ctx.dv, Tm.cf_scoped_iff, Tm.fvs, Finset.union_subset_iff] at *)
+    simp [Scoped.cons_iff, *]
+    <;> {
+      constructor
+      · apply Scoped.lookup
+        · simp [*]
+        · assumption
+      · apply Lookup.dv; assumption
+    }
+
+theorem Ctx.JEq.ctx_scoped {Γ A a b} (h : JEq Γ A a b) : Scoped Γ := h.scoped_all.left
+
+theorem Ctx.JEq.ty_scoped {Γ A a b} (h : JEq Γ A a b) : A.fvs ⊆ Γ.dv := h.scoped_all.right.left
+
+theorem Ctx.JEq.lhs_scoped {Γ A a b} (h : JEq Γ A a b) : a.fvs ⊆ Γ.dv
+  := h.scoped_all.right.right.left
+
+theorem Ctx.JEq.rhs_scoped {Γ A a b} (h : JEq Γ A a b) : b.fvs ⊆ Γ.dv
+  := h.scoped_all.right.right.right
+
+theorem Ctx.IsTy.scoped {Γ A} (h : IsTy Γ A) : A.fvs ⊆ Γ.dv := have ⟨_, h⟩ := h; h.lhs_scoped
 
 def Ctx.Cmp (Γ : Ctx) (A a b : Tm 0) : Prop := HasTy' Γ A a ∧ HasTy' Γ A b
 

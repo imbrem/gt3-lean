@@ -21,13 +21,12 @@ inductive Ctx.GJEq : ℕ → Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
         (hA : GJEq s Γ (.univ m) A A')
         (hB : ∀ x ∉ L, GJEq s (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
         (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
-        : GJEq (s + 1) Γ (.univ (max m n)) (.pi A B) (.pi A' B')
-    | abs {s} {Γ : Ctx} {A A' : Tm 0} {B B' b b' : Tm 1} {t t' : Tm 1} {m n : ℕ} {L : Finset String}
+        : GJEq (s + 1) Γ (.univ ℓ) (.pi A B) (.pi A' B')
+    | abs {s} {Γ : Ctx} {A A' : Tm 0} {B b b' : Tm 1} {t t' : Tm 1} {m : ℕ} {L : Finset String}
         (hA : GJEq s Γ (.univ m) A A')
-        (hB : ∀ x ∉ L, GJEq s (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
         (hb : ∀ x ∉ L, GJEq s (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
         : GJEq s Γ (A.pi B) (A.abs b) (A'.abs b')
-    | app {s} {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ} {L : Finset String}
+    | app {s} {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ}
         (hf : GJEq s Γ (A.pi B) f f')
         (ha : GJEq s Γ A a a')
         (hBa : GJEq s Γ (.univ n) (B.lst a) Ba)
@@ -40,7 +39,7 @@ inductive Ctx.GJEq : ℕ → Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
         (hA : GJEq s Γ (.univ ℓ) A A)
         : GJEq (s + 1) (Γ.cons x A) .unit .null .null
     -- Reduction
-    | beta_app {s} {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0} {n : ℕ} {L : Finset String}
+    | beta_app {s} {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
         (hf : GJEq s Γ (A.pi B) (A.abs b) (A.abs b))
         (ha : GJEq s Γ A a a)
         (hba : GJEq s Γ Ba (b.lst a) ba)
