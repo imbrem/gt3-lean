@@ -5,6 +5,7 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | univ {Γ : Ctx} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ (ℓ + 1)) (.univ ℓ)
   | empty {Γ : Ctx} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ ℓ) .empty
   | unit {Γ : Ctx} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ ℓ) .unit
+  | null {Γ : Ctx} (hΓ : Ok Γ) : HasTy Γ .unit .null
   | eqn {Γ : Ctx} {A a b : Tm 0} {ℓ : ℕ}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : HasTy Γ (.univ ℓ) (.eqn a b)

@@ -26,28 +26,64 @@ theorem Ctx.JEq.to_cf_u {Γ : Ctx} {x} {A} {B a b : Tm 1}
   : ∀ y ∉ Γ.dv , JEq (Γ.cons y A) (B.open y) (a.open y) (b.open y) := by
   simp only [Finset.notMem_union] at hx; apply h.to_cf <;> simp [*]
 
-theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
+theorem Ctx.TyEq.max_univ_dv' {Γ : Ctx} {A} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, TyEq (Γ.cons x A) (B.open x) (B'.open x))
+  : ∃ℓ, ∀ x ∉ Γ.dv, JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x)
+  := by
+  have ⟨x, hx⟩ := (L ∪ B.fvs ∪ B'.fvs).exists_notMem;
+  simp only [Finset.notMem_union] at hx
+  have ⟨n, hB⟩ := hB x hx.left.left;
+  exact ⟨n, hB.to_cf_univ hx.left.right hx.right⟩
 
-theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty h⟩
+theorem Ctx.TyEq.max_univ' {Γ : Ctx} {A} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, TyEq (Γ.cons x A) (B.open x) (B'.open x))
+  : ∃ℓ, ∀ x ∉ L, JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x)
+  := have ⟨ℓ, h⟩ := max_univ_dv' hB; ⟨ℓ, fun x hx => h _ fun hx' => (hB x hx).ok.var hx'⟩
 
-theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit h⟩
+theorem Ctx.TyEq.max_univ_iff' {Γ : Ctx} {A} {B B' : Tm 1} {L : Finset String}
+  : (∀ x ∉ L, TyEq (Γ.cons x A) (B.open x) (B'.open x))
+  ↔ ∃ℓ, ∀ x ∉ L, JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x)
+  := ⟨max_univ', fun ⟨ℓ, h⟩ x hx => ⟨ℓ, h x hx⟩⟩
 
-@[simp] theorem Ctx.IsTy.univ_iff {Γ ℓ} : IsTy Γ (.univ ℓ) ↔ Ok Γ := ⟨IsTy.ok, IsTy.univ⟩
-
-@[simp] theorem Ctx.IsTy.empty_iff {Γ} : IsTy Γ .empty ↔ Ok Γ := ⟨IsTy.ok, IsTy.empty⟩
-
-@[simp] theorem Ctx.IsTy.unit_iff {Γ} : IsTy Γ .unit ↔ Ok Γ := ⟨IsTy.ok, IsTy.unit⟩
-
-theorem Ctx.IsTy.pi {Γ A B} {L : Finset String}
-  (hA : IsTy Γ A) (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ (.pi A B)
+theorem Ctx.TyEq.pi {Γ A A' B B'} {L : Finset String}
+  (hA : TyEq Γ A A') (hB : ∀ x ∉ L, TyEq (Γ.cons x A) (B.open x) (B'.open x))
+  : TyEq Γ (.pi A B) (.pi A' B')
   := by
   have ⟨m, hA⟩ := hA;
-  have ⟨x, hx⟩ := (L ∪ B.fvs).exists_notMem;
+  have ⟨x, hx⟩ := (L ∪ B.fvs ∪ B'.fvs).exists_notMem;
   simp only [Finset.notMem_union] at hx
-  have ⟨n, hB⟩ := hB x hx.left;
-  have hB' := hB.to_cf_univ hx.right hx.right
+  have ⟨n, hB⟩ := hB x hx.left.left;
+  have hB' := hB.to_cf_univ hx.left.right hx.right
   exists m ⊔ n ⊔ 1
   apply JEq.pi hA hB' <;> simp
+
+theorem Ctx.IsTy.max_univ_dv' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
+  : ∃ℓ, ∀ x ∉ Γ.dv, HasTy' (Γ.cons x A) (.univ ℓ) (B.open x)
+  := TyEq.max_univ_dv' hB
+
+theorem Ctx.IsTy.max_univ' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
+  : ∃ℓ, ∀ x ∉ L, HasTy' (Γ.cons x A) (.univ ℓ) (B.open x)
+  := TyEq.max_univ' hB
+
+theorem Ctx.IsTy.max_univ_iff' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
+  : (∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) ↔ ∃ℓ, ∀ x ∉ L, HasTy' (Γ.cons x A) (.univ ℓ) (B.open x)
+  := ⟨max_univ', fun ⟨ℓ, h⟩ x hx => ⟨ℓ, h x hx⟩⟩
+
+theorem Ctx.IsTy.pi {Γ A B} {L : Finset String}
+  (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ (.pi A B)
+  := have ⟨x, hx⟩ := L.exists_notMem; TyEq.pi (hB x hx).ok.ty hB
+
+syntax "ty_eq_constructor'" : tactic
+
+macro_rules
+  | `(tactic| ty_eq_constructor') => `(tactic| first
+    | apply Ctx.IsTy.univ
+    | apply Ctx.IsTy.empty
+    | apply Ctx.IsTy.unit
+    | apply Ctx.TyEq.pi
+  )
 
 syntax "is_ty_constructor'" : tactic
 

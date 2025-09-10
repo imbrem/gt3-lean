@@ -143,6 +143,56 @@ def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .app f a => .app (f.lst v) (a.lst v)
   | .invalid => .invalid
 
+@[simp]
+theorem Tm.lst_of_fv {k : ℕ} (x : String) (v : Tm 0)
+  : (Tm.fv (k := (k + 1)) x).lst v = .fv x
+  := by simp [lst]
+
+theorem Tm.lst_bv {k : ℕ} (i : Fin (k + 1)) (v : Tm 0)
+  : (Tm.bv (k := (k + 1)) i).lst v = i.lastCases (v.castLE (by omega)) .bv
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_univ {k : ℕ} (ℓ : ℕ) (v : Tm 0)
+  : (Tm.univ (k := (k + 1)) ℓ).lst v = .univ ℓ
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_empty {k : ℕ} (v : Tm 0) : (Tm.empty (k := (k + 1))).lst v = .empty
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_unit {k : ℕ} (v : Tm 0) : (Tm.unit (k := (k + 1))).lst v = .unit
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_null {k : ℕ} (v : Tm 0) : (Tm.null (k := (k + 1))).lst v = .null
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_eqn {k : ℕ} (a b : Tm (k + 1)) (v : Tm 0)
+  : (Tm.eqn (k := (k + 1)) a b).lst v = .eqn (a.lst v) (b.lst v)
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_pi {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (v : Tm 0)
+  : (Tm.pi (k := (k + 1)) A B).lst v = .pi (A.lst v) (B.lst v)
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_abs {k : ℕ} (A : Tm (k + 1)) (b : Tm (k + 2)) (v : Tm 0)
+  : (Tm.abs (k := (k + 1)) A b).lst v = .abs (A.lst v) (b.lst v)
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_app {k : ℕ} (f a : Tm (k + 1)) (v : Tm 0)
+  : (Tm.app (k := (k + 1)) f a).lst v = .app (f.lst v) (a.lst v)
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_invalid {k : ℕ} (v : Tm 0) : (Tm.invalid (k := (k + 1))).lst v = .invalid
+  := by simp [lst]
+
 def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (fv : ∀ {k} (x : String), motive k (.fv x))
   (bv : ∀ {k} (i : Fin (k + 1)), motive k (.bv i))
@@ -193,7 +243,7 @@ theorem Tm.lst_cast_succ {k : ℕ} (t : Tm k) (v : Tm 0)
     exact i.lastCases_castSucc
       (motive := fun _ => Tm _)
       (last := v.castLE (by omega)) (cast := Tm.bv)
-  | _ => simp [castLE, lst, *]
+  | _ => simp [castLE, *]
 
 @[simp]
 theorem Tm.lst_castSucc {k : ℕ} (t : Tm k) (v : Tm 0)
@@ -307,7 +357,7 @@ theorem Tm.lsv_open {k : ℕ} (t : Tm (k + 1)) (x : String) (v : Tm 0) (hx : x �
   | bv i => cases i using Fin.lastCases <;> simp [lsv, lst, «open»]
   | _ =>
     simp at hx
-    simp [lsv, lst, *]
+    simp [lsv, *]
 
 def Tm.VSubst : Type := String → Tm 0
 
@@ -495,7 +545,7 @@ theorem Tm.ls_lst {k : ℕ} (t : Tm (k + 1)) (v : VSubst) (u : Tm 0)
   : v • (t.lst u) = (v • t).lst (v • u)
   :=  by induction t using succIndOn with
   | bv i => cases i using Fin.lastCases <;> simp [lst, castLE_lst]
-  | _ => simp [lst, *]
+  | _ => simp [*]
 
 theorem Tm.ls_open {k : ℕ} (t : Tm (k + 1)) (v : VSubst) (x : String)
   : v • (t.open x) = (v • t).lst (v.get x)

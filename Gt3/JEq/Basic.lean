@@ -92,6 +92,9 @@ theorem Ctx.TyEq.trans {Γ A B C} (hAB : TyEq Γ A B) (hBC : TyEq Γ B C) : TyEq
 
 def Ctx.IsTy (Γ : Ctx) (A : Tm 0) : Prop := TyEq Γ A A
 
+@[simp]
+theorem Ctx.TyEq.refl_iff {Γ A} : TyEq Γ A A ↔ IsTy Γ A := Iff.rfl
+
 theorem Ctx.TyEq.wf {Γ A B} (h : TyEq Γ A B) : WfEq Γ A B := have ⟨_, h⟩ := h; ⟨_, h⟩
 
 theorem Ctx.IsTy.wf {Γ A} (h : Ctx.IsTy Γ A) : Ctx.IsWf Γ A := TyEq.wf h
@@ -101,6 +104,12 @@ theorem Ctx.TyEq.lhs {Γ A B} (h : TyEq Γ A B) : IsTy Γ A := h.trans h.symm
 theorem Ctx.TyEq.rhs {Γ A B} (h : TyEq Γ A B) : IsTy Γ B := h.symm.lhs
 
 def Ctx.IsUniv (Γ : Ctx) (A : Tm 0) : Prop := ∃ℓ, TyEq Γ A (.univ ℓ)
+
+theorem Ctx.IsUniv.cast {Γ A B} (hAB : TyEq Γ A B) (hB : IsUniv Γ B)
+  : IsUniv Γ A := have ⟨ℓ, hB⟩ := hB; ⟨ℓ, hAB.trans hB⟩
+
+theorem Ctx.IsUniv.eq_iff {Γ A B} (hAB : TyEq Γ A B) : IsUniv Γ A ↔ IsUniv Γ B
+  := ⟨.cast hAB.symm, .cast hAB⟩
 
 def Ctx.HasTy' (Γ : Ctx) (A : Tm 0) (a : Tm 0) : Prop := JEq Γ A a a
 
@@ -175,6 +184,20 @@ theorem Ctx.JEq.univ {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ (ℓ + 1)) (.univ �
 theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
   : JEq Γ Ba (f.app a) (f'.app a') := have ⟨_, hBa⟩ := hBa; .app' hf ha hBa
+
+theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
+
+theorem Ctx.IsUniv.univ {Γ ℓ} (h : Ok Γ) : IsUniv Γ (.univ ℓ) := ⟨ℓ, IsTy.univ h⟩
+
+theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty h⟩
+
+theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit h⟩
+
+@[simp] theorem Ctx.IsTy.univ_iff {Γ ℓ} : IsTy Γ (.univ ℓ) ↔ Ok Γ := ⟨IsTy.ok, IsTy.univ⟩
+
+@[simp] theorem Ctx.IsTy.empty_iff {Γ} : IsTy Γ .empty ↔ Ok Γ := ⟨IsTy.ok, IsTy.empty⟩
+
+@[simp] theorem Ctx.IsTy.unit_iff {Γ} : IsTy Γ .unit ↔ Ok Γ := ⟨IsTy.ok, IsTy.unit⟩
 
 syntax "jeq_congr" : tactic
 

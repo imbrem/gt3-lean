@@ -153,21 +153,25 @@ theorem Ctx.IsTy.wk0_lset {Γ x A B} (hA : IsTy Γ A) (hx : x ∉ Γ.dv) (hB : I
   intro z hz; simp [Tm.get_lset]; intro h; cases h
   exact (hx (hA.scoped hz)).elim
 
+
+theorem Ctx.SEq.lset {Γ x y} (hΓ : Ok Γ) (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (a b : Tm 0)
+  : SEq Γ (.lset a x) (.lset b y) Γ :=
+  (SEq.one hΓ).castEqOn
+        (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
+        (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
+
+theorem Ctx.SEq.lset₁ {Γ x} (hΓ : Ok Γ) (hx : x ∉ Γ.dv) (a : Tm 0)
+  : SEq Γ (.lset a x) (.lset a x) Γ := lset hΓ hx hx a a
+
 theorem Ctx.SEq.rename_top' {Γ x y A B} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hAB : TyEq Γ A B)
   : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y B) :=
   have hABt := hAB.top_var' hx;
   have hxA := hAB.lhs.wk0 hx hAB.lhs
   have hxB := hAB.rhs.wk0 hx hAB.lhs
-  have hAy := Finset.not_mem_subset hAB.lhs.scoped hy;
-  have hBy := Finset.not_mem_subset hAB.rhs.scoped hy;
-  have hAy' := Tm.ls_lset_not_mem (hx := hAy)
-  have hBy' := Tm.ls_lset_not_mem (hx := hBy)
+  have hAy' := Tm.ls_lset_not_mem (hx := Finset.not_mem_subset hAB.lhs.scoped hy)
+  have hBy' := Tm.ls_lset_not_mem (hx := Finset.not_mem_subset hAB.rhs.scoped hy)
   by
-    apply SEq.cons' (.wk0
-      ((SEq.one hAB.ok).castEqOn
-        (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
-        (fun z hz => by simp [Tm.get_lset]; intro h; cases h; contradiction)
-      ) hx hAB.lhs)
+    apply SEq.cons' (.wk0 (.lset₁ hAB.ok hy (.fv x)) hx hAB.lhs)
     <;> simp [hAB.rhs, *]
 
 theorem Ctx.SEq.rename_top {Γ x y A} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hA : IsTy Γ A)
