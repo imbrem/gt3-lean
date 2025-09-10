@@ -9,7 +9,7 @@ inductive OTm : Type
   | null : OTm
   | eqn (a b : OTm) : OTm
   | pi (A B : OTm) : OTm
-  | abs (A : OTm) (b : OTm) : OTm
+  | abs (A B : OTm) (b : OTm) : OTm
   | app (f a : OTm) : OTm
   | invalid : OTm
 
@@ -22,7 +22,7 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .null => .null
   | .eqn a b => .eqn a.erase b.erase
   | .pi A B => .pi A.erase B.erase
-  | .abs A b => .abs A.erase b.erase
+  | .abs A B b => .abs A.erase B.erase b.erase
   | .app f a => .app f.erase a.erase
   | .invalid => .invalid
 
@@ -35,7 +35,7 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .null => .null
   | .eqn a b => .eqn (a.clamp k) (b.clamp k)
   | .pi A B => .pi (A.clamp k) (B.clamp (k + 1))
-  | .abs A b => .abs (A.clamp k) (b.clamp (k + 1))
+  | .abs A B b => .abs (A.clamp k) (B.clamp (k + 1)) (b.clamp (k + 1))
   | .app f a => .app (f.clamp k) (a.clamp k)
   | .invalid => .invalid
 
@@ -65,7 +65,7 @@ def OTm.fvs : OTm → Finset String
   | .fv x => {x}
   | .eqn a b => a.fvs ∪ b.fvs
   | .pi A B => A.fvs ∪ B.fvs
-  | .abs A b => A.fvs ∪ b.fvs
+  | .abs A B b => A.fvs ∪ B.fvs ∪ b.fvs
   | .app f a => f.fvs ∪ a.fvs
   | _ => ∅
 
@@ -83,7 +83,7 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .bv i => i + 1
   | .eqn a b => a.bvi ⊔ b.bvi
   | .pi A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A b => A.bvi ⊔ (b.bvi - 1)
+  | .abs A B b => A.bvi ⊔ (B.bvi - 1) ⊔  (b.bvi - 1)
   | .app f a => f.bvi ⊔ a.bvi
   | _ => 0
 
@@ -91,7 +91,7 @@ def OTm.bvi : OTm → ℕ
   | .bv i => i + 1
   | .eqn a b => a.bvi ⊔ b.bvi
   | .pi A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A b => A.bvi ⊔ (b.bvi - 1)
+  | .abs A B b => A.bvi ⊔ (B.bvi - 1) ⊔ (b.bvi - 1)
   | .app f a => f.bvi ⊔ a.bvi
   | _ => 0
 
