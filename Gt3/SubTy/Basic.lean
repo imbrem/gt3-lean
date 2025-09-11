@@ -72,6 +72,31 @@ theorem Ctx.CmpTy.of_sub {Γ A B} (hAB : SubTy Γ A B) : CmpTy Γ A B := by
 theorem Ctx.CmpTy.symm {Γ A B} (hAB : CmpTy Γ A B) : CmpTy Γ B A
   := by cases hAB with | inl h => exact .inl h.symm | inr h => simp [CmpTy, *]
 
+theorem Ctx.CmpTy.lhs_is_ty {Γ A B} (hAB : CmpTy Γ A B) : IsTy Γ A := match hAB with
+  | .inl h => h.lhs
+  | .inr h => h.left.is_ty
+
+theorem Ctx.CmpTy.rhs_is_ty {Γ A B} (hAB : CmpTy Γ A B) : IsTy Γ B := hAB.symm.lhs_is_ty
+
+@[simp]
+theorem Ctx.CmpTy.refl_iff {Γ A} : CmpTy Γ A A ↔ IsTy Γ A := ⟨lhs_is_ty, .refl⟩
+
+theorem Ctx.CmpTy.symm_iff {Γ A B} : CmpTy Γ A B ↔ CmpTy Γ B A := ⟨.symm, .symm⟩
+
+theorem Ctx.CmpTy.left_univ {Γ ℓ B} (h : CmpTy Γ (.univ ℓ) B) : IsUniv Γ B := match h with
+  | .inl h => ⟨_, h.symm⟩
+  | .inr h => h.right
+
+theorem Ctx.CmpTy.right_univ {Γ A ℓ} (h : CmpTy Γ A (.univ ℓ)) : IsUniv Γ A := h.symm.left_univ
+
+@[simp]
+theorem Ctx.CmpTy.left_univ_iff {Γ ℓ B} : CmpTy Γ (.univ ℓ) B ↔ IsUniv Γ B
+  := ⟨left_univ, fun h => by simp [CmpTy, h.ok, h]⟩
+
+@[simp]
+theorem Ctx.CmpTy.right_univ_iff {Γ A ℓ} : CmpTy Γ A (.univ ℓ) ↔ IsUniv Γ A
+  := by rw [symm_iff, left_univ_iff]
+
 theorem Ctx.CmpTy.trans {Γ A B C} (hAB : CmpTy Γ A B) (hBC : CmpTy Γ B C) : CmpTy Γ A C := by
   cases hAB with
   | inl h => cases hBC with

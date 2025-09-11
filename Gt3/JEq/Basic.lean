@@ -219,6 +219,12 @@ theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, 
 
 theorem Ctx.IsUniv.univ {Γ ℓ} (h : Ok Γ) : IsUniv Γ (.univ ℓ) := ⟨ℓ, IsTy.univ h⟩
 
+theorem Ctx.IsUniv.ok {Γ U} (h : IsUniv Γ U) : Ok Γ := have ⟨_, h⟩ := h; h.ok
+
+theorem Ctx.IsUniv.is_ty {Γ U} (h : IsUniv Γ U) : IsTy Γ U := have ⟨_, h⟩ := h; h.lhs
+
+@[simp] theorem Ctx.IsUniv.univ_iff {Γ ℓ} : IsUniv Γ (.univ ℓ) ↔ Ok Γ := ⟨IsUniv.ok, IsUniv.univ⟩
+
 theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty h⟩
 
 theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit h⟩
