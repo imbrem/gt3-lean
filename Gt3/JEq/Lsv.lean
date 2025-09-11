@@ -60,7 +60,8 @@ theorem Ctx.JEq.lst_cf_univ {Γ : Ctx} {n : ℕ} {A a a'} {B B' : Tm 1} {L : Fin
       (fun x hx => by convert hB x hx using 0 ; rw [Tm.open_univ])
   have app_eq
     : Ctx.JEq Γ (.univ n) (.app (.abs A (.univ n) B) a) (.app (.abs A (.univ n) B') a')
-    := .app hAB ha (by simp [hA.ok])
+    := .app' hA (fun x hx => by convert JEq.univ (ℓ := n) (.cons hA.ok hx ⟨_, hA⟩) <;> simp)
+        hAB ha (by convert JEq.univ hA.ok; simp)
   have hba : Ctx.JEq Γ (.univ n) (.app (.abs A (.univ n) B) a) (B.lst a)
     := .beta_app hAB.lhs_ty' ha.lhs_ty' (.lst_cf₁_k (fun x hx => (hB x hx).lhs_ty') ha.lhs_ty')
   have hba' : Ctx.JEq Γ (.univ n) (.app (.abs A (.univ n) B') a') (B'.lst a')
@@ -102,7 +103,7 @@ theorem Ctx.JEq.lst_cf {Γ : Ctx} {A a a'} {B b b' : Tm 1} {L : Finset String}
     := fun x hx => by simp at hx; exact hb x hx.left
   have app_eq
     : Ctx.JEq Γ (B.lst a) (.app (.abs A B b) a) (.app (.abs A B b') a')
-    := .app (.abs hA hB hb) ha hB'.lhs_is_ty
+    := .app_r (fun x hx => (hb x hx).regular) (.abs hA hB hb) ha hB'.lhs_is_ty
   have hbl := (fun x hx => (hb x hx).lhs_ty')
   have hba : Ctx.JEq Γ (B.lst a) (.app (.abs A B b) a) (b.lst a)
     := .beta_app (.abs hA hB hbl) ha.lhs_ty' (.lst_cf₁ hbl ha.lhs_ty')
