@@ -75,6 +75,14 @@ theorem Ctx.IsTy.pi {Γ A B} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ (.pi A B)
   := have ⟨x, hx⟩ := L.exists_notMem; TyEq.pi (hB x hx).ok.ty hB
 
+theorem Ctx.JEq.app_r {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {L : Finset String}
+  (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
+  (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
+  : JEq Γ Ba (f.app a) (f'.app a') :=
+  have ⟨_, hA⟩ := IsTy.top_cf hB
+  have ⟨_, hB⟩ := IsTy.max_univ' hB
+  .app_f hA hB hf ha hBa
+
 syntax "ty_eq_constructor'" : tactic
 
 macro_rules

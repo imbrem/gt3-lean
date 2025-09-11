@@ -75,6 +75,18 @@ def Ctx.SEq.src {Γ σ τ Δ} (_ : SEq Γ σ τ Δ) : Ctx := Γ
 
 def Ctx.SEq.trg {Γ σ τ Δ} (_ : SEq Γ σ τ Δ) : Ctx := Δ
 
+theorem Ctx.JEq.subst_open_cofinite_k_clamped_helper {L : Finset String} {Γ : Ctx} {σ : Tm.VSubst}
+  (hL : σ.Clamped L) {A B : Tm 0} {b b' : Tm 1}
+  {x} (hx : x ∉ L) (h : JEq (Γ.cons x A) B (σ • b.open x) (σ • b'.open x))
+  : JEq (Γ.cons x A) B ((σ • b).open x) ((σ • b').open x)
+  := by convert h using 1 <;> rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
+
+theorem Ctx.JEq.subst_open_cofinite_clamped_helper {L : Finset String} {Γ : Ctx} {σ : Tm.VSubst}
+  (hL : σ.Clamped L) {A : Tm 0} {B b b' : Tm 1}
+  {x} (hx : x ∉ L) (h : JEq (Γ.cons x A) (σ • B.open x) (σ • b.open x) (σ • b'.open x))
+  : JEq (Γ.cons x A) ((σ • B).open x) ((σ • b).open x) ((σ • b').open x)
+  := by convert h using 1 <;> rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
+
 theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b}
   (h : JEq Δ A a b) (hK : σ.Clamped K)
   : JEq Γ (σ • A) (σ • a) (σ • b) := by induction h generalizing Γ with
@@ -94,11 +106,13 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
       rename Finset String => L
       have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
         := by simp only [<-Finset.notMem_union]; exact hx
-      simp only [<-Tm.smul_def, Tm.open_ls_clamped (hv := hK) (hx := hxK)]
-      apply_assumption
-      <;> first | assumption | apply SEq.lift1_clamped
-      <;> apply_assumption
-      <;> assumption
+      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
+      · exact hK
+      · exact hxK
+      · apply_assumption
+        <;> first | assumption | apply SEq.lift1_clamped
+        <;> apply_assumption
+        <;> assumption
     }
 
 theorem Ctx.SEq.castEqOn {Γ σ τ σ' τ' Δ}

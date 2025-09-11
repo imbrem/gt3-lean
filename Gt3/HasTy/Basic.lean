@@ -18,7 +18,9 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
     : HasTy Γ (A.pi B) (A.abs B b)
-  | app {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0}
+  | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ℕ} {L : Finset String}
+    (hA : HasTy Γ (.univ m) A)
+    (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : HasTy Γ Ba (f.app a)
@@ -37,7 +39,7 @@ theorem Ctx.HasTy.ok {Γ A a} (h : HasTy Γ A a) : Ok Γ := by induction h <;> a
 theorem Ctx.HasTy.refl {Γ A a} (h : HasTy Γ A a) : JEq Γ A a a := by induction h with
   | cast_level _ IA => exact IA.cast_level
   | cast hA _ Ia => exact Ia.cast hA
-  | _ => jeq_congr <;> assumption
+  | _ => jeq_congr_f <;> assumption
 
 theorem Ctx.HasTy.scoped_all {Γ A a} (h : HasTy Γ A a)
   : Scoped Γ ∧ A.fvs ⊆ Γ.dv ∧ a.fvs ⊆ Γ.dv := by simp [h.refl.scoped_all]

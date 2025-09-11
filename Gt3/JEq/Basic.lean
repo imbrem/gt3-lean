@@ -24,7 +24,9 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
     : JEq Γ (A.pi B) (A.abs B b) (A'.abs B' b')
-  | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {n : ℕ}
+  | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+    (hA : JEq Γ (.univ m) A A)
+    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hf : JEq Γ (A.pi B) f f')
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
@@ -182,9 +184,34 @@ theorem Ctx.JEq.empty {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ ℓ) .empty .empty 
 theorem Ctx.JEq.univ {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
   := .univ' (.null h)
 
-theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
+theorem Ctx.IsTy.top_cf {Γ A} {B : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ A
+  := have ⟨x, hx⟩ := L.exists_notMem; (hB x hx).ok.ty
+
+theorem Ctx.JEq.app_f {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  (hA : JEq Γ (.univ m) A A)
+  (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
-  : JEq Γ Ba (f.app a) (f'.app a') := have ⟨_, hBa⟩ := hBa; .app' hf ha hBa
+  : JEq Γ Ba (f.app a) (f'.app a') :=
+  have ⟨ℓ, hBa⟩ := hBa;
+  .app' (n := n ⊔ ℓ) hA
+        (fun x hx => (hB x hx).cast_level_le (by simp)) hf ha
+        (hBa.cast_level_le (by simp))
+
+syntax "jeq_congr_f" : tactic
+
+macro_rules
+  | `(tactic| jeq_congr_f) => `(tactic| first
+    | apply Ctx.JEq.fv
+    | apply Ctx.JEq.univ
+    | apply Ctx.JEq.empty
+    | apply Ctx.JEq.unit
+    | apply Ctx.JEq.null
+    | apply Ctx.JEq.eqn
+    | apply Ctx.JEq.pi
+    | apply Ctx.JEq.abs
+    | apply Ctx.JEq.app_f
+  )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
 

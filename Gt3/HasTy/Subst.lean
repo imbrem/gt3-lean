@@ -61,6 +61,18 @@ theorem Ctx.S1.lift_clamped {Γ σ Δ x A ℓ}
     · exact .here _ _ _
   (hσ.wk0 hxΓ hAΓ).cons' hAΓ' hxΔ hAΔ.is_ty hΓ
 
+theorem Ctx.HasTy.subst_open_cofinite_k_clamped_helper {L : Finset String} {Γ : Ctx} {σ : Tm.VSubst}
+  (hL : σ.Clamped L) {A B : Tm 0} {b : Tm 1}
+  {x} (hx : x ∉ L) (h : HasTy (Γ.cons x A) B (σ • b.open x))
+  : HasTy (Γ.cons x A) B ((σ • b).open x)
+  := by convert h using 1; rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
+
+theorem Ctx.HasTy.subst_open_cofinite_clamped_helper {L : Finset String} {Γ : Ctx} {σ : Tm.VSubst}
+  (hL : σ.Clamped L) {A : Tm 0} {B b : Tm 1}
+  {x} (hx : x ∉ L) (h : HasTy (Γ.cons x A) (σ • B.open x) (σ • b.open x))
+  : HasTy (Γ.cons x A) ((σ • B).open x) ((σ • b).open x)
+  := by convert h using 1 <;> rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
+
 theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) {A a}
   (h : HasTy Δ A a) (hK : σ.Clamped K)
   : HasTy Γ (σ • A) (σ • a) := by induction h generalizing Γ with
@@ -79,11 +91,13 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
       rename Finset String => L
       have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
         := by simp only [<-Finset.notMem_union]; exact hx
-      simp only [<-Tm.smul_def, Tm.open_ls_clamped (hv := hK) (hx := hxK)]
-      apply_assumption
-      <;> first | assumption | apply S1.lift_clamped
-      <;> apply_assumption
-      <;> assumption
+      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
+      · exact hK
+      · exact hxK
+      · apply_assumption
+        <;> first | assumption | apply S1.lift_clamped
+        <;> apply_assumption
+        <;> assumption
     }
 
 theorem Ctx.S1.castEqOn {Γ σ σ' Δ}
@@ -169,7 +183,6 @@ theorem Ctx.HasTy.cast_top' {Γ x ℓ A B C a} (hAB : JEq Γ (.univ ℓ) A B) (h
 theorem Ctx.HasTy.cast_top_symm' {Γ x ℓ A B C a}
   (hAB : JEq Γ (.univ ℓ) B A) (h : HasTy (Γ.cons x B) C a)
   : HasTy (Γ.cons x A) C a := h.cast_top' hAB.symm
-
 
 -- theorem Ctx.HasTy.sjeq_clamped {K : Finset String} {Γ σ τ Δ} (hσ : SEq Γ σ τ Δ) {A a}
 --   (h : HasTy Δ A a) (hK : σ.Clamped K)
