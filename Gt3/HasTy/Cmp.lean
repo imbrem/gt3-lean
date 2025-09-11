@@ -28,30 +28,43 @@ theorem Ctx.Cmp.symm {Γ A a b} (h : Cmp Γ A a b) : Cmp Γ A b a
 theorem Ctx.Cmp.trans {Γ A a b c} (h : Cmp Γ A a b) (h' : Cmp Γ A b c) : Cmp Γ A a c
   := ⟨h.left, h'.right⟩
 
-theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction h with
-  | nil_ok => sorry
-  | cons_ok => sorry
-  | cast_level => apply Cmp.cast_level; assumption
-  | cast' => apply Cmp.cast' <;> assumption
-  | symm => apply Cmp.symm; assumption
-  | trans => apply Cmp.trans <;> assumption
-  | pi =>
-    sorry
-  | abs =>
-    sorry
-  | app' => sorry
-  | beta_app => sorry
-  | _ =>
-    simp only [Ctx.Cmp, forall_and] at *
-    casesm* _ ∧ _
-    apply And.intro <;>
-    first
-    | assumption
-    | {
-        constructor <;> first
-        | assumption
-        | apply Ctx.JEq.ok ; assumption
-        | apply JEq.ty_eq ; assumption
-        -- | intros <;> apply HasTy.cast_top' <;> fail
-        -- | fail
-      }
+-- theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction h with
+--   | nil_ok => sorry
+--   | cons_ok => sorry
+--   | cast_level => apply Cmp.cast_level; assumption
+--   | cast' => apply Cmp.cast' <;> assumption
+--   | symm => apply Cmp.symm; assumption
+--   | trans => apply Cmp.trans <;> assumption
+--   | abs =>
+--     simp only [Ctx.Cmp, forall_and] at *
+--     casesm* _ ∧ _
+--     apply And.intro <;>
+--     first
+--     | assumption
+--     | {
+--         constructor <;> first
+--         | assumption
+--         | apply Ctx.JEq.ok ; assumption
+--         | apply JEq.ty_eq ; assumption
+--         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
+--         | fail
+--         -- | intros <;> apply HasTy.cast_top' <;> fail
+--         -- | fail
+--       }
+--   | app' => sorry
+--   | beta_app => sorry
+--   | _ =>
+--     simp only [Ctx.Cmp, forall_and] at *
+--     casesm* _ ∧ _
+--     apply And.intro <;>
+--     first
+--     | assumption
+--     | {
+--         constructor <;> first
+--         | assumption
+--         | apply Ctx.JEq.ok ; assumption
+--         | apply JEq.ty_eq ; assumption
+--         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
+--         -- | intros <;> apply HasTy.cast_top' <;> fail
+--         -- | fail
+--       }

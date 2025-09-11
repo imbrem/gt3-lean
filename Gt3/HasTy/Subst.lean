@@ -166,6 +166,11 @@ theorem Ctx.HasTy.cast_top {Γ x A B C a} (hAB : TyEq Γ A B) (h : HasTy (Γ.con
 theorem Ctx.HasTy.cast_top' {Γ x ℓ A B C a} (hAB : JEq Γ (.univ ℓ) A B) (h : HasTy (Γ.cons x B) C a)
   : HasTy (Γ.cons x A) C a := h.cast_top hAB.ty_eq
 
+theorem Ctx.HasTy.cast_top_symm' {Γ x ℓ A B C a}
+  (hAB : JEq Γ (.univ ℓ) B A) (h : HasTy (Γ.cons x B) C a)
+  : HasTy (Γ.cons x A) C a := h.cast_top' hAB.symm
+
+
 -- theorem Ctx.HasTy.sjeq_clamped {K : Finset String} {Γ σ τ Δ} (hσ : SEq Γ σ τ Δ) {A a}
 --   (h : HasTy Δ A a) (hK : σ.Clamped K)
 --   : SJEq Γ σ τ A a := by induction h generalizing Γ with
