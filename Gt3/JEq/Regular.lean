@@ -81,7 +81,7 @@ theorem Ctx.JEq.app_r {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {L : Fins
   : JEq Γ Ba (f.app a) (f'.app a') :=
   have ⟨_, hA⟩ := IsTy.top_cf hB
   have ⟨_, hB⟩ := IsTy.max_univ' hB
-  .app_f hA hB hf ha hBa
+  .app_f hB hA hf ha hBa
 
 syntax "ty_eq_constructor'" : tactic
 

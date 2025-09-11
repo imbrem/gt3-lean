@@ -19,8 +19,8 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
     : HasTy Γ (A.pi B) (A.abs B b)
   | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ℕ} {L : Finset String}
-    (hA : HasTy Γ (.univ m) A)
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (hA : HasTy Γ (.univ m) A)
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : HasTy Γ Ba (f.app a)

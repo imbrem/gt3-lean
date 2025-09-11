@@ -25,8 +25,8 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
     : JEq Γ (A.pi B) (A.abs B b) (A'.abs B' b')
   | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
-    (hA : JEq Γ (.univ m) A A)
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
+    (hA : JEq Γ (.univ m) A A)
     (hf : JEq Γ (A.pi B) f f')
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
@@ -39,9 +39,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hA : JEq Γ (.univ ℓ) A A)
     : JEq (Γ.cons x A) .unit .null .null
   -- Reduction
-  | beta_app {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
+  | beta_app' {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
     (hf : JEq Γ (A.pi B) (A.abs B b) (A.abs B b))
     (ha : JEq Γ A a a)
+    (lhs_wf : JEq Γ Ba (.app (A.abs B b) a) (.app (A.abs B b) a))
+    (rhs_wf : JEq Γ Ba ba ba)
     (hba : JEq Γ Ba (b.lst a) ba)
     : JEq Γ Ba (.app (A.abs B b) a) ba
   -- Reflexivity and extensionality
@@ -189,13 +191,13 @@ theorem Ctx.IsTy.top_cf {Γ A} {B : Tm 1} {L : Finset String}
   := have ⟨x, hx⟩ := L.exists_notMem; (hB x hx).ok.ty
 
 theorem Ctx.JEq.app_f {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
-  (hA : JEq Γ (.univ m) A A)
   (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
+  (hA : JEq Γ (.univ m) A A)
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
   : JEq Γ Ba (f.app a) (f'.app a') :=
   have ⟨ℓ, hBa⟩ := hBa;
-  .app' (n := n ⊔ ℓ) hA
-        (fun x hx => (hB x hx).cast_level_le (by simp)) hf ha
+  .app' (n := n ⊔ ℓ)
+        (fun x hx => (hB x hx).cast_level_le (by simp)) hA hf ha
         (hBa.cast_level_le (by simp))
 
 syntax "jeq_congr_f" : tactic

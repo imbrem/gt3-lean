@@ -60,12 +60,14 @@ theorem Ctx.JEq.lst_cf_univ {Γ : Ctx} {n : ℕ} {A a a'} {B B' : Tm 1} {L : Fin
       (fun x hx => by convert hB x hx using 0 ; rw [Tm.open_univ])
   have app_eq
     : Ctx.JEq Γ (.univ n) (.app (.abs A (.univ n) B) a) (.app (.abs A (.univ n) B') a')
-    := .app' hA (fun x hx => by convert JEq.univ (ℓ := n) (.cons hA.ok hx ⟨_, hA⟩) <;> simp)
+    := .app' (fun x hx => by convert JEq.univ (ℓ := n) (.cons hA.ok hx ⟨_, hA⟩) <;> simp) hA
         hAB ha (by convert JEq.univ hA.ok; simp)
+  have hba := (JEq.lst_cf₁_k (fun x hx => (hB x hx).lhs_ty') ha.lhs_ty')
   have hba : Ctx.JEq Γ (.univ n) (.app (.abs A (.univ n) B) a) (B.lst a)
-    := .beta_app hAB.lhs_ty' ha.lhs_ty' (.lst_cf₁_k (fun x hx => (hB x hx).lhs_ty') ha.lhs_ty')
+    := .beta_app' hAB.lhs_ty' ha.lhs_ty' app_eq.lhs_ty' hba hba
+  have hba' := (JEq.lst_cf₁_k (fun x hx => (hB x hx).rhs_ty') ha.rhs_ty')
   have hba' : Ctx.JEq Γ (.univ n) (.app (.abs A (.univ n) B') a') (B'.lst a')
-    := .beta_app hAB.rhs_ty' ha.rhs_ty' (.lst_cf₁_k (fun x hx => (hB x hx).rhs_ty') ha.rhs_ty')
+    := .beta_app' hAB.rhs_ty' ha.rhs_ty' app_eq.rhs_ty' hba' hba'
   hba.symm.trans (app_eq.trans hba')
 
 theorem Ctx.TyEq.lst_cf {Γ : Ctx} {A a a'} {B B' : Tm 1} {L : Finset String}
@@ -75,8 +77,20 @@ theorem Ctx.TyEq.lst_cf {Γ : Ctx} {A a a'} {B B' : Tm 1} {L : Finset String}
 
 theorem Ctx.IsTy.lst_cf' {Γ : Ctx} {A a a'} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, Ctx.IsTy (Γ.cons x A) (B.open x))
+  (ha : Ctx.JEq Γ A a a') : TyEq Γ (B.lst a) (B.lst a')
+  := TyEq.lst_cf hB ha
+
+theorem Ctx.IsTy.lst_cf_is_ty' {Γ : Ctx} {A a a'} {B : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.IsTy (Γ.cons x A) (B.open x))
   (ha : Ctx.JEq Γ A a a') : IsTy Γ (B.lst a)
   := TyEq.lst_cf hB ha.lhs_ty'
+
+theorem Ctx.JEq.lst_cf_cast_lhs {Γ : Ctx} {ℓ A a a' Ba} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
+  (ha : JEq Γ A a a')
+  (hBa : TyEq Γ (B.lst a) Ba)
+  : TyEq Γ (B.lst a') Ba
+  := (IsTy.lst_cf' (fun x hx => (hB x hx).lhs_is_ty) ha).symm.trans hBa
 
 theorem Ctx.TyEq.lst_cf_k' {Γ : Ctx} {A a a' B B'} {L : Finset String}
   (hB : ∀ x ∉ L, Ctx.TyEq (Γ.cons x A) B B')
@@ -105,9 +119,13 @@ theorem Ctx.JEq.lst_cf {Γ : Ctx} {A a a'} {B b b' : Tm 1} {L : Finset String}
     : Ctx.JEq Γ (B.lst a) (.app (.abs A B b) a) (.app (.abs A B b') a')
     := .app_r (fun x hx => (hb x hx).regular) (.abs hA hB hb) ha hB'.lhs_is_ty
   have hbl := (fun x hx => (hb x hx).lhs_ty')
+  have hba := (JEq.lst_cf₁ hbl ha.lhs_ty')
   have hba : Ctx.JEq Γ (B.lst a) (.app (.abs A B b) a) (b.lst a)
-    := .beta_app (.abs hA hB hbl) ha.lhs_ty' (.lst_cf₁ hbl ha.lhs_ty')
+    := .beta_app' (.abs hA hB hbl) ha.lhs_ty' app_eq.lhs_ty' hba hba
   have hbr := (fun x hx => (hb x hx).rhs_ty')
+  have hba' := (JEq.lst_cf₁ hbr ha.rhs_ty')
   have hba' : Ctx.JEq Γ (B.lst a') (.app (.abs A B b') a') (b'.lst a')
-    :=.beta_app (.abs hA hB hbr) ha.rhs_ty' (.lst_cf₁ hbr ha.rhs_ty')
+    :=.beta_app'
+      (.abs hA hB hbr) ha.rhs_ty' (app_eq.rhs_ty'.cast ⟨_, hB'⟩)
+      hba' hba'
   exact hba.symm.trans (app_eq.trans (hB'.symm.cast' hba'))

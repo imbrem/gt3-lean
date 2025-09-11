@@ -28,43 +28,46 @@ theorem Ctx.Cmp.symm {Γ A a b} (h : Cmp Γ A a b) : Cmp Γ A b a
 theorem Ctx.Cmp.trans {Γ A a b c} (h : Cmp Γ A a b) (h' : Cmp Γ A b c) : Cmp Γ A a c
   := ⟨h.left, h'.right⟩
 
--- theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction h with
---   | nil_ok => sorry
---   | cons_ok => sorry
---   | cast_level => apply Cmp.cast_level; assumption
---   | cast' => apply Cmp.cast' <;> assumption
---   | symm => apply Cmp.symm; assumption
---   | trans => apply Cmp.trans <;> assumption
---   | abs =>
---     simp only [Ctx.Cmp, forall_and] at *
---     casesm* _ ∧ _
---     apply And.intro <;>
---     first
---     | assumption
---     | {
---         constructor <;> first
---         | assumption
---         | apply Ctx.JEq.ok ; assumption
---         | apply JEq.ty_eq ; assumption
---         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
---         | fail
---         -- | intros <;> apply HasTy.cast_top' <;> fail
---         -- | fail
---       }
---   | app' => sorry
---   | beta_app => sorry
---   | _ =>
---     simp only [Ctx.Cmp, forall_and] at *
---     casesm* _ ∧ _
---     apply And.intro <;>
---     first
---     | assumption
---     | {
---         constructor <;> first
---         | assumption
---         | apply Ctx.JEq.ok ; assumption
---         | apply JEq.ty_eq ; assumption
---         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
---         -- | intros <;> apply HasTy.cast_top' <;> fail
---         -- | fail
---       }
+theorem Ctx.Cmp.of_both {Γ A a b} (h : Cmp Γ A a a) (h' : Cmp Γ A b b) : Cmp Γ A a b
+  := ⟨h.left, h'.right⟩
+
+theorem Ctx.Cmp.of_cast {Γ A B a b}
+  (ha : HasTy Γ A a) (hb : HasTy Γ B b) (hAB : TyEq Γ A B) : Cmp Γ A a b
+  := ⟨ha, hb.cast hAB.symm⟩
+
+theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction h with
+  | nil_ok | cons_ok =>
+      constructor <;> constructor <;> constructor
+      <;> first | assumption | apply JEq.ok; assumption | apply JEq.lhs_is_ty; assumption
+  | cast' => apply Cmp.cast' <;> assumption
+  | _ =>
+    simp only [Ctx.Cmp, forall_and] at *
+    casesm* _ ∧ _
+    first
+    | {
+      -- Rewrite rules and simple cases
+      apply And.intro <;>
+      first
+      | assumption
+      | {
+          constructor <;> first
+          | assumption
+          | apply Ctx.JEq.ok ; assumption
+          | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
+        }
+    }
+    | {
+      -- Cases with binding
+      apply Cmp.of_cast
+      · constructor <;> first | assumption | apply JEq.ty_eq; assumption
+      · constructor <;> first
+        | assumption
+        | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
+        | intros; apply HasTy.cast_top_symm₂ <;> apply_assumption <;> assumption
+        | apply Ctx.JEq.lst_cf_cast_lhs <;> first | assumption | apply Ctx.JEq.lhs_is_ty; assumption
+      · first
+        | apply TyEq.symm; apply JEq.ty_eq; assumption
+        | (ty_eq_constructor'
+          <;> intros
+          <;> first | exact L | apply JEq.ty_eq <;> apply_assumption <;> assumption)
+    }
