@@ -56,11 +56,13 @@ Tasks may involve:
 
 #### 2. Erasure (`Gt3/Syntax/Erase.lean`)
 
+**Important**: This file contains multiple functions that must ALL be updated. The `bvi` functions are particularly easy to miss since they're defined separately from the main erasure functions.
+
 - [ ] Add constructor to `OTm` inductive type
 - [ ] Update `Tm.erase` function
 - [ ] Update `OTm.clamp` function
 - [ ] Update `OTm.fvs` function
-- [ ] Update `Tm.bvi` function (bound variable index tracking)
+- [ ] Update `Tm.bvi` function (**CRITICAL**: bound variable index tracking - easy to miss!)
 - [ ] Update `OTm.bvi` function
 - [ ] Test: `lake build Gt3.Syntax.Erase`
 

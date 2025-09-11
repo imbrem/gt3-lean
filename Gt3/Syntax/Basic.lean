@@ -1,3 +1,5 @@
+-- To add a new term former; follow the instructions in `TERM_FORMER_CHECKLIST.md`
+
 import Mathlib.Data.Nat.Lattice
 import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Algebra.Group.Action.Defs
@@ -11,6 +13,7 @@ inductive Tm : ℕ → Type
   | null {k : ℕ} : Tm k
   | eqn {k : ℕ} (a b : Tm k) : Tm k
   | pi {k : ℕ} (A : Tm k) (B : Tm (k + 1)) : Tm k
+  | sigma {k : ℕ} (A : Tm k) (B : Tm (k + 1)) : Tm k
   | abs {k : ℕ} (A : Tm k) (B b : Tm (k + 1)) : Tm k
   | app {k : ℕ} (f a : Tm k) : Tm k
   | invalid {k : ℕ} : Tm k
@@ -24,6 +27,7 @@ def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
   | .null => .null
   | .eqn a b => .eqn (a.castLE h) (b.castLE h)
   | .pi A B => .pi (A.castLE h) (B.castLE (by omega))
+  | .sigma A B => .sigma (A.castLE h) (B.castLE (by omega))
   | .abs A B b => .abs (A.castLE h) (B.castLE (by omega)) (b.castLE (by omega))
   | .app f a => .app (f.castLE h) (a.castLE h)
   | .invalid => .invalid
@@ -77,6 +81,7 @@ def Tm.open {k : ℕ} (t : Tm (k + 1)) (x : String) : Tm k := match t with
   | .null => .null
   | .eqn a b => .eqn (a.open x) (b.open x)
   | .pi A B => .pi (A.open x) (B.open x)
+  | .sigma A B => .sigma (A.open x) (B.open x)
   | .abs A B b => .abs (A.open x) (B.open x) (b.open x)
   | .app f a => .app (f.open x) (a.open x)
   | .invalid => .invalid
@@ -117,6 +122,11 @@ theorem Tm.open_pi {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (x : String)
   := by simp [«open»]
 
 @[simp]
+theorem Tm.open_sigma {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (x : String)
+  : (Tm.sigma (k := (k + 1)) A B).open x = .sigma (A.open x) (B.open x)
+  := by simp [«open»]
+
+@[simp]
 theorem Tm.open_abs {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (b : Tm (k + 2)) (x : String)
   : (Tm.abs (k := (k + 1)) A B b).open x = .abs (A.open x) (B.open x) (b.open x)
   := by simp [«open»]
@@ -139,6 +149,7 @@ def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .null => .null
   | .eqn a b => .eqn (a.lst v) (b.lst v)
   | .pi A B => .pi (A.lst v) (B.lst v)
+  | .sigma A B => .sigma (A.lst v) (B.lst v)
   | .abs A B b => .abs (A.lst v) (B.lst v) (b.lst v)
   | .app f a => .app (f.lst v) (a.lst v)
   | .invalid => .invalid
@@ -180,6 +191,11 @@ theorem Tm.lst_pi {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
+theorem Tm.lst_sigma {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (v : Tm 0)
+  : (Tm.sigma (k := (k + 1)) A B).lst v = .sigma (A.lst v) (B.lst v)
+  := by simp [lst]
+
+@[simp]
 theorem Tm.lst_abs {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (b : Tm (k + 2)) (v : Tm 0)
   : (Tm.abs (k := (k + 1)) A B b).lst v = .abs (A.lst v) (B.lst v) (b.lst v)
   := by simp [lst]
@@ -202,6 +218,8 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (null : ∀ {k}, motive k .null)
   (eqn : ∀ {k} (a b : Tm (k + 1)), motive k a → motive k b → motive k (.eqn a b))
   (pi : ∀ {k} (A : Tm (k + 1)) (B : Tm (k + 2)), motive k A → motive (k + 1) B → motive k (.pi A B))
+  (sigma : ∀ {k} (A : Tm (k + 1)) (B : Tm (k + 2)),
+    motive k A → motive (k + 1) B → motive k (.sigma A B))
   (abs : ∀ {k} (A : Tm (k + 1)) (B b : Tm (k + 2)),
     motive k A → motive (k + 1) B → motive (k + 1) b → motive k (.abs A B b))
   (app : ∀ {k} (f a : Tm (k + 1)), motive k f → motive k a → motive k (.app f a))
@@ -216,21 +234,25 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   | .null => null
   | .eqn a b =>
     eqn a b
-      (a.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
-      (b.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
+      (a.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
   | .pi A B =>
     pi A B
-      (A.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
-      (B.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+      (B.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+  | .sigma A B =>
+    sigma A B
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+      (B.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
   | .abs A B b =>
     abs A B b
-      (A.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
-      (B.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
-      (b.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+      (B.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
   | .app a b =>
     app a b
-      (a.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
-      (b.succIndOn fv bv univ empty unit null eqn pi abs app invalid)
+      (a.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app invalid)
   | .invalid => invalid
 
 theorem Tm.lst_fv {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.lst (.fv x)) = t.open x
@@ -285,6 +307,7 @@ def Tm.close {k : ℕ} (t : Tm k) (x : String) : Tm (k + 1) := match t with
   | .null => .null
   | .eqn a b => .eqn (a.close x) (b.close x)
   | .pi A B => .pi (A.close x) (B.close x)
+  | .sigma A B => .sigma (A.close x) (B.close x)
   | .abs A B b => .abs (A.close x) (B.close x) (b.close x)
   | .app f a => .app (f.close x) (a.close x)
   | .invalid => .invalid
@@ -299,6 +322,7 @@ def Tm.fvs {k : ℕ} : Tm k → Finset String
   | .fv x => {x}
   | .eqn a b => a.fvs ∪ b.fvs
   | .pi A B => A.fvs ∪ B.fvs
+  | .sigma A B => A.fvs ∪ B.fvs
   | .abs A B b => A.fvs ∪ B.fvs ∪ b.fvs
   | .app f a => f.fvs ∪ a.fvs
   | _ => ∅
@@ -341,6 +365,7 @@ def Tm.lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) : Tm k := match t with
   | .null => .null
   | .eqn a b => .eqn (a.lsv x v) (b.lsv x v)
   | .pi A B => .pi (A.lsv x v) (B.lsv x v)
+  | .sigma A B => .sigma (A.lsv x v) (B.lsv x v)
   | .abs A B b => .abs (A.lsv x v) (B.lsv x v) (b.lsv x v)
   | .app f a => .app (f.lsv x v) (a.lsv x v)
   | .invalid => .invalid
@@ -393,6 +418,7 @@ def Tm.ls {k : ℕ} (t : Tm k) (v : VSubst) : Tm k := match t with
   | .null => .null
   | .eqn a b => .eqn (a.ls v) (b.ls v)
   | .pi A B => .pi (A.ls v) (B.ls v)
+  | .sigma A B => .sigma (A.ls v) (B.ls v)
   | .abs A B b => .abs (A.ls v) (B.ls v) (b.ls v)
   | .app f a => .app (f.ls v) (a.ls v)
   | .invalid => .invalid
@@ -427,6 +453,10 @@ theorem Tm.smul_eqn {v : VSubst} {k a b}
 @[simp]
 theorem Tm.smul_pi {v : VSubst} {k A B}
   : v • Tm.pi (k := k) A B = Tm.pi (v • A) (v • B) := rfl
+
+@[simp]
+theorem Tm.smul_sigma {v : VSubst} {k A B}
+  : v • Tm.sigma (k := k) A B = Tm.sigma (v • A) (v • B) := rfl
 
 @[simp]
 theorem Tm.smul_abs {v : VSubst} {k A B b}
@@ -653,6 +683,7 @@ theorem Tm.ls_clamp_fvs {k : ℕ} (t : Tm k) (v : VSubst) : (v.clamp t.fvs) • 
 def Tm.depth {k : ℕ} : Tm k → ℕ
   | .eqn a b => (a.depth ⊔ b.depth) + 1
   | .pi A B => (A.depth ⊔ B.depth) + 1
+  | .sigma A B => (A.depth ⊔ B.depth) + 1
   | .abs A B b => (A.depth ⊔ B.depth ⊔ b.depth) + 1
   | .app f a => (f.depth ⊔ a.depth) + 1
   | _ => 0
@@ -713,6 +744,7 @@ def Tm.lcIndCof (L : Finset String)
   (null : motive .null)
   (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
   (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) → motive (.pi A B))
+  (sigma : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) → motive (.sigma A B))
   (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) →
     (∀ x ∉ L, motive (b.open x)) → motive (.abs A B b))
   (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
@@ -726,21 +758,25 @@ def Tm.lcIndCof (L : Finset String)
   | .null => null
   | .eqn a b =>
     eqn a b
-      (a.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
-      (b.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
   | .pi A B =>
     pi A B
-      (A.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
-      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+  | .sigma A B =>
+    sigma A B
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
   | .abs A B b =>
     abs A B b
-      (A.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
-      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi abs app invalid)
-      (fun x _ => (b.open x).lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (b.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
   | .app a b =>
     app a b
-      (a.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
-      (b.lcIndCof L fv univ empty unit null eqn pi abs app invalid)
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app invalid)
   | .invalid => invalid
   termination_by depth t
   decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
@@ -754,6 +790,8 @@ def Tm.lcIndFvs
   (null : motive .null)
   (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
   (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) → motive (.pi A B))
+  (sigma : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
+    motive (.sigma A B))
   (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
     (∀ x ∉ b.fvs, motive (b.open x)) → motive (.abs A B b))
   (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
@@ -767,21 +805,25 @@ def Tm.lcIndFvs
   | .null => null
   | .eqn a b =>
     eqn a b
-      (a.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
-      (b.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
   | .pi A B =>
     pi A B
-      (A.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
-      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+  | .sigma A B =>
+    sigma A B
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
   | .abs A B b =>
     abs A B b
-      (A.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
-      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi abs app invalid)
-      (fun x _ => (b.open x).lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+      (fun x _ => (b.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
   | .app a b =>
     app a b
-      (a.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
-      (b.lcIndFvs fv univ empty unit null eqn pi abs app invalid)
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app invalid)
   | .invalid => invalid
   termination_by depth t
   decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
