@@ -2,6 +2,15 @@
 
 This is the complete checklist for adding new term formers to GT3-Lean. Term formers are syntactic constructs that can appear in terms, like variables, applications, abstractions, etc.
 
+## ⚠️ CRITICAL REMINDERS
+
+**Most Common Oversights:**
+1. Missing `smul` theorems and their `@[simp]` attributes in Basic.lean
+2. Missing cases for `OTm.clamp` and `OTm.fvs` functions in Erase.lean
+3. Missing cases for `Tm.bvi` and `OTm.bvi` functions in Erase.lean
+
+**Always double-check these functions - they are easily missed!**
+
 ## Overview
 
 Adding a new term former has **two distinct phases** due to GT3-Lean's open-world design:
@@ -47,11 +56,14 @@ Tasks may involve:
 - [ ] Update `fvs` function (remember unions for multiple parameters)
 - [ ] Update `lsv` function
 - [ ] Update `ls` function
+- [ ] **CRITICAL**: Write new `smul` theorems for each constructor
+- [ ] **CRITICAL**: Add `@[simp]` attributes to the new `smul` theorems
 - [ ] Update `depth` function
 - [ ] Update `succIndOn` induction principle
 - [ ] Update `lcIndCof` induction principle  
 - [ ] Update `lcIndFvs` induction principle
 - [ ] Add simp lemmas for all operations
+- [ ] **IMPORTANT**: After updating `ls`, you must write corresponding `smul` theorems for each new constructor. These define how the `•` operator works: `theorem Tm.smul_pair {...} := rfl`. Then add `@[simp]` attributes to each theorem.
 - [ ] Test: `lake build Gt3.Syntax.Basic`
 
 #### 2. Erasure (`Gt3/Syntax/Erase.lean`)
@@ -60,8 +72,8 @@ Tasks may involve:
 
 - [ ] Add constructor to `OTm` inductive type
 - [ ] Update `Tm.erase` function
-- [ ] Update `OTm.clamp` function
-- [ ] Update `OTm.fvs` function
+- [ ] **CRITICAL**: Update `OTm.clamp` function (easy to miss!)
+- [ ] **CRITICAL**: Update `OTm.fvs` function (easy to miss!)
 - [ ] Update `Tm.bvi` function (**CRITICAL**: bound variable index tracking - easy to miss!)
 - [ ] Update `OTm.bvi` function
 - [ ] Test: `lake build Gt3.Syntax.Erase`
@@ -158,3 +170,23 @@ For reference, common parameter patterns (currently limited to at most one addit
 ❌ **Rarely need updates:**
 - Context files (`Gt3/Ctx.lean`)
 - Substitution-specific files (unless new binding patterns)
+
+## Common Mistakes Checklist
+
+Before considering the implementation complete, double-check these frequently missed items:
+
+### Basic.lean:
+- [ ] `smul` theorems written for each new constructor
+- [ ] `@[simp]` attributes added to new `smul` theorems
+- [ ] All major syntax functions updated (especially `fvs`, `lsv`, `ls`)
+
+### Erase.lean: 
+- [ ] `OTm.clamp` function updated with new constructor cases
+- [ ] `OTm.fvs` function updated with new constructor cases  
+- [ ] Both `Tm.bvi` and `OTm.bvi` functions updated
+
+### Build Test:
+- [ ] `lake build Gt3.Syntax.Basic` succeeds
+- [ ] `lake build Gt3.Syntax.Erase` succeeds
+
+If any of these fail, the missing implementations are likely in the functions listed above.
