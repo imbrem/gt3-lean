@@ -24,6 +24,32 @@ inductive Tm.NoInvalid : ∀ {k}, Tm k → Prop
 -- theorem Ctx.WfEq.no_invalid {Γ a b} (h : WfEq Γ a b) : a.NoInvalid ∧ b.NoInvalid
 --   := have ⟨_, h⟩ := h; h.no_invalid
 
+inductive Ctx.LRwEq (Γ : Ctx) : Tm 0 → Tm 0 → Prop
+  | fv (x) : LRwEq Γ (.fv x) (.fv x)
+  | univ (ℓ) : LRwEq Γ (.univ ℓ) (.univ ℓ)
+  | null : LRwEq Γ .null .null
+  | eqn {a a' b b'}
+    : LRwEq Γ a a' → LRwEq Γ b b' → LRwEq Γ (.eqn a b) (.eqn a' b')
+  | pi {A A' B B'} {L : Finset String}
+    : LRwEq Γ A A' → (∀x ∉ L, LRwEq Γ (B.open x) (B'.open x)) → LRwEq Γ (.pi A B) (.pi A' B')
+  | sigma {A A' B B'} {L : Finset String}
+    : LRwEq Γ A A' → (∀x ∉ L, LRwEq Γ (B.open x) (B'.open x)) → LRwEq Γ (.sigma A B) (.sigma A' B')
+  | empty : LRwEq Γ .empty .empty
+  | unit : LRwEq Γ .unit .unit
+  | abs {A A' B B' b b'} {L : Finset String}
+    : LRwEq Γ A A' → (∀x ∉ L, LRwEq Γ (B.open x) (B'.open x))
+    → (∀x ∉ L, LRwEq Γ (b.open x) (b'.open x))
+    → LRwEq Γ (.abs A B b) (.abs A' B' b')
+  | app {f f' a a'} : LRwEq Γ f f' → LRwEq Γ a a' → LRwEq Γ (.app f a) (.app f' a')
+  | pair {A A' B B' a a' b b'} {L : Finset String}
+    : LRwEq Γ A A' → (∀x ∉ L, LRwEq Γ (B.open x) (B'.open x)) → LRwEq Γ a a' → LRwEq Γ b b' →
+    LRwEq Γ (.pair A B a b) (.pair A' B' a' b')
+  | fst {p p'} : LRwEq Γ p p' → LRwEq Γ (.fst p) (.fst p')
+  | snd {p p'} : LRwEq Γ p p' → LRwEq Γ (.snd p) (.snd p')
+  | invalid : LRwEq Γ .invalid .invalid
+  | wf {a b} : WfEq Γ a b → LRwEq Γ a b
+  | trans {a b c} : LRwEq Γ a b → LRwEq Γ b c → LRwEq Γ a c
+
 inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
   | fv (x) : RwEq Γ (.fv x) (.fv x)
   | bv (i) : RwEq Γ (.bv i) (.bv i)
