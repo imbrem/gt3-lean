@@ -12,7 +12,7 @@ inductive OTm : Type
   | sigma (A B : OTm) : OTm
   | abs (A B : OTm) (b : OTm) : OTm
   | app (f a : OTm) : OTm
-  | pair (A B a b : OTm) : OTm
+  | pair (a b : OTm) : OTm
   | fst (p : OTm) : OTm
   | snd (p : OTm) : OTm
   | invalid : OTm
@@ -29,7 +29,7 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .sigma A B => .sigma A.erase B.erase
   | .abs A B b => .abs A.erase B.erase b.erase
   | .app f a => .app f.erase a.erase
-  | .pair A B a b => .pair A.erase B.erase a.erase b.erase
+  | .pair a b => .pair a.erase b.erase
   | .fst p => .fst p.erase
   | .snd p => .snd p.erase
   | .invalid => .invalid
@@ -46,7 +46,7 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .sigma A B => .sigma (A.clamp k) (B.clamp (k + 1))
   | .abs A B b => .abs (A.clamp k) (B.clamp (k + 1)) (b.clamp (k + 1))
   | .app f a => .app (f.clamp k) (a.clamp k)
-  | .pair A B a b => .pair (A.clamp k) (B.clamp (k + 1)) (a.clamp k) (b.clamp k)
+  | .pair a b => .pair (a.clamp k) (b.clamp k)
   | .fst p => .fst (p.clamp k)
   | .snd p => .snd (p.clamp k)
   | .invalid => .invalid
@@ -80,7 +80,7 @@ def OTm.fvs : OTm → Finset String
   | .sigma A B => A.fvs ∪ B.fvs
   | .abs A B b => A.fvs ∪ B.fvs ∪ b.fvs
   | .app f a => f.fvs ∪ a.fvs
-  | .pair A B a b => A.fvs ∪ B.fvs ∪ a.fvs ∪ b.fvs
+  | .pair a b => a.fvs ∪ b.fvs
   | .fst p => p.fvs
   | .snd p => p.fvs
   | _ => ∅
@@ -102,7 +102,7 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .sigma A B => A.bvi ⊔ (B.bvi - 1)
   | .abs A B b => A.bvi ⊔ (B.bvi - 1) ⊔  (b.bvi - 1)
   | .app f a => f.bvi ⊔ a.bvi
-  | .pair A B a b => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi ⊔ b.bvi
+  | .pair a b => a.bvi ⊔ b.bvi
   | .fst p => p.bvi
   | .snd p => p.bvi
   | _ => 0
@@ -114,7 +114,7 @@ def OTm.bvi : OTm → ℕ
   | .sigma A B => A.bvi ⊔ (B.bvi - 1)
   | .abs A B b => A.bvi ⊔ (B.bvi - 1) ⊔ (b.bvi - 1)
   | .app f a => f.bvi ⊔ a.bvi
-  | .pair A B a b => A.bvi ⊔ (B.bvi - 1) ⊔ a.bvi ⊔ b.bvi
+  | .pair a b => a.bvi ⊔ b.bvi
   | .fst p => p.bvi
   | .snd p => p.bvi
   | _ => 0

@@ -14,7 +14,7 @@ inductive Tm.NoInvalid : ∀ {k}, Tm k → Prop
   | abs {A B b} : NoInvalid A → NoInvalid B → NoInvalid b → NoInvalid (.abs A B b)
   | app {f a} : NoInvalid f → NoInvalid a → NoInvalid (.app f a)
   | pair {A B a b}
-    : NoInvalid A → NoInvalid B → NoInvalid a → NoInvalid b → NoInvalid (.pair A B a b)
+    : NoInvalid A → NoInvalid B → NoInvalid a → NoInvalid b → NoInvalid (.pair a b)
   | fst {p} : NoInvalid p → NoInvalid (.fst p)
   | snd {p} : NoInvalid p → NoInvalid (.snd p)
 
@@ -54,10 +54,8 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
     → (∀x ∉ L, ∀X ∈ RwTy Γ, LRwEq (Γ.cons x X) (b.open x) (b'.open x))
     → LRwEq Γ (.abs A B b) (.abs A' B' b')
   | app {Γ} {f f' a a'} : LRwEq Γ f f' → LRwEq Γ a a' → LRwEq Γ (.app f a) (.app f' a')
-  | pair {Γ} {A A' B B' a a' b b'} {L : Finset String}
-    : LRwEq Γ A A' → (∀x ∉ L, ∀X ∈ RwTy Γ, LRwEq (Γ.cons x X) (B.open x) (B'.open x))
-                   → LRwEq Γ a a' → LRwEq Γ b b' →
-    LRwEq Γ (.pair A B a b) (.pair A' B' a' b')
+  | pair {Γ} {a a' b b'} {L : Finset String} : LRwEq Γ a a' → LRwEq Γ b b' →
+    LRwEq Γ (.pair a b) (.pair a' b')
   | fst {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.fst p) (.fst p')
   | snd {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.snd p) (.snd p')
   | invalid {Γ} : LRwEq Γ .invalid .invalid
@@ -134,8 +132,8 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
   | abs {A A' B B' b b'} : RwEq Γ A A' → RwEq Γ B B' → RwEq Γ b b' →
     RwEq Γ (.abs A B b) (.abs A' B' b')
   | app {f f' a a'} : RwEq Γ f f' → RwEq Γ a a' → RwEq Γ (.app f a) (.app f' a')
-  | pair {A A' B B' a a' b b'} : RwEq Γ A A' → RwEq Γ B B' → RwEq Γ a a' → RwEq Γ b b' →
-    RwEq Γ (.pair A B a b) (.pair A' B' a' b')
+  | pair {a a' b b'} : RwEq Γ a a' → RwEq Γ b b' →
+    RwEq Γ (.pair a b) (.pair a' b')
   | fst {p p'} : RwEq Γ p p' → RwEq Γ (.fst p) (.fst p')
   | snd {p p'} : RwEq Γ p p' → RwEq Γ (.snd p) (.snd p')
   | invalid : RwEq Γ .invalid .invalid
