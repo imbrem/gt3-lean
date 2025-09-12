@@ -32,6 +32,11 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
     : HasTy Γ (.sigma A B) (.pair a b)
+  | fst' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p : Tm 0} {m n : ℕ} {L : Finset String}
+    (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (hA : HasTy Γ (.univ m) A)
+    (hp : HasTy Γ (.sigma A B) p)
+    : HasTy Γ A (.fst p)
   | cast_level {Γ : Ctx} {ℓ A}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ (ℓ + 1)) A
