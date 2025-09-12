@@ -66,6 +66,13 @@ Tasks may involve:
 - [ ] **IMPORTANT**: After updating `ls`, you must write corresponding `smul` theorems for each new constructor. These define how the `•` operator works: `theorem Tm.smul_pair {...} := rfl`. Then add `@[simp]` attributes to each theorem.
 - [ ] Test: `lake build Gt3.Syntax.Basic`
 
+#### 1b. Rewrite Equality (`Gt3/RwEq/Basic.lean`)
+
+- [ ] Add congruence case to `LRwEq` inductive type (for terms at level 0)
+- [ ] Add congruence case to `RwEq` inductive type (for terms at any level k)  
+- [ ] Include proper binding variable handling in `LRwEq` (use `L : Finset String`)
+- [ ] Test: `lake build Gt3.RwEq.Basic`
+
 #### 2. Erasure (`Gt3/Syntax/Erase.lean`)
 
 **Important**: This file contains multiple functions that must ALL be updated. The `bvi` functions are particularly easy to miss since they're defined separately from the main erasure functions.
@@ -155,6 +162,7 @@ For reference, common parameter patterns (currently limited to at most one addit
 ### Phase 1 (Syntax):
 ✅ **Always update these:**
 - `Gt3/Syntax/Basic.lean`
+- `Gt3/RwEq/Basic.lean` (for `LRwEq` and `RwEq` congruence cases)
 - `Gt3/Syntax/Erase.lean`
 
 ### Phase 2 (Typing):

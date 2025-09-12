@@ -2,29 +2,6 @@ import Gt3.JEq.Basic
 import Gt3.HasTy.Factor
 import Gt3.Syntax.Erase
 
-inductive Tm.NoInvalid : ∀ {k}, Tm k → Prop
-  | fv (x) : NoInvalid (.fv x)
-  | bv (i) : NoInvalid (.bv i)
-  | univ (ℓ) : NoInvalid (.univ ℓ)
-  | eqn {a b} : NoInvalid a → NoInvalid b → NoInvalid (.eqn a b)
-  | pi {A B} : NoInvalid A → NoInvalid B → NoInvalid (.pi A B)
-  | sigma {A B} : NoInvalid A → NoInvalid B → NoInvalid (.sigma A B)
-  | empty : NoInvalid .empty
-  | unit : NoInvalid .unit
-  | abs {A B b} : NoInvalid A → NoInvalid B → NoInvalid b → NoInvalid (.abs A B b)
-  | app {f a} : NoInvalid f → NoInvalid a → NoInvalid (.app f a)
-  | pair {A B a b}
-    : NoInvalid A → NoInvalid B → NoInvalid a → NoInvalid b → NoInvalid (.pair a b)
-  | fst {p} : NoInvalid p → NoInvalid (.fst p)
-  | snd {p} : NoInvalid p → NoInvalid (.snd p)
-
--- theorem Ctx.JEq.no_invalid {Γ A a b} (h : JEq Γ A a b)
---   : a.NoInvalid ∧ b.NoInvalid := by
---   sorry
-
--- theorem Ctx.WfEq.no_invalid {Γ a b} (h : WfEq Γ a b) : a.NoInvalid ∧ b.NoInvalid
---   := have ⟨_, h⟩ := h; h.no_invalid
-
 def Ctx.RwTy (Γ : Ctx) : Set (Tm 0) := { X | Ok Γ → IsTy Γ X }
 
 theorem Ctx.RwTy.of_has_ty {Γ ℓ A} (h : HasTy Γ (.univ ℓ) A) : A ∈ RwTy Γ := fun _ => h.is_ty
@@ -58,6 +35,16 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
     LRwEq Γ (.pair a b) (.pair a' b')
   | fst {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.fst p) (.fst p')
   | snd {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.snd p) (.snd p')
+  | dite {Γ} {A A' φ φ' l l' r r'} {L : Finset String}
+    : LRwEq Γ A A' → LRwEq Γ φ φ'
+    → (∀x ∉ L, ∀X ∈ RwTy Γ, LRwEq (Γ.cons x X) (l.open x) (l'.open x))
+    → (∀x ∉ L, ∀X ∈ RwTy Γ, LRwEq (Γ.cons x X) (r.open x) (r'.open x))
+    → LRwEq Γ (.dite A φ l r) (.dite A' φ' l' r')
+  | trunc {Γ} {A A'} : LRwEq Γ A A' → LRwEq Γ (.trunc A) (.trunc A')
+  | choose {Γ} {A A' φ φ'} {L : Finset String}
+    : LRwEq Γ A A'
+    → (∀x ∉ L, ∀X ∈ RwTy Γ, LRwEq (Γ.cons x X) (φ.open x) (φ'.open x))
+    → LRwEq Γ (.choose A φ) (.choose A' φ')
   | invalid {Γ} : LRwEq Γ .invalid .invalid
   | wf {Γ} {a b} : WfEq Γ a b → LRwEq Γ a b
   | trans {Γ} {a b c} : LRwEq Γ a b → LRwEq Γ b c → LRwEq Γ a c
@@ -138,6 +125,10 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
     RwEq Γ (.pair a b) (.pair a' b')
   | fst {p p'} : RwEq Γ p p' → RwEq Γ (.fst p) (.fst p')
   | snd {p p'} : RwEq Γ p p' → RwEq Γ (.snd p) (.snd p')
+  | dite {A A' φ φ' l l' r r'} : RwEq Γ A A' → RwEq Γ φ φ' → RwEq Γ l l' → RwEq Γ r r' →
+    RwEq Γ (.dite A φ l r) (.dite A' φ' l' r')
+  | trunc {A A'} : RwEq Γ A A' → RwEq Γ (.trunc A) (.trunc A')
+  | choose {A A' φ φ'} : RwEq Γ A A' → RwEq Γ φ φ' → RwEq Γ (.choose A φ) (.choose A' φ')
   | invalid : RwEq Γ .invalid .invalid
   | wf_clamp {a b} : WfEq Γ (a.erase.clamp 0) (b.erase.clamp 0) → RwEq Γ a b
   | trans {a b c} : RwEq Γ a b → RwEq Γ b c → RwEq Γ a c

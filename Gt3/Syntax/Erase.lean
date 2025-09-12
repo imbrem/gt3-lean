@@ -15,6 +15,9 @@ inductive OTm : Type
   | pair (a b : OTm) : OTm
   | fst (p : OTm) : OTm
   | snd (p : OTm) : OTm
+  | dite (A φ l r : OTm) : OTm
+  | trunc (A : OTm) : OTm
+  | choose (A φ : OTm) : OTm
   | invalid : OTm
 
 def Tm.erase {k : ℕ} : Tm k → OTm
@@ -32,6 +35,9 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .pair a b => .pair a.erase b.erase
   | .fst p => .fst p.erase
   | .snd p => .snd p.erase
+  | .dite A φ l r => .dite A.erase φ.erase l.erase r.erase
+  | .trunc A => .trunc A.erase
+  | .choose A φ => .choose A.erase φ.erase
   | .invalid => .invalid
 
 def OTm.clamp (k : ℕ) : OTm → Tm k
@@ -49,6 +55,9 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .pair a b => .pair (a.clamp k) (b.clamp k)
   | .fst p => .fst (p.clamp k)
   | .snd p => .snd (p.clamp k)
+  | .dite A φ l r => .dite (A.clamp k) (φ.clamp k) (l.clamp (k + 1)) (r.clamp (k + 1))
+  | .trunc A => .trunc (A.clamp k)
+  | .choose A φ => .choose (A.clamp k) (φ.clamp (k + 1))
   | .invalid => .invalid
 
 @[simp]
@@ -83,6 +92,9 @@ def OTm.fvs : OTm → Finset String
   | .pair a b => a.fvs ∪ b.fvs
   | .fst p => p.fvs
   | .snd p => p.fvs
+  | .dite A φ l r => A.fvs ∪ φ.fvs ∪ l.fvs ∪ r.fvs
+  | .trunc A => A.fvs
+  | .choose A φ => A.fvs ∪ φ.fvs
   | _ => ∅
 
 @[simp]
@@ -105,6 +117,9 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .pair a b => a.bvi ⊔ b.bvi
   | .fst p => p.bvi
   | .snd p => p.bvi
+  | .dite A φ l r => A.bvi ⊔ φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
+  | .trunc A => A.bvi
+  | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | _ => 0
 
 def OTm.bvi : OTm → ℕ
@@ -117,6 +132,9 @@ def OTm.bvi : OTm → ℕ
   | .pair a b => a.bvi ⊔ b.bvi
   | .fst p => p.bvi
   | .snd p => p.bvi
+  | .dite A φ l r => A.bvi ⊔ φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
+  | .trunc A => A.bvi
+  | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | _ => 0
 
 theorem Tm.bvi_le {k : ℕ} (t : Tm k) : t.bvi ≤ k
