@@ -78,6 +78,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
       try rename Finset String => L
       cases hai <;> {
         jeq_congr_f <;> first
+        | intros; apply HasTy.refl <;> apply_assumption <;> assumption
         | apply_assumption <;> apply Or.inl <;> assumption
         | {
           rename Finset String => K
@@ -96,6 +97,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
       cases hbi <;> {
         apply JEq.symm
         jeq_congr_f <;> first
+        | intros; apply HasTy.refl <;> apply_assumption <;> assumption
         | assumption
         | apply JEq.symm; apply_assumption ; apply Or.inr ; assumption
         | {

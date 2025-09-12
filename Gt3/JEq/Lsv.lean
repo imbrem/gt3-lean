@@ -92,6 +92,13 @@ theorem Ctx.JEq.lst_cf_cast_lhs {Γ : Ctx} {ℓ A a a' Ba} {B B' : Tm 1} {L : Fi
   : TyEq Γ (B.lst a') Ba
   := (IsTy.lst_cf' (fun x hx => (hB x hx).lhs_is_ty) ha).symm.trans hBa
 
+theorem Ctx.JEq.lst_cf_cast {Γ : Ctx} {ℓ A a a' b b'} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
+  (ha : JEq Γ A a a')
+  (hBa : JEq Γ (B.lst a) b b')
+  : JEq Γ (B.lst a') b b'
+  := hBa.cast (IsTy.lst_cf' (fun x hx => (hB x hx).lhs_is_ty) ha)
+
 theorem Ctx.TyEq.lst_cf_k' {Γ : Ctx} {A a a' B B'} {L : Finset String}
   (hB : ∀ x ∉ L, Ctx.TyEq (Γ.cons x A) B B')
   (ha : Ctx.JEq Γ A a a') : TyEq Γ B B'

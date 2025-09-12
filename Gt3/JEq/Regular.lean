@@ -50,12 +50,18 @@ theorem Ctx.TyEq.pi {Γ A A' B B'} {L : Finset String}
   : TyEq Γ (.pi A B) (.pi A' B')
   := by
   have ⟨m, hA⟩ := hA;
-  have ⟨x, hx⟩ := (L ∪ B.fvs ∪ B'.fvs).exists_notMem;
-  simp only [Finset.notMem_union] at hx
-  have ⟨n, hB⟩ := hB x hx.left.left;
-  have hB' := hB.to_cf_univ hx.left.right hx.right
+  have ⟨n, hB⟩ := TyEq.max_univ' hB;
   exists m ⊔ n ⊔ 1
-  apply JEq.pi hA hB' <;> simp
+  apply JEq.pi hA hB <;> simp
+
+theorem Ctx.TyEq.sigma {Γ A A' B B'} {L : Finset String}
+  (hA : TyEq Γ A A') (hB : ∀ x ∉ L, TyEq (Γ.cons x A) (B.open x) (B'.open x))
+  : TyEq Γ (.sigma A B) (.sigma A' B')
+  := by
+  have ⟨m, hA⟩ := hA;
+  have ⟨n, hB⟩ := TyEq.max_univ' hB;
+  exists m ⊔ n ⊔ 1
+  apply JEq.sigma hA hB <;> simp
 
 theorem Ctx.IsTy.max_univ_dv' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
@@ -75,6 +81,10 @@ theorem Ctx.IsTy.pi {Γ A B} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ (.pi A B)
   := have ⟨x, hx⟩ := L.exists_notMem; TyEq.pi (hB x hx).ok.ty hB
 
+theorem Ctx.IsTy.sigma {Γ A B} {L : Finset String}
+  (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ (.sigma A B)
+  := have ⟨x, hx⟩ := L.exists_notMem; TyEq.sigma (hB x hx).ok.ty hB
+
 theorem Ctx.JEq.app_r {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
@@ -91,6 +101,7 @@ macro_rules
     | apply Ctx.IsTy.empty
     | apply Ctx.IsTy.unit
     | apply Ctx.TyEq.pi
+    | apply Ctx.TyEq.sigma
   )
 
 syntax "is_ty_constructor'" : tactic
@@ -101,6 +112,7 @@ macro_rules
     | apply Ctx.IsTy.empty
     | apply Ctx.IsTy.unit
     | apply Ctx.IsTy.pi
+    | apply Ctx.IsTy.sigma
   )
 
 theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by induction h with
@@ -115,7 +127,10 @@ theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by inductio
     first | assumption
           | apply JEq.rhs_is_ty; assumption
           | (is_ty_constructor'
-            <;> (first | assumption | apply JEq.lhs_is_ty | apply Ctx.IsTy.ok) <;> assumption)
+            <;> intros
+            <;> (first | assumption | apply JEq.lhs_is_ty | apply Ctx.IsTy.ok)
+            <;> apply_assumption
+            <;> assumption)
 
 -- theorem Ctx.JEq.cast_cmp {Γ A B a b} (h : JEq Γ A a b) (h' : Cmp Γ B a b) : JEq Γ B a b := by
 --   induction h generalizing B with

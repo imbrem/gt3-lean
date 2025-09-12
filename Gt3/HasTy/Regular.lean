@@ -3,6 +3,13 @@ import Gt3.JEq.Lsv
 
 def Ctx.HasTy.regular {Γ A a} (h : HasTy Γ A a) : IsTy Γ A := h.refl.regular
 
+theorem Ctx.HasTy.lst_cf_cast {Γ : Ctx} {ℓ A a a' b} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
+  (ha : JEq Γ A a a')
+  (hBa : HasTy Γ (B.lst a) b)
+  : HasTy Γ (B.lst a') b
+  := hBa.cast (IsTy.lst_cf' (fun x hx => (hB x hx).lhs_is_ty) ha)
+
 def Ctx.Cmp (Γ : Ctx) (A a b : Tm 0) : Prop := HasTy Γ A a ∧ HasTy Γ A b
 
 theorem Ctx.Cmp.cast_level {Γ ℓ A B} (h : Cmp Γ (.univ ℓ) A B) : Cmp Γ (.univ (ℓ + 1)) A B
@@ -55,11 +62,15 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
         | intros; apply HasTy.cast_top_symm₂ <;> apply_assumption <;> assumption
         | apply Ctx.JEq.lst_cf_cast_lhs <;> first | assumption | apply Ctx.JEq.lhs_is_ty; assumption
+        | apply Ctx.HasTy.lst_cf_cast <;> assumption
+        | apply Ctx.HasTy.cast' <;> assumption
       · first
         | apply TyEq.symm; apply JEq.ty_eq; assumption
         | (ty_eq_constructor'
           <;> intros
-          <;> first | exact L | apply JEq.ty_eq <;> apply_assumption <;> assumption)
+          <;> first | exact L | apply JEq.ty_eq <;> apply_assumption <;> assumption
+                              | apply HasTy.is_ty; apply_assumption; assumption
+          )
     }
 
 theorem Ctx.JEq.lhs_ty {Γ A a b} (h : JEq Γ A a b) : HasTy Γ A a := h.cmp.left

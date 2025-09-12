@@ -36,6 +36,12 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.sigma A B) (.sigma A' B')
+  | pair' {Γ : Ctx} {A A' a a' b b' : Tm 0} {B B' : Tm 1} {m n : ℕ} {L : Finset String}
+    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
+    (hA : JEq Γ (.univ m) A A')
+    (ha : JEq Γ A a a')
+    (hb : JEq Γ (B.lst a) b b')
+    : JEq Γ (.sigma A B) (.pair a b) (.pair a' b')
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
   | cons_ok {Γ : Ctx} {x : String} {A : Tm 0} {ℓ}
@@ -230,6 +236,7 @@ macro_rules
     | apply Ctx.JEq.abs
     | apply Ctx.JEq.app_f
     | apply Ctx.JEq.sigma
+    | apply Ctx.JEq.pair'
   )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
