@@ -50,6 +50,12 @@ theorem Ctx.TyEq.psub {Γ Δ} (h : PSub Γ Δ) {A B : Tm 0} (hAB : TyEq Δ A B)
 theorem Ctx.IsTy.psub {Γ Δ} (h : PSub Γ Δ) {A : Tm 0} (hA : IsTy Δ A)
   : IsTy Γ A := TyEq.psub h hA
 
+theorem Ctx.WfEq.psub {Γ Δ} (h : PSub Γ Δ) {a b : Tm 0} (hab : WfEq Δ a b)
+  : WfEq Γ a b := have ⟨A, hab⟩ := hab; ⟨A, hab.psub h⟩
+
+theorem Ctx.IsWf.psub {Γ Δ} (h : PSub Γ Δ) {a : Tm 0} (ha : IsWf Δ a)
+  : IsWf Γ a := WfEq.psub h ha
+
 theorem Ctx.PSub.cons {Γ Δ} (h : PSub Γ Δ)
   {x A} (hx : x ∉ Γ.dv) (hΔA : IsTy Δ A)
   : PSub (Γ.cons x A) (Δ.cons x A) where
@@ -79,6 +85,14 @@ theorem Ctx.TyEq.top_var' {Γ : Ctx} {x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A
 theorem Ctx.IsTy.wk0 {Γ A} (hA : IsTy Γ A) {x B} (hx : x ∉ Γ.dv) (hB : Γ.IsTy B)
   : IsTy (Γ.cons x B) A
   := hA.psub (hA.ok.psub.skip hx hB)
+
+theorem Ctx.WfEq.wk0 {Γ a b} (hab : WfEq Γ a b) {x A} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
+  : WfEq (Γ.cons x A) a b
+  := have ⟨A, hab⟩ := hab; ⟨A, hab.wk0 hx hA⟩
+
+theorem Ctx.IsWf.wk0 {Γ a} (ha : IsWf Γ a) {x A} (hx : x ∉ Γ.dv) (hA : Γ.IsTy A)
+  : IsWf (Γ.cons x A) a
+  := WfEq.wk0 ha hx hA
 
 theorem Ctx.Ok.lookup {Γ x A} (h : Ok Γ) (hA : Lookup Γ x A) : IsTy Γ A
   := by induction hA <;> cases h <;> apply IsTy.wk0 <;> apply_assumption; assumption

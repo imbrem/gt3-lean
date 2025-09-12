@@ -472,6 +472,10 @@ theorem Tm.open_cast_succ {k : ℕ} (t : Tm k) (x : String)
 theorem Tm.open_castSucc {k : ℕ} (t : Tm k) (x : String)
   : t.castSucc.open x = t := t.open_cast_succ x
 
+theorem Tm.open_cast_lt {lo hi : ℕ} (h : lo < hi + 1) (t : Tm lo) (x : String)
+  : (t.castLE (le_of_lt h)).open x = t.castLE (m := hi) (by omega)
+  := by rw [<-castLE_castLE (m := hi), open_cast_succ]
+
 -- @[simp]
 -- theorem Tm.open_coe_succ {k : ℕ} (t : Tm k) (x : String)
 --   : Tm.open (t : Tm (k + 1)) x = t := t.open_cast_succ x
@@ -857,6 +861,18 @@ theorem Tm.open_ls_clamped {L : Finset String} {k : ℕ} (t : Tm (k + 1))
   : (v • t).open x = v • (t.open x)
   := t.open_ls_id_at v x (hv x hx)
 
+theorem Tm.open_lsv_ne {k : ℕ} (t : Tm (k + 1))
+  (v : Tm 0) (x y : String) (hx : x ≠ y)
+  : (t.lsv x v).open y = (t.open y).lsv x v
+  := by induction t using succIndOn with
+  | fv =>
+    simp only [lsv]
+    split
+    · simp [lsv, *]; rw [open_cast_lt]; omega
+    · simp [lsv, *]
+  | bv i => cases i using Fin.lastCases <;> simp [lsv, «open», hx]
+  | _ => simp [lsv, *]
+
 theorem Tm.VSubst.Clamped.anti {S L : Finset String} (h : S ⊆ L) {v : VSubst} (hv : v.Clamped S)
   : v.Clamped L := fun x hx => hv x (Finset.not_mem_subset h hx)
 
@@ -978,130 +994,223 @@ theorem Tm.le_depth_lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0)
   | fv => simp only [lsv, depth]; split <;> simp [depth]
   | _ => simp only [lsv, depth]; omega
 
--- def Tm.lcIndCof (L : Finset String)
---   {motive : Tm 0 → Sort*}
---   (fv : ∀ (x : String), motive (.fv x))
---   (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
---   (empty : motive .empty)
---   (unit : motive .unit)
---   (null : motive .null)
---   (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
---   (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) → motive (.pi A B))
---   (sigma : ∀ (A : Tm 0) (B : Tm 1),
---     motive A → (∀ x ∉ L, motive (B.open x)) → motive (.sigma A B))
---   (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) →
---     (∀ x ∉ L, motive (b.open x)) → motive (.abs A B b))
---   (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
---   (pair : ∀ (a b : Tm 0), motive a → motive b → motive (.pair a b))
---   (fst : ∀ (p : Tm 0), motive p → motive (.fst p))
---   (snd : ∀ (p : Tm 0), motive p → motive (.snd p))
---   (invalid : motive .invalid)
---   (t : Tm 0) : motive t
---   := match t with
---   | .fv x => fv x
---   | .univ ℓ => univ ℓ
---   | .empty => empty
---   | .unit => unit
---   | .null => null
---   | .eqn a b =>
---     eqn a b
---       (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .pi A B =>
---     pi A B
---       (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (B.open x).lcIndCof L
---         fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .sigma A B =>
---     sigma A B
---       (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (B.open x).lcIndCof L
---         fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .abs A B b =>
---     abs A B b
---       (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (B.open x).lcIndCof L
---         fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (b.open x).lcIndCof L
---         fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .app a b =>
---     app a b
---       (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .pair a b =>
---     pair a b
---       (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .fst p =>
---     fst p
---       (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .snd p =>
---     snd p
---       (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .invalid => invalid
---   termination_by depth t
---   decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
+def Tm.lcIndCof (L : Finset String)
+  {motive : Tm 0 → Sort*}
+  (fv : ∀ (x : String), motive (.fv x))
+  (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
+  (empty : motive .empty)
+  (unit : motive .unit)
+  (null : motive .null)
+  (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
+  (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) → motive (.pi A B))
+  (sigma : ∀ (A : Tm 0) (B : Tm 1),
+    motive A → (∀ x ∉ L, motive (B.open x)) → motive (.sigma A B))
+  (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) →
+    (∀ x ∉ L, motive (b.open x)) → motive (.abs A B b))
+  (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
+  (pair : ∀ (a b : Tm 0), motive a → motive b → motive (.pair a b))
+  (fst : ∀ (p : Tm 0), motive p → motive (.fst p))
+  (snd : ∀ (p : Tm 0), motive p → motive (.snd p))
+  (dite : ∀ (A φ : Tm 0) (l r : Tm 1), motive A → motive φ →
+    (∀ x ∉ L, motive (l.open x)) → (∀ x ∉ L, motive (r.open x)) → motive (.dite A φ l r))
+  (trunc : ∀ (A : Tm 0), motive A → motive (.trunc A))
+  (choose : ∀ (A : Tm 0) (φ : Tm 1), motive A →
+    (∀ x ∉ L, motive (φ.open x)) → motive (.choose A φ))
+  (has_ty : ∀ (A a : Tm 0), motive A → motive a → motive (.has_ty A a))
+  (invalid : motive .invalid)
+  (t : Tm 0) : motive t
+  := match t with
+  | .fv x => fv x
+  | .univ ℓ => univ ℓ
+  | .empty => empty
+  | .unit => unit
+  | .null => null
+  | .eqn a b =>
+    eqn a b
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .pi A B =>
+    pi A B
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (fun x _ => (B.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+  | .sigma A B =>
+    sigma A B
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (fun x _ => (B.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+  | .abs A B b =>
+    abs A B b
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (fun x _ => (B.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+      (fun x _ => (b.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+  | .app a b =>
+    app a b
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .pair a b =>
+    pair a b
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .fst p =>
+    fst p
+      (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .snd p =>
+    snd p
+      (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .dite A φ l r =>
+    dite A φ l r
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (φ.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (fun x _ => (l.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+      (fun x _ => (r.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+  | .trunc A =>
+    trunc A
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .choose A φ =>
+    choose A φ
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (fun x _ => (φ.open x).lcIndCof L
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+          trunc choose has_ty invalid)
+  | .has_ty A a =>
+    has_ty A a
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
+        trunc choose has_ty invalid)
+  | .invalid => invalid
+termination_by depth t
+decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
 
--- def Tm.lcIndFvs
---   {motive : Tm 0 → Sort*}
---   (fv : ∀ (x : String), motive (.fv x))
---   (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
---   (empty : motive .empty)
---   (unit : motive .unit)
---   (null : motive .null)
---   (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
---   (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) → motive (.pi A B))
---   (sigma : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
---     motive (.sigma A B))
---   (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
---     (∀ x ∉ b.fvs, motive (b.open x)) → motive (.abs A B b))
---   (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
---   (pair : ∀ (a b : Tm 0), motive a → motive b → motive (.pair a b))
---   (fst : ∀ (p : Tm 0), motive p → motive (.fst p))
---   (snd : ∀ (p : Tm 0), motive p → motive (.snd p))
---   (invalid : motive .invalid)
---   (t : Tm 0) : motive t
---   := match t with
---   | .fv x => fv x
---   | .univ ℓ => univ ℓ
---   | .empty => empty
---   | .unit => unit
---   | .null => null
---   | .eqn a b =>
---     eqn a b
---       (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .pi A B =>
---     pi A B
---       (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (B.open x).lcIndFvs
---         fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .sigma A B =>
---     sigma A B
---       (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (B.open x).lcIndFvs
---         fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .abs A B b =>
---     abs A B b
---       (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (B.open x).lcIndFvs fv
---         univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (fun x _ => (b.open x).lcIndFvs
---       fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .app a b =>
---     app a b
---       (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .pair a b =>
---     pair a b
---       (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---       (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .fst p =>
---     fst p
---       (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .snd p =>
---     snd p
---       (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd invalid)
---   | .invalid => invalid
---   termination_by depth t
---   decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
+def Tm.lcIndFvs
+  {motive : Tm 0 → Sort*}
+  (fv : ∀ (x : String), motive (.fv x))
+  (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
+  (empty : motive .empty)
+  (unit : motive .unit)
+  (null : motive .null)
+  (eqn : ∀ (a b : Tm 0), motive a → motive b → motive (.eqn a b))
+  (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) → motive (.pi A B))
+  (sigma : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
+    motive (.sigma A B))
+  (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
+    (∀ x ∉ b.fvs, motive (b.open x)) → motive (.abs A B b))
+  (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
+  (pair : ∀ (a b : Tm 0), motive a → motive b → motive (.pair a b))
+  (fst : ∀ (p : Tm 0), motive p → motive (.fst p))
+  (snd : ∀ (p : Tm 0), motive p → motive (.snd p))
+  (dite : ∀ (A φ : Tm 0) (l r : Tm 1), motive A → motive φ →
+    (∀ x ∉ l.fvs, motive (l.open x)) → (∀ x ∉ r.fvs, motive (r.open x)) → motive (.dite A φ l r))
+  (trunc : ∀ (A : Tm 0), motive A → motive (.trunc A))
+  (choose : ∀ (A : Tm 0) (φ : Tm 1), motive A →
+    (∀ x ∉ φ.fvs, motive (φ.open x)) → motive (.choose A φ))
+  (has_ty : ∀ (A a : Tm 0), motive A → motive a → motive (.has_ty A a))
+  (invalid : motive .invalid)
+  (t : Tm 0) : motive t
+  := match t with
+  | .fv x => fv x
+  | .univ ℓ => univ ℓ
+  | .empty => empty
+  | .unit => unit
+  | .null => null
+  | .eqn a b =>
+    eqn a b
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .pi A B =>
+    pi A B
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (fun x _ => (B.open x).lcIndFvs
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+  | .sigma A B =>
+    sigma A B
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (fun x _ => (B.open x).lcIndFvs
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+  | .abs A B b =>
+    abs A B b
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (fun x _ => (B.open x).lcIndFvs fv
+        univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+      (fun x _ => (b.open x).lcIndFvs
+      fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+  | .app a b =>
+    app a b
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .pair a b =>
+    pair a b
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .fst p =>
+    fst p
+      (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .snd p =>
+    snd p
+      (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .dite A φ l r =>
+    dite A φ l r
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (φ.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (fun x _ => (l.open x).lcIndFvs
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+      (fun x _ => (r.open x).lcIndFvs
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+  | .trunc A =>
+    trunc A
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .choose A φ =>
+    choose A φ
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (fun x _ => (φ.open x).lcIndFvs
+        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+  | .has_ty A a =>
+    has_ty A a
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .invalid => invalid
+termination_by depth t
+decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }

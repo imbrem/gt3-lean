@@ -187,6 +187,10 @@ theorem Ctx.TyEq.ok {Γ A B} (h : TyEq Γ A B) : Ok Γ := have ⟨_, h⟩ := h; 
 
 theorem Ctx.IsTy.ok {Γ A} (h : IsTy Γ A) : Ok Γ := TyEq.ok h
 
+theorem Ctx.WfEq.ok {Γ a b} (h : WfEq Γ a b) : Ok Γ := have ⟨_, h⟩ := h; h.ok
+
+theorem Ctx.IsWf.ok {Γ a} (h : IsWf Γ a) : Ok Γ := WfEq.ok h
+
 theorem Ctx.Ok.no_dup {Γ} (h : Ok Γ) : NoDup Γ := by induction h <;> constructor <;> assumption
 
 theorem Ctx.Ok.head {Γ x A} (h : Ok (Ctx.cons Γ x A)) : x ∉ Γ.dv ∧ IsTy Γ A

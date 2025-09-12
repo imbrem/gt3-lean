@@ -146,8 +146,17 @@ def OTm.bvi : OTm → ℕ
 theorem Tm.bvi_le {k : ℕ} (t : Tm k) : t.bvi ≤ k
   := by induction t <;> simp only [bvi, sup_le_iff] <;> omega
 
+@[simp]
 theorem Tm.bvi_erase {k : ℕ} (t : Tm k) : t.erase.bvi = t.bvi
   := by induction t <;> simp [bvi, erase, OTm.bvi, *]
+
+theorem Tm.lst_bvi_le {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : (t.lst v).bvi ≤ t.bvi := by
+  induction t using succIndOn with
+  | bv i =>
+    cases i using Fin.lastCases <;> simp [Tm.lst, Tm.bvi]
+    apply Nat.le_succ_of_le
+    apply Tm.bvi_le
+  | _ => simp only [Tm.lst, Tm.bvi]; omega
 
 theorem OTm.clamp_bvi_le_clamp (k : ℕ) (t : OTm) : (t.clamp k).bvi ≤ k
   := by induction t generalizing k with
@@ -175,3 +184,175 @@ theorem OTm.erase_clamp_bvi_le (k : ℕ) (t : OTm) (h : t.bvi ≤ k) : (t.clamp 
   | _ =>
     simp [bvi] at h
     simp [clamp, Tm.erase, *]
+
+def OTm.open (k : ℕ) (x : String) : OTm → OTm
+  | .fv x => .fv x
+  | .bv i => if i < k then .bv i else if i = k then .fv x else .bv (i - 1)
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.open k x) (b.open k x)
+  | .pi A B => .pi (A.open k x) (B.open (k + 1) x)
+  | .sigma A B => .sigma (A.open k x) (B.open (k + 1) x)
+  | .abs A B b => .abs (A.open k x) (B.open (k + 1) x) (b.open (k + 1) x)
+  | .app f a => .app (f.open k x) (a.open k x)
+  | .pair a b => .pair (a.open k x) (b.open k x)
+  | .fst p => .fst (p.open k x)
+  | .snd p => .snd (p.open k x)
+  | .dite A φ l r => .dite (A.open k x) (φ.open k x) (l.open (k + 1) x) (r.open (k + 1) x)
+  | .trunc A => .trunc (A.open k x)
+  | .choose A φ => .choose (A.open k x) (φ.open (k + 1) x)
+  | .has_ty A a => .has_ty (A.open k x) (a.open k x)
+  | .invalid => .invalid
+
+theorem Tm.erase_open {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.open x).erase = t.erase.open k x
+  := by induction t using Tm.succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [OTm.open, erase, Tm.open]
+  | _ => simp [OTm.open, erase, *]
+
+theorem Tm.clamp_top {k : ℕ} (t : Tm (k + 1)) : t.erase.clamp k = t.lst .invalid
+  := by induction t using Tm.succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [OTm.clamp, Tm.erase, Tm.castLE, Tm.lst]
+  | _ => simp [OTm.clamp, Tm.erase, *]
+
+theorem OTm.clamp_succ_lst_invalid {k : ℕ} (t : OTm)
+  : (t.clamp (k + 1)).lst .invalid = t.clamp k
+  := by induction t generalizing k with
+  | bv i =>
+    simp only [clamp]
+    split
+    case isTrue h =>
+      generalize hj : Fin.mk i h = j
+      have hi : i = j := by cases hj; rfl
+      rw [hi]
+      cases j using Fin.lastCases <;> simp [Tm.lst, Tm.castLE]
+    · simp only [Tm.lst]
+      rw [dite_cond_eq_false]
+      simp only [eq_iff_iff, iff_false, not_lt]
+      omega
+  | _ => simp [clamp, *]
+
+theorem OTm.clamp_one (t : OTm)
+  : (t.clamp 1).lst .invalid = t.clamp 0
+  := t.clamp_succ_lst_invalid
+
+theorem OTm.clamp_succ_open {k : ℕ} (t : OTm) (x : String)
+  : (t.clamp (k + 1)).open x = (t.open k x).clamp k
+  := by induction t generalizing k with
+  | bv i =>
+    simp only [clamp]
+    split
+    case isTrue h =>
+      generalize hj : Fin.mk i h = j
+      have hi : i = j := by cases hj; rfl
+      rw [hi]
+      cases j using Fin.lastCases <;> simp [Tm.open, OTm.clamp, OTm.open]
+    · simp only [Tm.open_invalid, «open»]
+      rw [ite_cond_eq_false]
+      · split
+        · omega
+        · simp [clamp]
+          omega
+      simp only [eq_iff_iff, iff_false, not_lt]
+      omega
+  | _ => simp [OTm.open, clamp, *]
+
+@[simp]
+def OTm.lst (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
+  | .fv x => .fv x
+  | .bv i => if i < k then .bv i else if i = k then v else .bv (i - 1)
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.lst k v) (b.lst k v)
+  | .pi A B => .pi (A.lst k v) (B.lst (k + 1) v)
+  | .sigma A B => .sigma (A.lst k v) (B.lst (k + 1) v)
+  | .abs A B b => .abs (A.lst k v) (B.lst (k + 1) v) (b.lst (k + 1) v)
+  | .app f a => .app (f.lst k v) (a.lst k v)
+  | .pair a b => .pair (a.lst k v) (b.lst k v)
+  | .fst p => .fst (p.lst k v)
+  | .snd p => .snd (p.lst k v)
+  | .dite A φ l r => .dite (A.lst k v) (φ.lst k v) (l.lst (k + 1) v) (r.lst (k + 1) v)
+  | .trunc A => .trunc (A.lst k v)
+  | .choose A φ => .choose (A.lst k v) (φ.lst (k + 1) v)
+  | .has_ty A a => .has_ty (A.lst k v) (a.lst k v)
+  | .invalid => .invalid
+
+theorem Tm.erase_lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : (t.lst v).erase = t.erase.lst k v.erase
+  := by induction t using succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [Tm.erase, Tm.lst]
+  | _ => simp [Tm.erase, *]
+
+theorem OTm.lst_bvi (t : OTm) (k : ℕ) (v : OTm) (h : t.bvi ≤ k) : t.lst k v = t := by
+  induction t generalizing k with
+  | bv i =>
+    simp [bvi] at h
+    simp [lst]
+    intro h; split <;> omega
+  | _ =>
+    simp [bvi] at h
+    simp [*]
+
+@[simp]
+def OTm.wkn (k : ℕ) : OTm → OTm
+  | .fv x => .fv x
+  | .bv i => if i < k then .bv i else .bv (i + 1)
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.wkn k) (b.wkn k)
+  | .pi A B => .pi (A.wkn k) (B.wkn (k + 1))
+  | .sigma A B => .sigma (A.wkn k) (B.wkn (k + 1))
+  | .abs A B b => .abs (A.wkn k) (B.wkn (k + 1)) (b.wkn (k + 1))
+  | .app f a => .app (f.wkn k) (a.wkn k)
+  | .pair a b => .pair (a.wkn k) (b.wkn k)
+  | .fst p => .fst (p.wkn k)
+  | .snd p => .snd (p.wkn k)
+  | .dite A φ l r => .dite (A.wkn k) (φ.wkn k) (l.wkn (k + 1)) (r.wkn (k + 1))
+  | .trunc A => .trunc (A.wkn k)
+  | .choose A φ => .choose (A.wkn k) (φ.wkn (k + 1))
+  | .has_ty A a => .has_ty (A.wkn k) (a.wkn k)
+  | .invalid => .invalid
+
+def OTm.Subst : Type := ℕ → OTm
+
+def OTm.Subst.mk (f : ℕ → OTm) : Subst := f
+
+def OTm.Subst.get (σ : Subst) (i : ℕ) : OTm := σ i
+
+@[simp] theorem OTm.Subst.get_mk {f i} : (mk f).get i = f i := rfl
+
+@[ext] theorem OTm.Subst.ext (f g : Subst) (h : ∀ i, f.get i = g.get i) : f = g := funext h
+
+def OTm.Subst.lift (σ : Subst) : Subst := mk (fun | 0 => .bv 0 | i + 1 => (σ.get i).wkn 0)
+
+@[simp] theorem OTm.Subst.lift_get_zero {σ : Subst}
+  : σ.lift.get 0 = .bv 0 := rfl
+
+@[simp] theorem OTm.Subst.lift_get_succ {σ : Subst} {i}
+  : σ.lift.get (i + 1) = (σ.get i).wkn 0 := rfl
+
+@[simp]
+def OTm.subst (σ : Subst) : OTm → OTm
+  | .fv x => .fv x
+  | .bv i => σ.get i
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.subst σ) (b.subst σ)
+  | .pi A B => .pi (A.subst σ) (B.subst σ.lift)
+  | .sigma A B => .sigma (A.subst σ) (B.subst σ.lift)
+  | .abs A B b => .abs (A.subst σ) (B.subst σ.lift) (b.subst σ.lift)
+  | .app f a => .app (f.subst σ) (a.subst σ)
+  | .pair a b => .pair (a.subst σ) (b.subst σ)
+  | .fst p => .fst (p.subst σ)
+  | .snd p => .snd (p.subst σ)
+  | .dite A φ l r => .dite (A.subst σ) (φ.subst σ) (l.subst σ.lift) (r.subst σ.lift)
+  | .trunc A => .trunc (A.subst σ)
+  | .choose A φ => .choose (A.subst σ) (φ.subst σ.lift)
+  | .has_ty A a => .has_ty (A.subst σ) (a.subst σ)
+  | .invalid => .invalid
