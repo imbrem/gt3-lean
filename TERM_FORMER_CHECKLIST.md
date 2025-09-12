@@ -35,6 +35,45 @@ Tasks may involve:
 - **Typing only**: Propagate JEq rules to HasTy files only  
 - **Full addition**: Both phases for a complete new term former
 
+## Current Status: `has_ty` Constructor
+
+**Syntax Phase (Phase 1): ✅ COMPLETE**
+
+#### 1. Syntax (`Gt3/Syntax/Basic.lean`)
+- ✅ Add constructor to `Tm` inductive type
+- ✅ Update `castLE` function
+- ✅ Update `open` function  
+- ✅ Update `lst` function
+- ✅ Update `close` function
+- ✅ Update `fvs` function 
+- ✅ Update `lsv` function
+- ✅ Update `ls` function
+- ✅ Write new `smul` theorems for each constructor
+- ✅ Add `@[simp]` attributes to the new `smul` theorems
+- ✅ Update `depth` function
+- ✅ Update `succIndOn` induction principle
+- ✅ Update `lcIndCof` induction principle (commented out - skipped)
+- ✅ Update `lcIndFvs` induction principle (commented out - skipped)
+
+#### 1b. Rewrite Equality (`Gt3/RwEq/Basic.lean`)
+- ✅ Add congruence case to `LRwEq` inductive type
+- ✅ Add congruence case to `RwEq` inductive type  
+
+#### 2. Erasure (`Gt3/Syntax/Erase.lean`)
+- ✅ Add constructor to `OTm` inductive type
+- ✅ Update `Tm.erase` function
+- ✅ Update `OTm.clamp` function
+- ✅ Update `OTm.fvs` function
+- ✅ Update `Tm.bvi` function
+- ✅ Update `OTm.bvi` function
+
+**Full build test: ✅ `lake build` succeeds**
+
+**Typing Phase (Phase 2): ⏸️ PENDING**
+- ⏸️ Phase 2 files not yet started
+
+---
+
 ## Pre-Implementation Planning
 
 - [ ] Design the syntax: constructor name, parameters, binding structure

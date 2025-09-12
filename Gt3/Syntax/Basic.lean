@@ -22,6 +22,7 @@ inductive Tm : ℕ → Type
   | dite {k : ℕ} (A φ : Tm k) (l r : Tm (k + 1)) : Tm k
   | trunc {k : ℕ} (A : Tm k) : Tm k
   | choose {k : ℕ} (A : Tm k) (φ : Tm (k + 1)) : Tm k
+  | has_ty {k : ℕ} (A a : Tm k) : Tm k
   | invalid {k : ℕ} : Tm k
 
 def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
@@ -42,6 +43,7 @@ def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
   | .dite A φ l r => .dite (A.castLE h) (φ.castLE h) (l.castLE (by omega)) (r.castLE (by omega))
   | .trunc A => .trunc (A.castLE h)
   | .choose A φ => .choose (A.castLE h) (φ.castLE (by omega))
+  | .has_ty A a => .has_ty (A.castLE h) (a.castLE h)
   | .invalid => .invalid
 
 @[simp]
@@ -102,6 +104,7 @@ def Tm.open {k : ℕ} (t : Tm (k + 1)) (x : String) : Tm k := match t with
   | .dite A φ l r => .dite (A.open x) (φ.open x) (l.open x) (r.open x)
   | .trunc A => .trunc (A.open x)
   | .choose A φ => .choose (A.open x) (φ.open x)
+  | .has_ty A a => .has_ty (A.open x) (a.open x)
   | .invalid => .invalid
 
 @[simp]
@@ -185,6 +188,11 @@ theorem Tm.open_choose {k : ℕ} (A : Tm (k + 1)) (φ : Tm (k + 2)) (x : String)
   := by simp [«open»]
 
 @[simp]
+theorem Tm.open_has_ty {k : ℕ} (A a : Tm (k + 1)) (x : String)
+  : (Tm.has_ty (k := (k + 1)) A a).open x = .has_ty (A.open x) (a.open x)
+  := by simp [«open»]
+
+@[simp]
 theorem Tm.open_invalid {k : ℕ} (x : String) : (Tm.invalid (k := (k + 1))).open x = .invalid
   := by simp [«open»]
 
@@ -206,6 +214,7 @@ def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .dite A φ l r => .dite (A.lst v) (φ.lst v) (l.lst v) (r.lst v)
   | .trunc A => .trunc (A.lst v)
   | .choose A φ => .choose (A.lst v) (φ.lst v)
+  | .has_ty A a => .has_ty (A.lst v) (a.lst v)
   | .invalid => .invalid
 
 @[simp]
@@ -290,6 +299,11 @@ theorem Tm.lst_choose {k : ℕ} (A : Tm (k + 1)) (φ : Tm (k + 2)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
+theorem Tm.lst_has_ty {k : ℕ} (A a : Tm (k + 1)) (v : Tm 0)
+  : (Tm.has_ty (k := (k + 1)) A a).lst v = .has_ty (A.lst v) (a.lst v)
+  := by simp [lst]
+
+@[simp]
 theorem Tm.lst_invalid {k : ℕ} (v : Tm 0) : (Tm.invalid (k := (k + 1))).lst v = .invalid
   := by simp [lst]
 
@@ -316,6 +330,7 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (trunc : ∀ {k} (A : Tm (k + 1)), motive k A → motive k (.trunc A))
   (choose : ∀ {k} (A : Tm (k + 1)) (φ : Tm (k + 2)),
     motive k A → motive (k + 1) φ → motive k (.choose A φ))
+  (has_ty : ∀ {k} (A a : Tm (k + 1)), motive k A → motive k a → motive k (.has_ty A a))
   (invalid : ∀ {k}, motive k .invalid)
   {k : ℕ} (t : Tm (k + 1)) : motive k t
   := match t with
@@ -328,69 +343,99 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   | .eqn a b =>
     eqn a b
       (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .pi A B =>
     pi A B
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (B.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .sigma A B =>
     sigma A B
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (B.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .abs A B b =>
     abs A B b
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (B.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .app a b =>
     app a b
       (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .pair a b =>
     pair a b
       (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .fst p =>
     fst p
       (p.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .snd p =>
     snd p
       (p.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .dite A φ l r =>
     dite A φ l r
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (φ.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (l.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (r.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .trunc A =>
     trunc A
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .choose A φ =>
     choose A φ
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
       (φ.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose invalid)
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+  | .has_ty A a =>
+    has_ty A a
+      (A.succIndOn
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
+      (a.succIndOn
+        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+        choose has_ty invalid)
   | .invalid => invalid
 
 theorem Tm.lst_fv {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.lst (.fv x)) = t.open x
@@ -454,6 +499,7 @@ def Tm.close {k : ℕ} (t : Tm k) (x : String) : Tm (k + 1) := match t with
   | .dite A φ l r => .dite (A.close x) (φ.close x) (l.close x) (r.close x)
   | .trunc A => .trunc (A.close x)
   | .choose A φ => .choose (A.close x) (φ.close x)
+  | .has_ty A a => .has_ty (A.close x) (a.close x)
   | .invalid => .invalid
 
 theorem Tm.open_close {k : ℕ} (t : Tm k) (x : String) : (t.close x).open x = t
@@ -475,6 +521,7 @@ def Tm.fvs {k : ℕ} : Tm k → Finset String
   | .dite A φ l r => A.fvs ∪ φ.fvs ∪ l.fvs ∪ r.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
+  | .has_ty A a => A.fvs ∪ a.fvs
   | _ => ∅
 
 theorem Tm.close_open {k : ℕ} (t : Tm (k + 1)) (x : String) (h : x ∉ t.fvs)
@@ -523,6 +570,7 @@ def Tm.lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) : Tm k := match t with
   | .dite A φ l r => .dite (A.lsv x v) (φ.lsv x v) (l.lsv x v) (r.lsv x v)
   | .trunc A => .trunc (A.lsv x v)
   | .choose A φ => .choose (A.lsv x v) (φ.lsv x v)
+  | .has_ty A a => .has_ty (A.lsv x v) (a.lsv x v)
   | .invalid => .invalid
 
 theorem Tm.lst_close {k : ℕ} (t : Tm k) (x : String) (v : Tm 0)
@@ -582,6 +630,7 @@ def Tm.ls {k : ℕ} (t : Tm k) (v : VSubst) : Tm k := match t with
   | .dite A φ l r => .dite (A.ls v) (φ.ls v) (l.ls v) (r.ls v)
   | .trunc A => .trunc (A.ls v)
   | .choose A φ => .choose (A.ls v) (φ.ls v)
+  | .has_ty A a => .has_ty (A.ls v) (a.ls v)
   | .invalid => .invalid
 
 instance Tm.instSMul {k} : SMul VSubst (Tm k) where
@@ -648,6 +697,10 @@ theorem Tm.smul_trunc {v : VSubst} {k A}
 @[simp]
 theorem Tm.smul_choose {v : VSubst} {k A φ}
   : v • Tm.choose (k := k) A φ = Tm.choose (v • A) (v • φ) := rfl
+
+@[simp]
+theorem Tm.smul_has_ty {v : VSubst} {k A a}
+  : v • Tm.has_ty (k := k) A a = Tm.has_ty (v • A) (v • a) := rfl
 
 @[simp]
 theorem Tm.smul_invalid {v : VSubst} {k} : v • Tm.invalid (k := k) = .invalid := rfl
@@ -875,6 +928,7 @@ def Tm.depth {k : ℕ} : Tm k → ℕ
   | .dite A φ l r => (A.depth ⊔ φ.depth ⊔ l.depth ⊔ r.depth) + 1
   | .trunc A => A.depth + 1
   | .choose A φ => (A.depth ⊔ φ.depth) + 1
+  | .has_ty A a => (A.depth ⊔ a.depth) + 1
   | _ => 0
 
 @[simp]

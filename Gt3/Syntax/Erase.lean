@@ -18,6 +18,7 @@ inductive OTm : Type
   | dite (A φ l r : OTm) : OTm
   | trunc (A : OTm) : OTm
   | choose (A φ : OTm) : OTm
+  | has_ty (A a : OTm) : OTm
   | invalid : OTm
 
 def Tm.erase {k : ℕ} : Tm k → OTm
@@ -38,6 +39,7 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .dite A φ l r => .dite A.erase φ.erase l.erase r.erase
   | .trunc A => .trunc A.erase
   | .choose A φ => .choose A.erase φ.erase
+  | .has_ty A a => .has_ty A.erase a.erase
   | .invalid => .invalid
 
 def OTm.clamp (k : ℕ) : OTm → Tm k
@@ -58,6 +60,7 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .dite A φ l r => .dite (A.clamp k) (φ.clamp k) (l.clamp (k + 1)) (r.clamp (k + 1))
   | .trunc A => .trunc (A.clamp k)
   | .choose A φ => .choose (A.clamp k) (φ.clamp (k + 1))
+  | .has_ty A a => .has_ty (A.clamp k) (a.clamp k)
   | .invalid => .invalid
 
 @[simp]
@@ -95,6 +98,7 @@ def OTm.fvs : OTm → Finset String
   | .dite A φ l r => A.fvs ∪ φ.fvs ∪ l.fvs ∪ r.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
+  | .has_ty A a => A.fvs ∪ a.fvs
   | _ => ∅
 
 @[simp]
@@ -120,6 +124,7 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .dite A φ l r => A.bvi ⊔ φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
+  | .has_ty A a => A.bvi ⊔ a.bvi
   | _ => 0
 
 def OTm.bvi : OTm → ℕ
@@ -135,6 +140,7 @@ def OTm.bvi : OTm → ℕ
   | .dite A φ l r => A.bvi ⊔ φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
+  | .has_ty A a => A.bvi ⊔ a.bvi
   | _ => 0
 
 theorem Tm.bvi_le {k : ℕ} (t : Tm k) : t.bvi ≤ k
