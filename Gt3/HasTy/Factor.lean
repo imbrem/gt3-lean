@@ -22,6 +22,10 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : InnerTy Γ Ba (f.app a)
+  | sigma {Γ : Ctx} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
+    : InnerTy Γ (.univ ℓ) (.sigma A B)
 
 theorem Ctx.InnerTy.has_ty {Γ A a} (h : InnerTy Γ A a) : HasTy Γ A a
   := by cases h <;> constructor <;> assumption
@@ -114,4 +118,5 @@ macro_rules
     | apply Ctx.JEq.pi
     | apply Ctx.JEq.abs
     | apply Ctx.JEq.app
+    | apply Ctx.JEq.sigma
   )
