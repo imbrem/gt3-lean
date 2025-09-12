@@ -47,6 +47,12 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hA : JEq Γ (.univ m) A A)
     (hp : JEq Γ (.sigma A B) p p')
     : JEq Γ A (.fst p) (.fst p')
+  | snd' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
+    (hA : JEq Γ (.univ m) A A)
+    (hp : JEq Γ (.sigma A B) p p')
+    (hBa : JEq Γ (.univ n) (B.lst (.fst p)) Ba)
+    : JEq Γ Ba (.snd p) (.snd p')
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
   | cons_ok {Γ : Ctx} {x : String} {A : Tm 0} {ℓ}
@@ -227,6 +233,16 @@ theorem Ctx.JEq.app_f {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {m n : �
         (fun x hx => (hB x hx).cast_level_le (by simp)) hA hf ha
         (hBa.cast_level_le (by simp))
 
+theorem Ctx.JEq.snd_f {Γ} {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
+  (hA : JEq Γ (.univ m) A A)
+  (hp : JEq Γ (A.sigma B) p p') (hBa : TyEq Γ (B.lst p.fst) Ba)
+  : JEq Γ Ba (.snd p) (.snd p') :=
+  have ⟨ℓ, hBa⟩ := hBa;
+  .snd' (n := n ⊔ ℓ)
+        (fun x hx => (hB x hx).cast_level_le (by simp)) hA hp
+        (hBa.cast_level_le (by simp))
+
 syntax "jeq_congr_f" : tactic
 
 macro_rules
@@ -243,6 +259,7 @@ macro_rules
     | apply Ctx.JEq.sigma
     | apply Ctx.JEq.pair'
     | apply Ctx.JEq.fst'
+    | apply Ctx.JEq.snd_f
   )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩

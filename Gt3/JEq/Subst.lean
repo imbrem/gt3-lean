@@ -101,7 +101,8 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | _ =>
     constructor <;>
     first
-    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst]) ; (apply_assumption <;> assumption)
+    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst])
+      ; (apply_assumption <;> assumption)
     | {
       intro x hx
       rename Finset String => L

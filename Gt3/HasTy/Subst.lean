@@ -83,7 +83,7 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
   | _ =>
     constructor <;>
     first
-    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst])
+    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst])
       ; (first | apply_assumption | apply TyEq.ls1)
       <;> assumption
     | exact hσ.src_ok

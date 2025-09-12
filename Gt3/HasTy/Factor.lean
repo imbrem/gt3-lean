@@ -26,15 +26,21 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : InnerTy Γ (.univ ℓ) (.sigma A B)
+  | pair {Γ : Ctx} {A a b : Tm 0} {B : Tm 1} {m n : ℕ} {L : Finset String}
+    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
+    : InnerTy Γ (.sigma A B) (.pair a b)
   | fst' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hA : HasTy Γ (.univ m) A)
     (hp : HasTy Γ (.sigma A B) p)
     : InnerTy Γ A (.fst p)
-  | pair {Γ : Ctx} {A a b : Tm 0} {B : Tm 1} {m n : ℕ} {L : Finset String}
-    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
-    (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
-    : InnerTy Γ (.sigma A B) (.pair a b)
+  | snd' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p Ba : Tm 0} {m n : ℕ} {L : Finset String}
+    (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (hA : HasTy Γ (.univ m) A)
+    (hp : HasTy Γ (.sigma A B) p)
+    (hBa : TyEq Γ (B.lst (.fst p)) Ba)
+    : InnerTy Γ Ba (.snd p)
 
 theorem Ctx.InnerTy.has_ty {Γ A a} (h : InnerTy Γ A a) : HasTy Γ A a
   := by cases h <;> constructor <;> assumption
