@@ -64,6 +64,9 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hA : JEq Γ (.univ ℓ) A A')
     (ha : JEq Γ A a a')
     : JEq Γ A' a a'
+  | transfer {Γ : Ctx} {A B a b : Tm 0}
+    (hA : JEq Γ A a b) (ha : JEq Γ B a a)
+    : JEq Γ B a b
 
 def Ctx.WfEq (Γ : Ctx) (a b : Tm 0) : Prop := ∃A, JEq Γ A a b
 
@@ -116,11 +119,11 @@ theorem Ctx.IsUniv.cast {Γ A B} (hAB : TyEq Γ A B) (hB : IsUniv Γ B)
 theorem Ctx.IsUniv.eq_iff {Γ A B} (hAB : TyEq Γ A B) : IsUniv Γ A ↔ IsUniv Γ B
   := ⟨.cast hAB.symm, .cast hAB⟩
 
-def Ctx.HasTy' (Γ : Ctx) (A : Tm 0) (a : Tm 0) : Prop := JEq Γ A a a
+def Ctx.HasTy (Γ : Ctx) (A : Tm 0) (a : Tm 0) : Prop := JEq Γ A a a
 
-theorem Ctx.JEq.lhs_ty' {Γ A a b} (h : JEq Γ A a b) : HasTy' Γ A a := h.trans h.symm
+theorem Ctx.JEq.lhs_ty' {Γ A a b} (h : JEq Γ A a b) : HasTy Γ A a := h.trans h.symm
 
-theorem Ctx.JEq.rhs_ty' {Γ A a b} (h : JEq Γ A a b) : HasTy' Γ A b := h.symm.lhs_ty'
+theorem Ctx.JEq.rhs_ty' {Γ A a b} (h : JEq Γ A a b) : HasTy Γ A b := h.symm.lhs_ty'
 
 theorem Ctx.JEq.ty_eq {Γ ℓ A B} (h : JEq Γ (.univ ℓ) A B) : TyEq Γ A B := ⟨ℓ, h⟩
 
@@ -130,13 +133,21 @@ theorem Ctx.JEq.rhs_is_ty {Γ ℓ A B} (h : JEq Γ (.univ ℓ) A B) : IsTy Γ B 
 
 theorem Ctx.JEq.wf_eq {Γ A a b} (h : JEq Γ A a b) : WfEq Γ a b := ⟨A, h⟩
 
-theorem Ctx.HasTy'.is_wf {Γ A a} (h : HasTy' Γ A a) : IsWf Γ a := ⟨A, h⟩
+theorem Ctx.HasTy.is_wf {Γ A a} (h : HasTy Γ A a) : IsWf Γ a := ⟨A, h⟩
 
 theorem Ctx.JEq.lhs_is_wf {Γ A a b} (h : JEq Γ A a b) : IsWf Γ a := h.lhs_ty'.is_wf
 
 theorem Ctx.JEq.rhs_is_wf {Γ A a b} (h : JEq Γ A a b) : IsWf Γ b := h.rhs_ty'.is_wf
 
-theorem Ctx.HasTy'.has_ty_univ {Γ U A} (h : HasTy' Γ U A) (hU : IsUniv Γ U) : IsTy Γ A
+theorem Ctx.WfEq.trans {Γ a b c} (hab : WfEq Γ a b) (hbc : WfEq Γ b c) : WfEq Γ a c :=
+  have ⟨_, hab⟩ := hab;
+  have ⟨_, hbc⟩ := hbc;
+  ⟨_, hab.trans (hbc.transfer hab.rhs_ty')⟩
+
+theorem Ctx.WfEq.transfer {Γ A a b} (hab : WfEq Γ a b) (hbc : HasTy Γ A a) : JEq Γ A a b :=
+  have ⟨_, hab⟩ := hab; hab.transfer hbc
+
+theorem Ctx.HasTy.has_ty_univ {Γ U A} (h : HasTy Γ U A) (hU : IsUniv Γ U) : IsTy Γ A
   := have ⟨ℓ, hU⟩ := hU; ⟨ℓ, h.cast hU⟩
 
 inductive Ctx.Ok : Ctx → Prop
