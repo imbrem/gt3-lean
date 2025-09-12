@@ -36,20 +36,20 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
     → LRwEq Γ (.sigma A B) (.sigma A' B')
   | empty {Γ} : LRwEq Γ .empty .empty
   | unit {Γ} : LRwEq Γ .unit .unit
-  | abs {Γ} {A A' B B' b b'} {L : Finset String}
-    : LRwEq Γ A A' → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (B.open y) (B'.open y))
+  | abs {Γ} {A A' b b'} {L : Finset String}
+    : LRwEq Γ A A'
     → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y, LRwEq (Γ.cons x X) (b.open y) (b'.open y))
-    → LRwEq Γ (.abs A B b) (.abs A' B' b')
+    → LRwEq Γ (.abs A b) (.abs A' b')
   | app {Γ} {f f' a a'} : LRwEq Γ f f' → LRwEq Γ a a' → LRwEq Γ (.app f a) (.app f' a')
   | pair {Γ} {a a' b b'} {L : Finset String} : LRwEq Γ a a' → LRwEq Γ b b' →
     LRwEq Γ (.pair a b) (.pair a' b')
   | fst {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.fst p) (.fst p')
   | snd {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.snd p) (.snd p')
-  | dite {Γ} {A A' φ φ' l l' r r'} {L : Finset String}
-    : LRwEq Γ A A' → LRwEq Γ φ φ'
+  | dite {Γ} {φ φ' l l' r r'} {L : Finset String}
+    : LRwEq Γ φ φ'
     → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (l.open y) (l'.open y))
     → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (r.open y) (r'.open y))
-    → LRwEq Γ (.dite A φ l r) (.dite A' φ' l' r')
+    → LRwEq Γ (.dite φ l r) (.dite φ' l' r')
   | trunc {Γ} {A A'} : LRwEq Γ A A' → LRwEq Γ (.trunc A) (.trunc A')
   | choose {Γ} {A A' φ φ'} {L : Finset String}
     : LRwEq Γ A A'
@@ -76,6 +76,12 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
       try rename Finset String => L
       cases hai <;> {
         jeq_congr_f <;> first
+        | {
+          rename Finset String => K
+          intros x hx
+          have ⟨hxK, hxL⟩ : x ∉ K ∧ x ∉ L := by rw [<-Finset.notMem_union]; exact hx
+          apply HasTy.refl; apply_assumption; assumption
+        }
         | intros; apply HasTy.refl <;> apply_assumption <;> assumption
         | apply_assumption <;> apply Or.inl <;> assumption
         | {
@@ -94,6 +100,12 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
       cases hbi <;> {
         apply JEq.symm
         jeq_congr_f <;> first
+        | {
+          rename Finset String => K
+          intros x hx
+          have ⟨hxK, hxL⟩ : x ∉ K ∧ x ∉ L := by rw [<-Finset.notMem_union]; exact hx
+          apply HasTy.refl; apply_assumption; assumption
+        }
         | intros; apply HasTy.refl <;> apply_assumption <;> assumption
         | assumption
         | apply JEq.symm; apply_assumption ; apply Or.inr ; assumption
@@ -146,15 +158,15 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
   | sigma {A A' B B'} : RwEq Γ A A' → RwEq Γ B B' → RwEq Γ (.sigma A B) (.sigma A' B')
   | empty : RwEq Γ .empty .empty
   | unit : RwEq Γ .unit .unit
-  | abs {A A' B B' b b'} : RwEq Γ A A' → RwEq Γ B B' → RwEq Γ b b' →
-    RwEq Γ (.abs A B b) (.abs A' B' b')
+  | abs {A A' b b'} : RwEq Γ A A' → RwEq Γ b b' →
+    RwEq Γ (.abs A b) (.abs A' b')
   | app {f f' a a'} : RwEq Γ f f' → RwEq Γ a a' → RwEq Γ (.app f a) (.app f' a')
   | pair {a a' b b'} : RwEq Γ a a' → RwEq Γ b b' →
     RwEq Γ (.pair a b) (.pair a' b')
   | fst {p p'} : RwEq Γ p p' → RwEq Γ (.fst p) (.fst p')
   | snd {p p'} : RwEq Γ p p' → RwEq Γ (.snd p) (.snd p')
-  | dite {A A' φ φ' l l' r r'} : RwEq Γ A A' → RwEq Γ φ φ' → RwEq Γ l l' → RwEq Γ r r' →
-    RwEq Γ (.dite A φ l r) (.dite A' φ' l' r')
+  | dite {φ φ' l l' r r'} : RwEq Γ φ φ' → RwEq Γ l l' → RwEq Γ r r' →
+    RwEq Γ (.dite φ l r) (.dite φ' l' r')
   | trunc {A A'} : RwEq Γ A A' → RwEq Γ (.trunc A) (.trunc A')
   | choose {A A' φ φ'} : RwEq Γ A A' → RwEq Γ φ φ' → RwEq Γ (.choose A φ) (.choose A' φ')
   | has_ty {A A' a a'} : RwEq Γ A A' → RwEq Γ a a' → RwEq Γ (.has_ty A a) (.has_ty A' a')

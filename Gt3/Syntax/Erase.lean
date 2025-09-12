@@ -10,12 +10,12 @@ inductive OTm : Type
   | eqn (a b : OTm) : OTm
   | pi (A B : OTm) : OTm
   | sigma (A B : OTm) : OTm
-  | abs (A B : OTm) (b : OTm) : OTm
+  | abs (A : OTm) (b : OTm) : OTm
   | app (f a : OTm) : OTm
   | pair (a b : OTm) : OTm
   | fst (p : OTm) : OTm
   | snd (p : OTm) : OTm
-  | dite (A φ l r : OTm) : OTm
+  | dite (φ l r : OTm) : OTm
   | trunc (A : OTm) : OTm
   | choose (A φ : OTm) : OTm
   | has_ty (A a : OTm) : OTm
@@ -31,12 +31,12 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .eqn a b => .eqn a.erase b.erase
   | .pi A B => .pi A.erase B.erase
   | .sigma A B => .sigma A.erase B.erase
-  | .abs A B b => .abs A.erase B.erase b.erase
+  | .abs A b => .abs A.erase b.erase
   | .app f a => .app f.erase a.erase
   | .pair a b => .pair a.erase b.erase
   | .fst p => .fst p.erase
   | .snd p => .snd p.erase
-  | .dite A φ l r => .dite A.erase φ.erase l.erase r.erase
+  | .dite φ l r => .dite φ.erase l.erase r.erase
   | .trunc A => .trunc A.erase
   | .choose A φ => .choose A.erase φ.erase
   | .has_ty A a => .has_ty A.erase a.erase
@@ -52,12 +52,12 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .eqn a b => .eqn (a.clamp k) (b.clamp k)
   | .pi A B => .pi (A.clamp k) (B.clamp (k + 1))
   | .sigma A B => .sigma (A.clamp k) (B.clamp (k + 1))
-  | .abs A B b => .abs (A.clamp k) (B.clamp (k + 1)) (b.clamp (k + 1))
+  | .abs A b => .abs (A.clamp k) (b.clamp (k + 1))
   | .app f a => .app (f.clamp k) (a.clamp k)
   | .pair a b => .pair (a.clamp k) (b.clamp k)
   | .fst p => .fst (p.clamp k)
   | .snd p => .snd (p.clamp k)
-  | .dite A φ l r => .dite (A.clamp k) (φ.clamp k) (l.clamp (k + 1)) (r.clamp (k + 1))
+  | .dite φ l r => .dite (φ.clamp k) (l.clamp (k + 1)) (r.clamp (k + 1))
   | .trunc A => .trunc (A.clamp k)
   | .choose A φ => .choose (A.clamp k) (φ.clamp (k + 1))
   | .has_ty A a => .has_ty (A.clamp k) (a.clamp k)
@@ -90,12 +90,12 @@ def OTm.fvs : OTm → Finset String
   | .eqn a b => a.fvs ∪ b.fvs
   | .pi A B => A.fvs ∪ B.fvs
   | .sigma A B => A.fvs ∪ B.fvs
-  | .abs A B b => A.fvs ∪ B.fvs ∪ b.fvs
+  | .abs A b => A.fvs ∪ b.fvs
   | .app f a => f.fvs ∪ a.fvs
   | .pair a b => a.fvs ∪ b.fvs
   | .fst p => p.fvs
   | .snd p => p.fvs
-  | .dite A φ l r => A.fvs ∪ φ.fvs ∪ l.fvs ∪ r.fvs
+  | .dite φ l r => φ.fvs ∪ l.fvs ∪ r.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
   | .has_ty A a => A.fvs ∪ a.fvs
@@ -116,12 +116,12 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .eqn a b => a.bvi ⊔ b.bvi
   | .pi A B => A.bvi ⊔ (B.bvi - 1)
   | .sigma A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A B b => A.bvi ⊔ (B.bvi - 1) ⊔  (b.bvi - 1)
+  | .abs A b => A.bvi ⊔ (b.bvi - 1)
   | .app f a => f.bvi ⊔ a.bvi
   | .pair a b => a.bvi ⊔ b.bvi
   | .fst p => p.bvi
   | .snd p => p.bvi
-  | .dite A φ l r => A.bvi ⊔ φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
+  | .dite φ l r => φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | .has_ty A a => A.bvi ⊔ a.bvi
@@ -132,12 +132,12 @@ def OTm.bvi : OTm → ℕ
   | .eqn a b => a.bvi ⊔ b.bvi
   | .pi A B => A.bvi ⊔ (B.bvi - 1)
   | .sigma A B => A.bvi ⊔ (B.bvi - 1)
-  | .abs A B b => A.bvi ⊔ (B.bvi - 1) ⊔ (b.bvi - 1)
+  | .abs A b => A.bvi ⊔ (b.bvi - 1)
   | .app f a => f.bvi ⊔ a.bvi
   | .pair a b => a.bvi ⊔ b.bvi
   | .fst p => p.bvi
   | .snd p => p.bvi
-  | .dite A φ l r => A.bvi ⊔ φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
+  | .dite φ l r => φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | .has_ty A a => A.bvi ⊔ a.bvi
@@ -195,12 +195,12 @@ def OTm.open (k : ℕ) (x : String) : OTm → OTm
   | .eqn a b => .eqn (a.open k x) (b.open k x)
   | .pi A B => .pi (A.open k x) (B.open (k + 1) x)
   | .sigma A B => .sigma (A.open k x) (B.open (k + 1) x)
-  | .abs A B b => .abs (A.open k x) (B.open (k + 1) x) (b.open (k + 1) x)
+  | .abs A b => .abs (A.open k x) (b.open (k + 1) x)
   | .app f a => .app (f.open k x) (a.open k x)
   | .pair a b => .pair (a.open k x) (b.open k x)
   | .fst p => .fst (p.open k x)
   | .snd p => .snd (p.open k x)
-  | .dite A φ l r => .dite (A.open k x) (φ.open k x) (l.open (k + 1) x) (r.open (k + 1) x)
+  | .dite φ l r => .dite (φ.open k x) (l.open (k + 1) x) (r.open (k + 1) x)
   | .trunc A => .trunc (A.open k x)
   | .choose A φ => .choose (A.open k x) (φ.open (k + 1) x)
   | .has_ty A a => .has_ty (A.open k x) (a.open k x)
@@ -269,12 +269,12 @@ def OTm.lst (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
   | .eqn a b => .eqn (a.lst k v) (b.lst k v)
   | .pi A B => .pi (A.lst k v) (B.lst (k + 1) v)
   | .sigma A B => .sigma (A.lst k v) (B.lst (k + 1) v)
-  | .abs A B b => .abs (A.lst k v) (B.lst (k + 1) v) (b.lst (k + 1) v)
+  | .abs A b => .abs (A.lst k v) (b.lst (k + 1) v)
   | .app f a => .app (f.lst k v) (a.lst k v)
   | .pair a b => .pair (a.lst k v) (b.lst k v)
   | .fst p => .fst (p.lst k v)
   | .snd p => .snd (p.lst k v)
-  | .dite A φ l r => .dite (A.lst k v) (φ.lst k v) (l.lst (k + 1) v) (r.lst (k + 1) v)
+  | .dite φ l r => .dite (φ.lst k v) (l.lst (k + 1) v) (r.lst (k + 1) v)
   | .trunc A => .trunc (A.lst k v)
   | .choose A φ => .choose (A.lst k v) (φ.lst (k + 1) v)
   | .has_ty A a => .has_ty (A.lst k v) (a.lst k v)
@@ -306,12 +306,12 @@ def OTm.wkn (k : ℕ) : OTm → OTm
   | .eqn a b => .eqn (a.wkn k) (b.wkn k)
   | .pi A B => .pi (A.wkn k) (B.wkn (k + 1))
   | .sigma A B => .sigma (A.wkn k) (B.wkn (k + 1))
-  | .abs A B b => .abs (A.wkn k) (B.wkn (k + 1)) (b.wkn (k + 1))
+  | .abs A b => .abs (A.wkn k) (b.wkn (k + 1))
   | .app f a => .app (f.wkn k) (a.wkn k)
   | .pair a b => .pair (a.wkn k) (b.wkn k)
   | .fst p => .fst (p.wkn k)
   | .snd p => .snd (p.wkn k)
-  | .dite A φ l r => .dite (A.wkn k) (φ.wkn k) (l.wkn (k + 1)) (r.wkn (k + 1))
+  | .dite φ l r => .dite (φ.wkn k) (l.wkn (k + 1)) (r.wkn (k + 1))
   | .trunc A => .trunc (A.wkn k)
   | .choose A φ => .choose (A.wkn k) (φ.wkn (k + 1))
   | .has_ty A a => .has_ty (A.wkn k) (a.wkn k)
@@ -346,12 +346,12 @@ def OTm.subst (σ : Subst) : OTm → OTm
   | .eqn a b => .eqn (a.subst σ) (b.subst σ)
   | .pi A B => .pi (A.subst σ) (B.subst σ.lift)
   | .sigma A B => .sigma (A.subst σ) (B.subst σ.lift)
-  | .abs A B b => .abs (A.subst σ) (B.subst σ.lift) (b.subst σ.lift)
+  | .abs A b => .abs (A.subst σ) (b.subst σ.lift)
   | .app f a => .app (f.subst σ) (a.subst σ)
   | .pair a b => .pair (a.subst σ) (b.subst σ)
   | .fst p => .fst (p.subst σ)
   | .snd p => .snd (p.subst σ)
-  | .dite A φ l r => .dite (A.subst σ) (φ.subst σ) (l.subst σ.lift) (r.subst σ.lift)
+  | .dite φ l r => .dite (φ.subst σ) (l.subst σ.lift) (r.subst σ.lift)
   | .trunc A => .trunc (A.subst σ)
   | .choose A φ => .choose (A.subst σ) (φ.subst σ.lift)
   | .has_ty A a => .has_ty (A.subst σ) (a.subst σ)

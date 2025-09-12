@@ -60,7 +60,7 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
       · constructor <;> first
         | assumption
         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
-        | intros; apply HasTy.cast_top_symm₂ <;> apply_assumption <;> assumption
+        --| intros; apply HasTy.cast_top_symm₂ <;> apply_assumption <;> assumption
         | apply Ctx.HasTy.lst_cf_cast <;> assumption
         | apply Ctx.HasTy.cast' <;> assumption
         | apply Ctx.JEq.lst_cf_cast_lhs <;> first | assumption

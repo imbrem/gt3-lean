@@ -14,12 +14,12 @@ inductive Tm : ℕ → Type
   | eqn {k : ℕ} (a b : Tm k) : Tm k
   | pi {k : ℕ} (A : Tm k) (B : Tm (k + 1)) : Tm k
   | sigma {k : ℕ} (A : Tm k) (B : Tm (k + 1)) : Tm k
-  | abs {k : ℕ} (A : Tm k) (B b : Tm (k + 1)) : Tm k
+  | abs {k : ℕ} (A : Tm k) (b : Tm (k + 1)) : Tm k
   | app {k : ℕ} (f a : Tm k) : Tm k
   | pair {k : ℕ} (a : Tm k) (b : Tm k) : Tm k
   | fst {k : ℕ} (p : Tm k) : Tm k
   | snd {k : ℕ} (p : Tm k) : Tm k
-  | dite {k : ℕ} (A φ : Tm k) (l r : Tm (k + 1)) : Tm k
+  | dite {k : ℕ} (φ : Tm k) (l r : Tm (k + 1)) : Tm k
   | trunc {k : ℕ} (A : Tm k) : Tm k
   | choose {k : ℕ} (A : Tm k) (φ : Tm (k + 1)) : Tm k
   | has_ty {k : ℕ} (A a : Tm k) : Tm k
@@ -35,12 +35,12 @@ def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
   | .eqn a b => .eqn (a.castLE h) (b.castLE h)
   | .pi A B => .pi (A.castLE h) (B.castLE (by omega))
   | .sigma A B => .sigma (A.castLE h) (B.castLE (by omega))
-  | .abs A B b => .abs (A.castLE h) (B.castLE (by omega)) (b.castLE (by omega))
+  | .abs A b => .abs (A.castLE h) (b.castLE (by omega))
   | .app f a => .app (f.castLE h) (a.castLE h)
   | .pair a b => .pair (a.castLE h) (b.castLE h)
   | .fst p => .fst (p.castLE h)
   | .snd p => .snd (p.castLE h)
-  | .dite A φ l r => .dite (A.castLE h) (φ.castLE h) (l.castLE (by omega)) (r.castLE (by omega))
+  | .dite φ l r => .dite (φ.castLE h) (l.castLE (by omega)) (r.castLE (by omega))
   | .trunc A => .trunc (A.castLE h)
   | .choose A φ => .choose (A.castLE h) (φ.castLE (by omega))
   | .has_ty A a => .has_ty (A.castLE h) (a.castLE h)
@@ -96,12 +96,12 @@ def Tm.open {k : ℕ} (t : Tm (k + 1)) (x : String) : Tm k := match t with
   | .eqn a b => .eqn (a.open x) (b.open x)
   | .pi A B => .pi (A.open x) (B.open x)
   | .sigma A B => .sigma (A.open x) (B.open x)
-  | .abs A B b => .abs (A.open x) (B.open x) (b.open x)
+  | .abs A b => .abs (A.open x) (b.open x)
   | .app f a => .app (f.open x) (a.open x)
   | .pair a b => .pair (a.open x) (b.open x)
   | .fst p => .fst (p.open x)
   | .snd p => .snd (p.open x)
-  | .dite A φ l r => .dite (A.open x) (φ.open x) (l.open x) (r.open x)
+  | .dite φ l r => .dite (φ.open x) (l.open x) (r.open x)
   | .trunc A => .trunc (A.open x)
   | .choose A φ => .choose (A.open x) (φ.open x)
   | .has_ty A a => .has_ty (A.open x) (a.open x)
@@ -148,8 +148,8 @@ theorem Tm.open_sigma {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (x : String)
   := by simp [«open»]
 
 @[simp]
-theorem Tm.open_abs {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (b : Tm (k + 2)) (x : String)
-  : (Tm.abs (k := (k + 1)) A B b).open x = .abs (A.open x) (B.open x) (b.open x)
+theorem Tm.open_abs {k : ℕ} (A : Tm (k + 1)) (b : Tm (k + 2)) (x : String)
+  : (Tm.abs (k := (k + 1)) A b).open x = .abs (A.open x) (b.open x)
   := by simp [«open»]
 
 @[simp]
@@ -173,8 +173,8 @@ theorem Tm.open_snd {k : ℕ} (p : Tm (k + 1)) (x : String)
   := by simp [«open»]
 
 @[simp]
-theorem Tm.open_dite {k : ℕ} (A φ : Tm (k + 1)) (l r : Tm (k + 2)) (x : String)
-  : (Tm.dite (k := (k + 1)) A φ l r).open x = .dite (A.open x) (φ.open x) (l.open x) (r.open x)
+theorem Tm.open_dite {k : ℕ} (φ : Tm (k + 1)) (l r : Tm (k + 2)) (x : String)
+  : (Tm.dite (k := (k + 1)) φ l r).open x = .dite (φ.open x) (l.open x) (r.open x)
   := by simp [«open»]
 
 @[simp]
@@ -206,12 +206,12 @@ def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .eqn a b => .eqn (a.lst v) (b.lst v)
   | .pi A B => .pi (A.lst v) (B.lst v)
   | .sigma A B => .sigma (A.lst v) (B.lst v)
-  | .abs A B b => .abs (A.lst v) (B.lst v) (b.lst v)
+  | .abs A b => .abs (A.lst v) (b.lst v)
   | .app f a => .app (f.lst v) (a.lst v)
   | .pair a b => .pair (a.lst v) (b.lst v)
   | .fst p => .fst (p.lst v)
   | .snd p => .snd (p.lst v)
-  | .dite A φ l r => .dite (A.lst v) (φ.lst v) (l.lst v) (r.lst v)
+  | .dite φ l r => .dite (φ.lst v) (l.lst v) (r.lst v)
   | .trunc A => .trunc (A.lst v)
   | .choose A φ => .choose (A.lst v) (φ.lst v)
   | .has_ty A a => .has_ty (A.lst v) (a.lst v)
@@ -259,8 +259,8 @@ theorem Tm.lst_sigma {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
-theorem Tm.lst_abs {k : ℕ} (A : Tm (k + 1)) (B : Tm (k + 2)) (b : Tm (k + 2)) (v : Tm 0)
-  : (Tm.abs (k := (k + 1)) A B b).lst v = .abs (A.lst v) (B.lst v) (b.lst v)
+theorem Tm.lst_abs {k : ℕ} (A : Tm (k + 1)) (b : Tm (k + 2)) (v : Tm 0)
+  : (Tm.abs (k := (k + 1)) A b).lst v = .abs (A.lst v) (b.lst v)
   := by simp [lst]
 
 @[simp]
@@ -284,8 +284,8 @@ theorem Tm.lst_snd {k : ℕ} (p : Tm (k + 1)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
-theorem Tm.lst_dite {k : ℕ} (A φ : Tm (k + 1)) (l r : Tm (k + 2)) (v : Tm 0)
-  : (Tm.dite (k := (k + 1)) A φ l r).lst v = .dite (A.lst v) (φ.lst v) (l.lst v) (r.lst v)
+theorem Tm.lst_dite {k : ℕ} (φ : Tm (k + 1)) (l r : Tm (k + 2)) (v : Tm 0)
+  : (Tm.dite (k := (k + 1)) φ l r).lst v = .dite (φ.lst v) (l.lst v) (r.lst v)
   := by simp [lst]
 
 @[simp]
@@ -318,15 +318,15 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (pi : ∀ {k} (A : Tm (k + 1)) (B : Tm (k + 2)), motive k A → motive (k + 1) B → motive k (.pi A B))
   (sigma : ∀ {k} (A : Tm (k + 1)) (B : Tm (k + 2)),
     motive k A → motive (k + 1) B → motive k (.sigma A B))
-  (abs : ∀ {k} (A : Tm (k + 1)) (B b : Tm (k + 2)),
-    motive k A → motive (k + 1) B → motive (k + 1) b → motive k (.abs A B b))
+  (abs : ∀ {k} (A : Tm (k + 1)) (b : Tm (k + 2)),
+    motive k A → motive (k + 1) b → motive k (.abs A b))
   (app : ∀ {k} (f a : Tm (k + 1)), motive k f → motive k a → motive k (.app f a))
   (pair : ∀ {k} (a b : Tm (k + 1)),
     motive k a → motive k b → motive k (.pair a b))
   (fst : ∀ {k} (p : Tm (k + 1)), motive k p → motive k (.fst p))
   (snd : ∀ {k} (p : Tm (k + 1)), motive k p → motive k (.snd p))
-  (dite : ∀ {k} (A φ : Tm (k + 1)) (l r : Tm (k + 2)),
-    motive k A → motive k φ → motive (k + 1) l → motive (k + 1) r → motive k (.dite A φ l r))
+  (dite : ∀ {k} (φ : Tm (k + 1)) (l r : Tm (k + 2)),
+    motive k φ → motive (k + 1) l → motive (k + 1) r → motive k (.dite φ l r))
   (trunc : ∀ {k} (A : Tm (k + 1)), motive k A → motive k (.trunc A))
   (choose : ∀ {k} (A : Tm (k + 1)) (φ : Tm (k + 2)),
     motive k A → motive (k + 1) φ → motive k (.choose A φ))
@@ -364,12 +364,9 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
       (B.succIndOn
         fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
-  | .abs A B b =>
-    abs A B b
+  | .abs A b =>
+    abs A b
       (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (B.succIndOn
         fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
       (b.succIndOn
@@ -401,11 +398,8 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
       (p.succIndOn
         fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
-  | .dite A φ l r =>
-    dite A φ l r
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+  | .dite φ l r =>
+    dite φ l r
       (φ.succIndOn
         fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
@@ -495,12 +489,12 @@ def Tm.close {k : ℕ} (t : Tm k) (x : String) : Tm (k + 1) := match t with
   | .eqn a b => .eqn (a.close x) (b.close x)
   | .pi A B => .pi (A.close x) (B.close x)
   | .sigma A B => .sigma (A.close x) (B.close x)
-  | .abs A B b => .abs (A.close x) (B.close x) (b.close x)
+  | .abs A b => .abs (A.close x) (b.close x)
   | .app f a => .app (f.close x) (a.close x)
   | .pair a b => .pair (a.close x) (b.close x)
   | .fst p => .fst (p.close x)
   | .snd p => .snd (p.close x)
-  | .dite A φ l r => .dite (A.close x) (φ.close x) (l.close x) (r.close x)
+  | .dite φ l r => .dite (φ.close x) (l.close x) (r.close x)
   | .trunc A => .trunc (A.close x)
   | .choose A φ => .choose (A.close x) (φ.close x)
   | .has_ty A a => .has_ty (A.close x) (a.close x)
@@ -517,12 +511,12 @@ def Tm.fvs {k : ℕ} : Tm k → Finset String
   | .eqn a b => a.fvs ∪ b.fvs
   | .pi A B => A.fvs ∪ B.fvs
   | .sigma A B => A.fvs ∪ B.fvs
-  | .abs A B b => A.fvs ∪ B.fvs ∪ b.fvs
+  | .abs A b => A.fvs ∪ b.fvs
   | .app f a => f.fvs ∪ a.fvs
   | .pair a b => a.fvs ∪ b.fvs
   | .fst p => p.fvs
   | .snd p => p.fvs
-  | .dite A φ l r => A.fvs ∪ φ.fvs ∪ l.fvs ∪ r.fvs
+  | .dite φ l r => φ.fvs ∪ l.fvs ∪ r.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
   | .has_ty A a => A.fvs ∪ a.fvs
@@ -566,12 +560,12 @@ def Tm.lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) : Tm k := match t with
   | .eqn a b => .eqn (a.lsv x v) (b.lsv x v)
   | .pi A B => .pi (A.lsv x v) (B.lsv x v)
   | .sigma A B => .sigma (A.lsv x v) (B.lsv x v)
-  | .abs A B b => .abs (A.lsv x v) (B.lsv x v) (b.lsv x v)
+  | .abs A b => .abs (A.lsv x v) (b.lsv x v)
   | .app f a => .app (f.lsv x v) (a.lsv x v)
   | .pair a b => .pair (a.lsv x v) (b.lsv x v)
   | .fst p => .fst (p.lsv x v)
   | .snd p => .snd (p.lsv x v)
-  | .dite A φ l r => .dite (A.lsv x v) (φ.lsv x v) (l.lsv x v) (r.lsv x v)
+  | .dite φ l r => .dite (φ.lsv x v) (l.lsv x v) (r.lsv x v)
   | .trunc A => .trunc (A.lsv x v)
   | .choose A φ => .choose (A.lsv x v) (φ.lsv x v)
   | .has_ty A a => .has_ty (A.lsv x v) (a.lsv x v)
@@ -626,12 +620,12 @@ def Tm.ls {k : ℕ} (t : Tm k) (v : VSubst) : Tm k := match t with
   | .eqn a b => .eqn (a.ls v) (b.ls v)
   | .pi A B => .pi (A.ls v) (B.ls v)
   | .sigma A B => .sigma (A.ls v) (B.ls v)
-  | .abs A B b => .abs (A.ls v) (B.ls v) (b.ls v)
+  | .abs A b => .abs (A.ls v) (b.ls v)
   | .app f a => .app (f.ls v) (a.ls v)
   | .pair a b => .pair (a.ls v) (b.ls v)
   | .fst p => .fst (p.ls v)
   | .snd p => .snd (p.ls v)
-  | .dite A φ l r => .dite (A.ls v) (φ.ls v) (l.ls v) (r.ls v)
+  | .dite φ l r => .dite (φ.ls v) (l.ls v) (r.ls v)
   | .trunc A => .trunc (A.ls v)
   | .choose A φ => .choose (A.ls v) (φ.ls v)
   | .has_ty A a => .has_ty (A.ls v) (a.ls v)
@@ -673,8 +667,8 @@ theorem Tm.smul_sigma {v : VSubst} {k A B}
   : v • Tm.sigma (k := k) A B = Tm.sigma (v • A) (v • B) := rfl
 
 @[simp]
-theorem Tm.smul_abs {v : VSubst} {k A B b}
-  : v • Tm.abs (k := k) A B b = Tm.abs (v • A) (v • B) (v • b) := rfl
+theorem Tm.smul_abs {v : VSubst} {k A b}
+  : v • Tm.abs (k := k) A b = Tm.abs (v • A) (v • b) := rfl
 
 @[simp]
 theorem Tm.smul_app {v : VSubst} {k f a}
@@ -691,8 +685,8 @@ theorem Tm.smul_fst {v : VSubst} {k p} : v • Tm.fst (k := k) p = Tm.fst (v •
 theorem Tm.smul_snd {v : VSubst} {k p} : v • Tm.snd (k := k) p = Tm.snd (v • p) := rfl
 
 @[simp]
-theorem Tm.smul_dite {v : VSubst} {k A φ l r}
-  : v • Tm.dite (k := k) A φ l r = Tm.dite (v • A) (v • φ) (v • l) (v • r) := rfl
+theorem Tm.smul_dite {v : VSubst} {k φ l r}
+  : v • Tm.dite (k := k) φ l r = Tm.dite (v • φ) (v • l) (v • r) := rfl
 
 @[simp]
 theorem Tm.smul_trunc {v : VSubst} {k A}
@@ -936,12 +930,12 @@ def Tm.depth {k : ℕ} : Tm k → ℕ
   | .eqn a b => (a.depth ⊔ b.depth) + 1
   | .pi A B => (A.depth ⊔ B.depth) + 1
   | .sigma A B => (A.depth ⊔ B.depth) + 1
-  | .abs A B b => (A.depth ⊔ B.depth ⊔ b.depth) + 1
+  | .abs A b => (A.depth ⊔ b.depth) + 1
   | .app f a => (f.depth ⊔ a.depth) + 1
   | .pair a b => (a.depth ⊔ b.depth) + 1
   | .fst p => p.depth + 1
   | .snd p => p.depth + 1
-  | .dite A φ l r => (A.depth ⊔ φ.depth ⊔ l.depth ⊔ r.depth) + 1
+  | .dite φ l r => (φ.depth ⊔ l.depth ⊔ r.depth) + 1
   | .trunc A => A.depth + 1
   | .choose A φ => (A.depth ⊔ φ.depth) + 1
   | .has_ty A a => (A.depth ⊔ a.depth) + 1
@@ -1005,14 +999,14 @@ def Tm.lcIndCof (L : Finset String)
   (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) → motive (.pi A B))
   (sigma : ∀ (A : Tm 0) (B : Tm 1),
     motive A → (∀ x ∉ L, motive (B.open x)) → motive (.sigma A B))
-  (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ L, motive (B.open x)) →
-    (∀ x ∉ L, motive (b.open x)) → motive (.abs A B b))
+  (abs : ∀ (A : Tm 0) (b : Tm 1), motive A →
+    (∀ x ∉ L, motive (b.open x)) → motive (.abs A b))
   (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
   (pair : ∀ (a b : Tm 0), motive a → motive b → motive (.pair a b))
   (fst : ∀ (p : Tm 0), motive p → motive (.fst p))
   (snd : ∀ (p : Tm 0), motive p → motive (.snd p))
-  (dite : ∀ (A φ : Tm 0) (l r : Tm 1), motive A → motive φ →
-    (∀ x ∉ L, motive (l.open x)) → (∀ x ∉ L, motive (r.open x)) → motive (.dite A φ l r))
+  (dite : ∀ (φ : Tm 0) (l r : Tm 1), motive φ →
+    (∀ x ∉ L, motive (l.open x)) → (∀ x ∉ L, motive (r.open x)) → motive (.dite φ l r))
   (trunc : ∀ (A : Tm 0), motive A → motive (.trunc A))
   (choose : ∀ (A : Tm 0) (φ : Tm 1), motive A →
     (∀ x ∉ L, motive (φ.open x)) → motive (.choose A φ))
@@ -1045,13 +1039,10 @@ def Tm.lcIndCof (L : Finset String)
       (fun x _ => (B.open x).lcIndCof L
         fv univ empty unit null eqn pi sigma abs app pair fst snd dite
           trunc choose has_ty invalid)
-  | .abs A B b =>
-    abs A B b
+  | .abs A b =>
+    abs A b
       (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
         trunc choose has_ty invalid)
-      (fun x _ => (B.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
       (fun x _ => (b.open x).lcIndCof L
         fv univ empty unit null eqn pi sigma abs app pair fst snd dite
           trunc choose has_ty invalid)
@@ -1075,10 +1066,8 @@ def Tm.lcIndCof (L : Finset String)
     snd p
       (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
         trunc choose has_ty invalid)
-  | .dite A φ l r =>
-    dite A φ l r
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+  | .dite φ l r =>
+    dite φ l r
       (φ.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
         trunc choose has_ty invalid)
       (fun x _ => (l.open x).lcIndCof L
@@ -1119,14 +1108,14 @@ def Tm.lcIndFvs
   (pi : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) → motive (.pi A B))
   (sigma : ∀ (A : Tm 0) (B : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
     motive (.sigma A B))
-  (abs : ∀ (A : Tm 0) (B b : Tm 1), motive A → (∀ x ∉ B.fvs, motive (B.open x)) →
-    (∀ x ∉ b.fvs, motive (b.open x)) → motive (.abs A B b))
+  (abs : ∀ (A : Tm 0) (b : Tm 1), motive A →
+    (∀ x ∉ b.fvs, motive (b.open x)) → motive (.abs A b))
   (app : ∀ (f a : Tm 0), motive f → motive a → motive (.app f a))
   (pair : ∀ (a b : Tm 0), motive a → motive b → motive (.pair a b))
   (fst : ∀ (p : Tm 0), motive p → motive (.fst p))
   (snd : ∀ (p : Tm 0), motive p → motive (.snd p))
-  (dite : ∀ (A φ : Tm 0) (l r : Tm 1), motive A → motive φ →
-    (∀ x ∉ l.fvs, motive (l.open x)) → (∀ x ∉ r.fvs, motive (r.open x)) → motive (.dite A φ l r))
+  (dite : ∀ (φ : Tm 0) (l r : Tm 1), motive φ →
+    (∀ x ∉ l.fvs, motive (l.open x)) → (∀ x ∉ r.fvs, motive (r.open x)) → motive (.dite φ l r))
   (trunc : ∀ (A : Tm 0), motive A → motive (.trunc A))
   (choose : ∀ (A : Tm 0) (φ : Tm 1), motive A →
     (∀ x ∉ φ.fvs, motive (φ.open x)) → motive (.choose A φ))
@@ -1157,12 +1146,10 @@ def Tm.lcIndFvs
         choose has_ty invalid)
       (fun x _ => (B.open x).lcIndFvs
         fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
-  | .abs A B b =>
-    abs A B b
+  | .abs A b =>
+    abs A b
       (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
-      (fun x _ => (B.open x).lcIndFvs fv
-        univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
       (fun x _ => (b.open x).lcIndFvs
       fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
   | .app a b =>
@@ -1185,10 +1172,8 @@ def Tm.lcIndFvs
     snd p
       (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
-  | .dite A φ l r =>
-    dite A φ l r
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+  | .dite φ l r =>
+    dite φ l r
       (φ.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
         choose has_ty invalid)
       (fun x _ => (l.open x).lcIndFvs

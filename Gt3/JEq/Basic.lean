@@ -19,11 +19,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
-  | abs {Γ : Ctx} {A A' : Tm 0} {B B' b b' : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs {Γ : Ctx} {A A' : Tm 0} {B b b' : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
-    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
+    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
-    : JEq Γ (A.pi B) (A.abs B b) (A'.abs B' b')
+    : JEq Γ (A.pi B) (A.abs b) (A'.abs b')
   | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
@@ -62,12 +62,12 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     : JEq (Γ.cons x A) .unit .null .null
   -- Reduction
   | beta_app' {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
-    (hf : JEq Γ (A.pi B) (A.abs B b) (A.abs B b))
+    (hf : JEq Γ (A.pi B) (A.abs b) (A.abs b))
     (ha : JEq Γ A a a)
-    (lhs_wf : JEq Γ Ba (.app (A.abs B b) a) (.app (A.abs B b) a))
+    (lhs_wf : JEq Γ Ba (.app (A.abs b) a) (.app (A.abs b) a))
     (rhs_wf : JEq Γ Ba ba ba)
     (hba : JEq Γ Ba (b.lst a) ba)
-    : JEq Γ Ba (.app (A.abs B b) a) ba
+    : JEq Γ Ba (.app (A.abs b) a) ba
   -- Reflexivity and extensionality
   | eqn_rfl {Γ : Ctx} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ : Ctx} {A a b : Tm 0}

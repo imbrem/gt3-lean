@@ -16,7 +16,7 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | abs {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
-    : InnerTy Γ (A.pi B) (A.abs B b)
+    : InnerTy Γ (A.pi B) (A.abs b)
   | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)

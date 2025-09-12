@@ -9,13 +9,13 @@ inductive Tm.Valid : ∀ {k}, Tm k → Prop
   | null : Valid .null
   | eqn {a b} : Valid a → Valid b → Valid (.eqn a b)
   | pi {A B} : Valid A → Valid B → Valid (.pi A B)
-  | abs {A B b} : Valid A → Valid B → Valid b → Valid (.abs A B b)
+  | abs {A b} : Valid A → Valid b → Valid (.abs A b)
   | app {f a} : Valid f → Valid a → Valid (.app f a)
   | sigma {A B} : Valid A → Valid B → Valid (.sigma A B)
   | pair {a b} : Valid a → Valid b → Valid (.pair a b)
   | fst {p} : Valid p → Valid (.fst p)
   | snd {p} : Valid p → Valid (.snd p)
-  | dite {A φ l r} : Valid A → Valid φ → Valid l → Valid r → Valid (.dite A φ l r)
+  | dite {φ l r} : Valid φ → Valid l → Valid r → Valid (.dite φ l r)
   | trunc {A} : Valid A → Valid (.trunc A)
   | choose {A φ} : Valid A → Valid φ → Valid (.choose A φ)
   | has_ty {A a} : Valid A → Valid a → Valid (.has_ty A a)
@@ -31,8 +31,8 @@ theorem Tm.Valid.pi_iff {k} {A : Tm k} {B : Tm (k + 1)} : Valid (.pi A B) ↔ Va
   := ⟨fun h => by cases h; simp [*], fun h => by cases h; constructor <;> assumption⟩
 
 @[simp]
-theorem Tm.Valid.abs_iff {k} {A : Tm k} {B b : Tm (k + 1)}
-  : Valid (.abs A B b) ↔ Valid A ∧ Valid B ∧ Valid b
+theorem Tm.Valid.abs_iff {k} {A : Tm k} {b : Tm (k + 1)}
+  : Valid (.abs A b) ↔ Valid A ∧ Valid b
 := ⟨fun h => by cases h; simp [*], fun h => by constructor <;> simp [*]⟩
 
 @[simp]
@@ -57,8 +57,8 @@ theorem Tm.Valid.snd_iff {k} {p : Tm k} : Valid (.snd p) ↔ Valid p
   := ⟨fun h => by cases h; assumption, fun h => by constructor; assumption⟩
 
 @[simp]
-theorem Tm.Valid.dite_iff {k} {A φ : Tm k} {l r : Tm (k + 1)}
-  : Valid (.dite A φ l r) ↔ Valid A ∧ Valid φ ∧ Valid l ∧ Valid r
+theorem Tm.Valid.dite_iff {k} {φ : Tm k} {l r : Tm (k + 1)}
+  : Valid (.dite φ l r) ↔ Valid φ ∧ Valid l ∧ Valid r
   := ⟨fun h => by cases h; simp [*], fun h => by constructor <;> simp [*]⟩
 
 @[simp]
