@@ -29,7 +29,7 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
   | cast' => apply cast' <;> apply_assumption <;> assumption
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption
-  | transfer => apply transfer <;> apply_assumption <;> assumption
+  | transfer' => apply transfer' <;> apply_assumption <;> assumption
   | _ =>
     constructor <;> first
     | apply_assumption <;> assumption

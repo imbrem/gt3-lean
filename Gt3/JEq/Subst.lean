@@ -95,7 +95,7 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | cast' => apply cast' <;> apply_assumption <;> assumption
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption
-  | transfer => apply transfer <;> apply_assumption <;> assumption
+  | transfer' => apply transfer' <;> apply_assumption <;> assumption
   | nil_ok => exact .null hσ.src_ok
   | cons_ok => apply_assumption; cases hσ; assumption
   | _ =>

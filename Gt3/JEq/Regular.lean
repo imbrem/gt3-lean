@@ -59,16 +59,16 @@ theorem Ctx.TyEq.pi {Γ A A' B B'} {L : Finset String}
 
 theorem Ctx.IsTy.max_univ_dv' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
-  : ∃ℓ, ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (.univ ℓ) (B.open x)
+  : ∃ℓ, ∀ x ∉ Γ.dv, HasTy' (Γ.cons x A) (.univ ℓ) (B.open x)
   := TyEq.max_univ_dv' hB
 
 theorem Ctx.IsTy.max_univ' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
-  : ∃ℓ, ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x)
+  : ∃ℓ, ∀ x ∉ L, HasTy' (Γ.cons x A) (.univ ℓ) (B.open x)
   := TyEq.max_univ' hB
 
 theorem Ctx.IsTy.max_univ_iff' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
-  : (∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) ↔ ∃ℓ, ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x)
+  : (∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) ↔ ∃ℓ, ∀ x ∉ L, HasTy' (Γ.cons x A) (.univ ℓ) (B.open x)
   := ⟨max_univ', fun ⟨ℓ, h⟩ x hx => ⟨ℓ, h x hx⟩⟩
 
 theorem Ctx.IsTy.pi {Γ A B} {L : Finset String}
