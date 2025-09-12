@@ -64,3 +64,9 @@ theorem Ctx.JEq.ltr {Γ A B a b} (hA : JEq Γ A a b) (hB : HasTy Γ B a) : JEq �
 
 theorem Ctx.JEq.rtr {Γ A B a b} (hA : JEq Γ A a b) (hB : HasTy Γ B b) : JEq Γ B a b
   := .symm (.ltr hA.symm hB)
+
+theorem Ctx.WfEq.ltr {Γ A a b} (hab : WfEq Γ a b) (hA : HasTy Γ A a) : JEq Γ A a b
+  := have ⟨_, hab⟩ := hab; hab.ltr hA
+
+theorem Ctx.WfEq.rtr {Γ A a b} (hab : WfEq Γ a b) (hA : HasTy Γ A b) : JEq Γ A a b
+  := have ⟨_, hab⟩ := hab; hab.rtr hA
