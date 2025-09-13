@@ -23,6 +23,8 @@ theorem Ctx.RwTy.of_has_ty_jeq {Γ ℓ U A A'}
 inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
   | fv {Γ} (x) : LRwEq Γ (.fv x) (.fv x)
   | univ {Γ} (ℓ) : LRwEq Γ (.univ ℓ) (.univ ℓ)
+  | empty {Γ} : LRwEq Γ .empty .empty
+  | unit {Γ} : LRwEq Γ .unit .unit
   | null {Γ} : LRwEq Γ .null .null
   | eqn {Γ} {a a' b b'}
     : LRwEq Γ a a' → LRwEq Γ b b' → LRwEq Γ (.eqn a b) (.eqn a' b')
@@ -34,14 +36,12 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
     : LRwEq Γ A A'
     → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (B.open y) (B'.open y))
     → LRwEq Γ (.sigma A B) (.sigma A' B')
-  | empty {Γ} : LRwEq Γ .empty .empty
-  | unit {Γ} : LRwEq Γ .unit .unit
   | abs {Γ} {A A' b b'} {L : Finset String}
     : LRwEq Γ A A'
-    → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y, LRwEq (Γ.cons x X) (b.open y) (b'.open y))
+    → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (b.open y) (b'.open y))
     → LRwEq Γ (.abs A b) (.abs A' b')
   | app {Γ} {f f' a a'} : LRwEq Γ f f' → LRwEq Γ a a' → LRwEq Γ (.app f a) (.app f' a')
-  | pair {Γ} {a a' b b'} {L : Finset String} : LRwEq Γ a a' → LRwEq Γ b b' →
+  | pair {Γ} {a a' b b'} : LRwEq Γ a a' → LRwEq Γ b b' →
     LRwEq Γ (.pair a b) (.pair a' b')
   | fst {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.fst p) (.fst p')
   | snd {Γ} {p p'} : LRwEq Γ p p' → LRwEq Γ (.snd p) (.snd p')
@@ -152,12 +152,12 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
   | fv (x) : RwEq Γ (.fv x) (.fv x)
   | bv (i) : RwEq Γ (.bv i) (.bv i)
   | univ (ℓ) : RwEq Γ (.univ ℓ) (.univ ℓ)
+  | empty : RwEq Γ .empty .empty
+  | unit : RwEq Γ .unit .unit
   | null : RwEq Γ .null .null
   | eqn {a a' b b'} : RwEq Γ a a' → RwEq Γ b b' → RwEq Γ (.eqn a b) (.eqn a' b')
   | pi {A A' B B'} : RwEq Γ A A' → RwEq Γ B B' → RwEq Γ (.pi A B) (.pi A' B')
   | sigma {A A' B B'} : RwEq Γ A A' → RwEq Γ B B' → RwEq Γ (.sigma A B) (.sigma A' B')
-  | empty : RwEq Γ .empty .empty
-  | unit : RwEq Γ .unit .unit
   | abs {A A' b b'} : RwEq Γ A A' → RwEq Γ b b' →
     RwEq Γ (.abs A b) (.abs A' b')
   | app {f f' a a'} : RwEq Γ f f' → RwEq Γ a a' → RwEq Γ (.app f a) (.app f' a')
@@ -220,118 +220,159 @@ theorem Ctx.RwEq.wk0
 
 theorem Ctx.RwEq.lst_bar {Γ Δ} (h : PSub Γ Δ) {k} {a b : Tm k} {a' b'}
   (h : RwEq Δ a b) (h' : Tm.LstBar a b a' b') : LRwEq Γ a' b'
-  := by induction h generalizing Γ with
+  := by induction h generalizing Γ a' b' with
   | wf_clamp hab =>
     apply LRwEq.wf (WfEq.psub h _)
     cases h'.lhs.clamped_valid hab.lhs_valid
     cases h'.rhs.clamped_valid hab.rhs_valid
     exact hab
-  | abs =>
+  | fv => simp [h'.fv]; rfl
+  | bv => simp [h'.bv]; rfl
+  | univ => simp [h'.univ]; rfl
+  | empty => simp [h'.empty]; rfl
+  | unit => simp [h'.unit]; rfl
+  | null => simp [h'.null]; rfl
+  | eqn ha hb Ia Ib =>
+    have _ := h'.eqn
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
     constructor
-    · stop
-    · intro x hx X hX y hy
-      --simp only [<-Tm.lst_fv]
-      sorry
-    · intro x hx X hX y
-      sorry
-  | _ =>
-    stop
+    · apply Ia <;> assumption
+    · apply Ib <;> assumption
+  | pi hA hB IA IB =>
+    have _ := h'.pi;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
     constructor
-
-theorem Ctx.RwEq.clamp {Γ} {k} {a b : Tm k}
-  (h : RwEq Γ a b) : LRwEq Γ (a.erase.clamp 0) (b.erase.clamp 0)
-  := by stop induction h with
-  | wf_clamp h => exact .wf h
-  | abs =>
+    · apply IA <;> assumption
+    · {
+      intro x hx X hX y hy
+      apply IB
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+  | abs hA hb IA Ib =>
+    have _ := h'.abs;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
     constructor
-    · assumption
-    · intro x hx X hX y hy
-      --simp only [<-Tm.lst_fv]
-      sorry
-    · intro x hx X hX y
-      sorry
-  | _ =>
-    stop
+    · apply IA <;> assumption
+    · {
+      intro x hx X hX y hy
+      apply Ib
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+  | sigma hA hB IA IB =>
+    have _ := h'.sigma;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
     constructor
+    · apply IA <;> assumption
+    · {
+      intro x hx X hX y hy
+      apply IB
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+  | app hf ha If Ia =>
+    have _ := h'.app;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply If <;> assumption
+    · apply Ia <;> assumption
+  | pair ha hb Ia Ib =>
+    have _ := h'.pair;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply Ia <;> assumption
+    · apply Ib <;> assumption
+  | fst hp Ip =>
+    have _ := h'.fst;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply Ip <;> assumption
+  | snd hp Ip =>
+    have _ := h'.snd;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply Ip <;> assumption
+  | dite hφ hl hr Iφ Il Ir =>
+    have _ := h'.dite;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply Iφ <;> assumption
+    · {
+      intro x hx X hX y hy
+      apply Il
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+    · {
+      intro x hx X hX y hy
+      apply Ir
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+  | trunc hA IA =>
+    have _ := h'.trunc;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply IA <;> assumption
+  | choose hA hφ IA Iφ =>
+    have _ := h'.choose;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply IA <;> assumption
+    · {
+      intro x hx X hX y hy
+      apply Iφ
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+  | has_ty hA ha IA Ia =>
+    have _ := h'.has_ty;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply IA <;> assumption
+    · apply Ia <;> assumption
+  | invalid => simp [h'.invalid]; rfl
+  | trans hac hcb Iac Icb =>
+    rename_i a c b
+    have ⟨c', hac', hcb'⟩ := h'.split c;
+    apply LRwEq.trans
+    · apply Iac h hac'
+    · apply Icb h hcb'
 
--- theorem Ctx.RwEq.toJEq {Γ} {A a b : Tm 0} (h : RwEq Γ a b) (ha : HasTy Γ A a)
---   : JEq Γ A a b
---   := by
---   generalize hu : a = u
---   induction u using Tm.lcIndCof Γ.dv generalizing b with
---   | invalid => cases hu; cases ha.no_invalid.left
---   | _ =>
---     induction h with
---     | wf_clamp h => cases hu; apply WfEq.transfer _ ha; convert h <;> simp
---     | _ => first | assumption | fail
+theorem Ctx.RwEq.lwreq {Γ} {a b : Tm 0}
+  (h : RwEq Γ a b) : LRwEq Γ a b
+  := open Classical in by
+  if hΓ : Ok Γ then
+    exact h.lst_bar hΓ.psub .refl
+  else
+    cases h.not_ok hΓ; rfl
 
--- theorem Ctx.RwEq.toWf {Γ} {a b : Tm 0} (h : RwEq Γ a b) (ha : IsWf Γ a)
---   : WfEq Γ a b
---   := by induction a using Tm.lcIndCof Γ.dv generalizing b with
---   | _ =>
---     cases h with
---     | wf_clamp h => convert h <;> simp
---     | _ => sorry
+theorem Ctx.RwEq.jeq {Γ} {A a b : Tm 0} (h : RwEq Γ a b) (ha : HasTy Γ A a)
+  : JEq Γ A a b := h.lwreq.jeq_or (.inl ha)
 
--- inductive Ctx.ORwEq (Γ : Ctx) : OTm → OTm → Prop
---   | fv (x) : ORwEq Γ (.fv x) (.fv x)
---   | bv (i) : ORwEq Γ (.bv i) (.bv i)
---   | univ (ℓ) : ORwEq Γ (.univ ℓ) (.univ ℓ)
---   | null : ORwEq Γ .null .null
---   | eqn {a a' b b'} : ORwEq Γ a a' → ORwEq Γ b b' → ORwEq Γ (.eqn a b) (.eqn a' b')
---   | pi {A A' B B'} : ORwEq Γ A A' → ORwEq Γ B B' → ORwEq Γ (.pi A B) (.pi A' B')
---   | sigma {A A' B B'} : ORwEq Γ A A' → ORwEq Γ B B' → ORwEq Γ (.sigma A B) (.sigma A' B')
---   | empty : ORwEq Γ .empty .empty
---   | unit : ORwEq Γ .unit .unit
---   | abs {A A' B B' b b'} : ORwEq Γ A A' → ORwEq Γ B B' → ORwEq Γ b b' →
---     ORwEq Γ (.abs A B b) (.abs A' B' b')
---   | app {f f' a a'} : ORwEq Γ f f' → ORwEq Γ a a' → ORwEq Γ (.app f a) (.app f' a')
---   | pair {A A' B B' a a' b b'} : ORwEq Γ A A' → ORwEq Γ B B' → ORwEq Γ a a' → ORwEq Γ b b' →
---     ORwEq Γ (.pair A B a b) (.pair A' B' a' b')
---   | fst {p p'} : ORwEq Γ p p' → ORwEq Γ (.fst p) (.fst p')
---   | snd {p p'} : ORwEq Γ p p' → ORwEq Γ (.snd p) (.snd p')
---   | invalid : ORwEq Γ .invalid .invalid
---   | wf {a b} : WfEq Γ (a.clamp 0) (b.clamp 0) → ORwEq Γ a b
---   | trans {a b c} : ORwEq Γ a b → ORwEq Γ b c → ORwEq Γ a c
+theorem Ctx.RwEq.has_ty_mp {Γ} {A a b : Tm 0} (h : RwEq Γ a b)
+  (ha : HasTy Γ A a) : HasTy Γ A b
+  := (h.jeq ha).rhs_ty
 
--- theorem Ctx.ORwEq.refl {Γ} (a) : ORwEq Γ a a := by induction a <;> constructor <;> assumption
+theorem Ctx.RwEq.has_ty_iff {Γ} {A a b : Tm 0} (h : RwEq Γ a b)
+  : HasTy Γ A a ↔ HasTy Γ A b
+  := ⟨h.has_ty_mp, h.symm.has_ty_mp⟩
 
--- theorem Ctx.ORwEq.symm {Γ} {a b} (h : ORwEq Γ a b) : ORwEq Γ b a
---   := by induction h with
---   | wf h => exact .wf h.symm
---   | trans _ _ Iab Ibc => exact .trans Ibc Iab
---   | _ => constructor <;> assumption
+theorem Ctx.RwEq.ty_eq {Γ} {A B : Tm 0} (h : RwEq Γ A B) (hA : IsTy Γ A)
+  : TyEq Γ A B := have ⟨ℓ, hA⟩ := hA; ⟨ℓ, h.jeq hA.lhs_ty⟩
 
--- inductive Ctx.HRwEq (Γ : Ctx) : ∀ {kl kr}, Tm kl → Tm kr → Prop
---   | fv (x) : HRwEq Γ (.fv x) (.fv x)
---   | bv (il ir) : il.val = ir.val → HRwEq Γ (.bv il) (.bv ir)
---   | univ (ℓ) : HRwEq Γ (.univ ℓ) (.univ ℓ)
---   | null : HRwEq Γ .null .null
---   | eqn {a a' b b'} : HRwEq Γ a a' → HRwEq Γ b b' → HRwEq Γ (.eqn a b) (.eqn a' b')
---   | pi {A A' B B'} : HRwEq Γ A A' → HRwEq Γ B B' → HRwEq Γ (.pi A B) (.pi A' B')
---   | sigma {A A' B B'} : HRwEq Γ A A' → HRwEq Γ B B' → HRwEq Γ (.sigma A B) (.sigma A' B')
---   | empty : HRwEq Γ .empty .empty
---   | unit : HRwEq Γ .unit .unit
---   | abs {A A' B B' b b'} : HRwEq Γ A A' → HRwEq Γ B B' → HRwEq Γ b b' →
---     HRwEq Γ (.abs A B b) (.abs A' B' b')
---   | app {f f' a a'} : HRwEq Γ f f' → HRwEq Γ a a' → HRwEq Γ (.app f a) (.app f' a')
---   | pair {A A' B B' a a' b b'} : HRwEq Γ A A' → HRwEq Γ B B' → HRwEq Γ a a' → HRwEq Γ b b' →
---     HRwEq Γ (.pair A B a b) (.pair A' B' a' b')
---   | fst {p p'} : HRwEq Γ p p' → HRwEq Γ (.fst p) (.fst p')
---   | snd {p p'} : HRwEq Γ p p' → HRwEq Γ (.snd p) (.snd p')
---   | invalid : HRwEq Γ .invalid .invalid
---   | wf {a b} : WfEq Γ a b → HRwEq Γ a b
---   | trans {a b c} : HRwEq Γ a b → HRwEq Γ b c → HRwEq Γ a c
+theorem Ctx.RwEq.is_ty {Γ} {A B : Tm 0} (h : RwEq Γ A B) (hA : IsTy Γ A)
+  : IsTy Γ B := (h.ty_eq hA).rhs
 
--- theorem Ctx.HRwEq.refl_cast {Γ} {lo hi : ℕ}
---   (h : lo ≤ hi) (t : Tm lo) : HRwEq Γ t (t.castLE h) := by
---   induction t generalizing hi <;> constructor <;> simp [*]
+theorem Ctx.RwEq.is_ty_iff {Γ} {A B : Tm 0} (h : RwEq Γ A B)
+  : IsTy Γ A ↔ IsTy Γ B := ⟨h.is_ty, h.symm.is_ty⟩
 
--- theorem Ctx.HRwEq.refl {Γ} {k : ℕ} (t : Tm k) : HRwEq Γ t t
---   := by convert HRwEq.refl_cast (le_refl _) t; simp
+theorem Ctx.RwEq.weq {Γ} {a b : Tm 0} (h : RwEq Γ a b) (ha : IsWf Γ a)
+  : WfEq Γ a b := have ⟨W, ha⟩ := ha.has_ty; ⟨W, h.jeq ha⟩
 
--- theorem Ctx.HRwEq.symm {Γ} {kl kr} {a : Tm kl} {b : Tm kr} (h : HRwEq Γ a b) : HRwEq Γ b a
---   := by induction h with
---   | wf h => exact .wf h.symm
---   | trans _ _ Iab Ibc => exact .trans Ibc Iab
---   | _ => constructor <;> simp [*]
+theorem Ctx.RwEq.is_wf {Γ} {a b : Tm 0} (h : RwEq Γ a b) (hA : IsWf Γ a)
+  : IsWf Γ b := (h.weq hA).rhs
+
+theorem Ctx.RwEq.wf_iff {Γ} {a b : Tm 0} (h : RwEq Γ a b)
+  : IsWf Γ a ↔ IsWf Γ b := ⟨h.is_wf, h.symm.is_wf⟩
