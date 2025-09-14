@@ -95,13 +95,17 @@ Tasks may involve:
 - [ ] Update `fvs` function (remember unions for multiple parameters)
 - [ ] Update `lsv` function
 - [ ] Update `ls` function
-- [ ] **CRITICAL**: Write new `smul` theorems for each constructor
 - [ ] **CRITICAL**: Add `@[simp]` attributes to the new `smul` theorems
 - [ ] Update `depth` function
 - [ ] Update `succIndOn` induction principle
 - [ ] Update `lcIndCof` induction principle  
 - [ ] Update `lcIndFvs` induction principle
 - [ ] Add simp lemmas for all operations
+- [ ] **IMPORTANT**: Add `smul_*` simp theorems for each new constructor (e.g., `smul_zero`,
+  `smul_succ`, `smul_natrec`)
+- [ ] **IMPORTANT**: Add `open_*` simp theorems for each new constructor (e.g., `open_zero`,
+  `open_succ`, `open_natrec`)
+- [ ] **IMPORTANT**: Add `lst_*` simp theorems for each new constructor (e.g., `lst_zero`, `lst_succ`, `lst_natrec`)
 - [ ] **IMPORTANT**: After updating `ls`, you must write corresponding `smul` theorems for each new constructor. These define how the `•` operator works: `theorem Tm.smul_pair {...} := rfl`. Then add `@[simp]` attributes to each theorem.
 - [ ] Test: `lake build Gt3.Syntax.Basic`
 

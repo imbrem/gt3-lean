@@ -22,6 +22,9 @@ inductive Tm : ℕ → Type
   | dite {k : ℕ} (φ : Tm k) (l r : Tm (k + 1)) : Tm k
   | trunc {k : ℕ} (A : Tm k) : Tm k
   | choose {k : ℕ} (A : Tm k) (φ : Tm (k + 1)) : Tm k
+  | zero {k : ℕ} : Tm k
+  | succ {k : ℕ} (n : Tm k) : Tm k
+  | natrec {k : ℕ} (C s : Tm (k + 1)) (z n : Tm k) : Tm k
   | has_ty {k : ℕ} (A a : Tm k) : Tm k
   | invalid {k : ℕ} : Tm k
 
@@ -43,6 +46,9 @@ def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
   | .dite φ l r => .dite (φ.castLE h) (l.castLE (by omega)) (r.castLE (by omega))
   | .trunc A => .trunc (A.castLE h)
   | .choose A φ => .choose (A.castLE h) (φ.castLE (by omega))
+  | .zero => .zero
+  | .succ n => .succ (n.castLE h)
+  | .natrec C s z n => .natrec (C.castLE (by omega)) (s.castLE (by omega)) (z.castLE h) (n.castLE h)
   | .has_ty A a => .has_ty (A.castLE h) (a.castLE h)
   | .invalid => .invalid
 
@@ -104,6 +110,9 @@ def Tm.open {k : ℕ} (t : Tm (k + 1)) (x : String) : Tm k := match t with
   | .dite φ l r => .dite (φ.open x) (l.open x) (r.open x)
   | .trunc A => .trunc (A.open x)
   | .choose A φ => .choose (A.open x) (φ.open x)
+  | .zero => .zero
+  | .succ n => .succ (n.open x)
+  | .natrec C z s n => .natrec (C.open x) (z.open x) (s.open x) (n.open x)
   | .has_ty A a => .has_ty (A.open x) (a.open x)
   | .invalid => .invalid
 
@@ -188,6 +197,20 @@ theorem Tm.open_choose {k : ℕ} (A : Tm (k + 1)) (φ : Tm (k + 2)) (x : String)
   := by simp [«open»]
 
 @[simp]
+theorem Tm.open_zero {k : ℕ} (x : String) : (Tm.zero (k := (k + 1))).open x = .zero
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_succ {k : ℕ} (n : Tm (k + 1)) (x : String)
+  : (Tm.succ (k := (k + 1)) n).open x = .succ (n.open x)
+  := by simp [«open»]
+
+@[simp]
+theorem Tm.open_natrec {k : ℕ} (C : Tm (k + 2)) (s : Tm (k + 2)) (z : Tm (k + 1)) (n : Tm (k + 1))
+  (x : String) : (Tm.natrec (k := (k + 1)) C s z n).open x =
+  .natrec (C.open x) (s.open x) (z.open x) (n.open x) := by simp [«open»]
+
+@[simp]
 theorem Tm.open_has_ty {k : ℕ} (A a : Tm (k + 1)) (x : String)
   : (Tm.has_ty (k := (k + 1)) A a).open x = .has_ty (A.open x) (a.open x)
   := by simp [«open»]
@@ -214,6 +237,9 @@ def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .dite φ l r => .dite (φ.lst v) (l.lst v) (r.lst v)
   | .trunc A => .trunc (A.lst v)
   | .choose A φ => .choose (A.lst v) (φ.lst v)
+  | .zero => .zero
+  | .succ n => .succ (n.lst v)
+  | .natrec C s z n => .natrec (C.lst v) (s.lst v) (z.lst v) (n.lst v)
   | .has_ty A a => .has_ty (A.lst v) (a.lst v)
   | .invalid => .invalid
 
@@ -299,6 +325,20 @@ theorem Tm.lst_choose {k : ℕ} (A : Tm (k + 1)) (φ : Tm (k + 2)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
+theorem Tm.lst_zero {k : ℕ} (v : Tm 0) : (Tm.zero (k := (k + 1))).lst v = .zero
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_succ {k : ℕ} (n : Tm (k + 1)) (v : Tm 0)
+  : (Tm.succ (k := (k + 1)) n).lst v = .succ (n.lst v)
+  := by simp [lst]
+
+@[simp]
+theorem Tm.lst_natrec {k : ℕ} (C : Tm (k + 2)) (s : Tm (k + 2)) (z : Tm (k + 1)) (n : Tm (k + 1))
+  (v : Tm 0) : (Tm.natrec (k := (k + 1)) C s z n).lst v =
+  .natrec (C.lst v) (s.lst v) (z.lst v) (n.lst v) := by simp [lst]
+
+@[simp]
 theorem Tm.lst_has_ty {k : ℕ} (A a : Tm (k + 1)) (v : Tm 0)
   : (Tm.has_ty (k := (k + 1)) A a).lst v = .has_ty (A.lst v) (a.lst v)
   := by simp [lst]
@@ -330,6 +370,10 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (trunc : ∀ {k} (A : Tm (k + 1)), motive k A → motive k (.trunc A))
   (choose : ∀ {k} (A : Tm (k + 1)) (φ : Tm (k + 2)),
     motive k A → motive (k + 1) φ → motive k (.choose A φ))
+  (zero : ∀ {k}, motive k .zero)
+  (succ : ∀ {k} (n : Tm (k + 1)), motive k n → motive k (.succ n))
+  (natrec : ∀ {k} (C : Tm (k + 2)) (s : Tm (k + 2)) (z : Tm (k + 1)) (n : Tm (k + 1)),
+    motive (k + 1) C → motive (k + 1) s → motive k z → motive k n → motive k (.natrec C s z n))
   (has_ty : ∀ {k} (A a : Tm (k + 1)), motive k A → motive k a → motive k (.has_ty A a))
   (invalid : ∀ {k}, motive k .invalid)
   {k : ℕ} (t : Tm (k + 1)) : motive k t
@@ -342,94 +386,86 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   | .null => null
   | .eqn a b =>
     eqn a b
-      (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (a.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .pi A B =>
     pi A B
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (B.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (B.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .sigma A B =>
     sigma A B
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (B.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (B.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .abs A b =>
     abs A b
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .app a b =>
     app a b
-      (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (a.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .pair a b =>
     pair a b
-      (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (a.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .fst p =>
     fst p
-      (p.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (p.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .snd p =>
     snd p
-      (p.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (p.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .dite φ l r =>
     dite φ l r
-      (φ.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (l.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (r.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (φ.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (l.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (r.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .trunc A =>
     trunc A
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .choose A φ =>
     choose A φ
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (φ.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (φ.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+  | .zero => zero
+  | .succ n => succ n
+    (n.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
+  | .natrec C s z n =>
+    natrec C s z n
+      (C.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (s.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (z.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (n.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .has_ty A a =>
     has_ty A a
-      (A.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (a.succIndOn
-        fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (a.succIndOn fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .invalid => invalid
 
 theorem Tm.lst_fv {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.lst (.fv x)) = t.open x
@@ -497,6 +533,9 @@ def Tm.close {k : ℕ} (t : Tm k) (x : String) : Tm (k + 1) := match t with
   | .dite φ l r => .dite (φ.close x) (l.close x) (r.close x)
   | .trunc A => .trunc (A.close x)
   | .choose A φ => .choose (A.close x) (φ.close x)
+  | .zero => .zero
+  | .succ n => .succ (n.close x)
+  | .natrec C s z n => .natrec (C.close x) (s.close x) (z.close x) (n.close x)
   | .has_ty A a => .has_ty (A.close x) (a.close x)
   | .invalid => .invalid
 
@@ -519,6 +558,9 @@ def Tm.fvs {k : ℕ} : Tm k → Finset String
   | .dite φ l r => φ.fvs ∪ l.fvs ∪ r.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
+  | .zero => ∅
+  | .succ n => n.fvs
+  | .natrec C s z n => C.fvs ∪ s.fvs ∪ z.fvs ∪ n.fvs
   | .has_ty A a => A.fvs ∪ a.fvs
   | _ => ∅
 
@@ -568,6 +610,9 @@ def Tm.lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0) : Tm k := match t with
   | .dite φ l r => .dite (φ.lsv x v) (l.lsv x v) (r.lsv x v)
   | .trunc A => .trunc (A.lsv x v)
   | .choose A φ => .choose (A.lsv x v) (φ.lsv x v)
+  | .zero => .zero
+  | .succ n => .succ (n.lsv x v)
+  | .natrec C s z n => .natrec (C.lsv x v) (s.lsv x v) (z.lsv x v) (n.lsv x v)
   | .has_ty A a => .has_ty (A.lsv x v) (a.lsv x v)
   | .invalid => .invalid
 
@@ -628,6 +673,9 @@ def Tm.ls {k : ℕ} (t : Tm k) (v : VSubst) : Tm k := match t with
   | .dite φ l r => .dite (φ.ls v) (l.ls v) (r.ls v)
   | .trunc A => .trunc (A.ls v)
   | .choose A φ => .choose (A.ls v) (φ.ls v)
+  | .zero => .zero
+  | .succ n => .succ (n.ls v)
+  | .natrec C s z n => .natrec (C.ls v) (s.ls v) (z.ls v) (n.ls v)
   | .has_ty A a => .has_ty (A.ls v) (a.ls v)
   | .invalid => .invalid
 
@@ -695,6 +743,17 @@ theorem Tm.smul_trunc {v : VSubst} {k A}
 @[simp]
 theorem Tm.smul_choose {v : VSubst} {k A φ}
   : v • Tm.choose (k := k) A φ = Tm.choose (v • A) (v • φ) := rfl
+
+@[simp]
+theorem Tm.smul_zero {v : VSubst} {k} : v • Tm.zero (k := k) = .zero := rfl
+
+@[simp]
+theorem Tm.smul_succ {v : VSubst} {k n}
+  : v • Tm.succ (k := k) n = Tm.succ (v • n) := rfl
+
+@[simp]
+theorem Tm.smul_natrec {v : VSubst} {k C s z n}
+  : v • Tm.natrec (k := k) C s z n = Tm.natrec (v • C) (v • s) (v • z) (v • n) := rfl
 
 @[simp]
 theorem Tm.smul_has_ty {v : VSubst} {k A a}
@@ -938,6 +997,9 @@ def Tm.depth {k : ℕ} : Tm k → ℕ
   | .dite φ l r => (φ.depth ⊔ l.depth ⊔ r.depth) + 1
   | .trunc A => A.depth + 1
   | .choose A φ => (A.depth ⊔ φ.depth) + 1
+  | .zero => 0
+  | .succ n => n.depth + 1
+  | .natrec C z s n => (C.depth ⊔ z.depth ⊔ s.depth ⊔ n.depth) + 1
   | .has_ty A a => (A.depth ⊔ a.depth) + 1
   | _ => 0
 
@@ -1010,6 +1072,11 @@ def Tm.lcIndCof (L : Finset String)
   (trunc : ∀ (A : Tm 0), motive A → motive (.trunc A))
   (choose : ∀ (A : Tm 0) (φ : Tm 1), motive A →
     (∀ x ∉ L, motive (φ.open x)) → motive (.choose A φ))
+  (zero : motive .zero)
+  (succ : ∀ (n : Tm 0), motive n → motive (.succ n))
+  (natrec : ∀ (C s : Tm 1) (z n : Tm 0),
+    (∀ x ∉ L, motive (C.open x)) → (∀ x ∉ L, motive (s.open x)) → motive z → motive n →
+    motive (.natrec C s z n))
   (has_ty : ∀ (A a : Tm 0), motive A → motive a → motive (.has_ty A a))
   (invalid : motive .invalid)
   (t : Tm 0) : motive t
@@ -1021,78 +1088,83 @@ def Tm.lcIndCof (L : Finset String)
   | .null => null
   | .eqn a b =>
     eqn a b
-      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .pi A B =>
     pi A B
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (fun x _ => (B.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .sigma A B =>
     sigma A B
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (fun x _ => (B.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (B.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .abs A b =>
     abs A b
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (fun x _ => (b.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (b.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .app a b =>
     app a b
-      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
-      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .pair a b =>
     pair a b
-      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .fst p =>
     fst p
-      (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .snd p =>
     snd p
-      (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (p.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .dite φ l r =>
     dite φ l r
-      (φ.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (fun x _ => (l.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
-      (fun x _ => (r.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
+      (φ.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (l.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
+      (fun x _ => (r.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .trunc A =>
     trunc A
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .choose A φ =>
     choose A φ
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (fun x _ => (φ.open x).lcIndCof L
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-          trunc choose has_ty invalid)
-  | .has_ty A a =>
-    has_ty A a
-      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
-      (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite
-        trunc choose has_ty invalid)
+      (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (φ.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
+  | .zero => zero
+  | .succ n => succ n (n.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair
+    fst snd dite trunc choose zero succ natrec has_ty invalid)
+  | .natrec C s z n => natrec C s z n
+    (fun x _ => (C.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst
+      snd dite trunc choose zero succ natrec has_ty invalid)
+    (fun x _ => (s.open x).lcIndCof L fv univ empty unit
+        null eqn pi sigma abs app pair fst snd dite trunc choose zero succ natrec has_ty invalid)
+    (z.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
+      choose zero succ natrec has_ty invalid)
+    (n.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
+  | .has_ty A a => has_ty A a
+    (A.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
+    (a.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
   | .invalid => invalid
 termination_by depth t
 decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
@@ -1119,6 +1191,11 @@ def Tm.lcIndFvs
   (trunc : ∀ (A : Tm 0), motive A → motive (.trunc A))
   (choose : ∀ (A : Tm 0) (φ : Tm 1), motive A →
     (∀ x ∉ φ.fvs, motive (φ.open x)) → motive (.choose A φ))
+  (zero : motive .zero)
+  (succ : ∀ (n : Tm 0), motive n → motive (.succ n))
+  (natrec : ∀ (C s : Tm 1) (z n : Tm 0),
+    (∀ x ∉ C.fvs, motive (C.open x)) → (∀ x ∉ s.fvs, motive (s.open x)) → motive z → motive n →
+    motive (.natrec C s z n))
   (has_ty : ∀ (A a : Tm 0), motive A → motive a → motive (.has_ty A a))
   (invalid : motive .invalid)
   (t : Tm 0) : motive t
@@ -1130,72 +1207,83 @@ def Tm.lcIndFvs
   | .null => null
   | .eqn a b =>
     eqn a b
-      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .pi A B =>
     pi A B
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (fun x _ => (B.open x).lcIndFvs
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .sigma A B =>
     sigma A B
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (fun x _ => (B.open x).lcIndFvs
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (B.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .abs A b =>
     abs A b
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (fun x _ => (b.open x).lcIndFvs
-      fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (b.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .app a b =>
     app a b
-      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .pair a b =>
     pair a b
-      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (b.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .fst p =>
     fst p
-      (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .snd p =>
     snd p
-      (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (p.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .dite φ l r =>
     dite φ l r
-      (φ.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (fun x _ => (l.open x).lcIndFvs
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
-      (fun x _ => (r.open x).lcIndFvs
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
+      (φ.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (l.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
+      (fun x _ => (r.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
   | .trunc A =>
     trunc A
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
   | .choose A φ =>
     choose A φ
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (fun x _ => (φ.open x).lcIndFvs
-        fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose has_ty invalid)
-  | .has_ty A a =>
-    has_ty A a
-      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
-      (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
-        choose has_ty invalid)
+      (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+        zero succ natrec has_ty invalid)
+      (fun x _ => (φ.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+        fst snd dite trunc choose zero succ natrec has_ty invalid)
+  | .zero => zero
+  | .succ n => succ n (n.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+    fst snd dite trunc choose zero succ natrec has_ty invalid)
+  | .natrec C s z n => natrec C s z n
+    (fun x _ => (C.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+      fst snd dite trunc choose zero succ natrec has_ty invalid)
+    (fun x _ => (s.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+      fst snd dite trunc choose zero succ natrec has_ty invalid)
+    (z.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
+    (n.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
+  | .has_ty A a => has_ty A a
+    (A.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
+    (a.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      zero succ natrec has_ty invalid)
   | .invalid => invalid
 termination_by depth t
 decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }

@@ -18,9 +18,13 @@ inductive Tm.Valid : ∀ {k}, Tm k → Prop
   | dite {φ l r} : Valid φ → Valid l → Valid r → Valid (.dite φ l r)
   | trunc {A} : Valid A → Valid (.trunc A)
   | choose {A φ} : Valid A → Valid φ → Valid (.choose A φ)
+  | zero : Valid .zero
+  | succ {n} : Valid n → Valid (.succ n)
+  | natrec {C s z n} : Valid C → Valid s → Valid z → Valid n → Valid (.natrec C s z n)
   | has_ty {A a} : Valid A → Valid a → Valid (.has_ty A a)
 
-attribute [simp] Tm.Valid.fv Tm.Valid.bv Tm.Valid.univ Tm.Valid.empty Tm.Valid.unit Tm.Valid.null
+attribute [simp]
+  Tm.Valid.fv Tm.Valid.bv Tm.Valid.univ Tm.Valid.empty Tm.Valid.unit Tm.Valid.null Tm.Valid.zero
 
 @[simp]
 theorem Tm.Valid.eqn_iff {k} {a b : Tm k} : Valid (.eqn a b) ↔ Valid a ∧ Valid b
@@ -71,6 +75,15 @@ theorem Tm.Valid.choose_iff {k} {A : Tm k} {φ : Tm (k + 1)}
   := ⟨fun h => by cases h; simp [*], fun h => by cases h; constructor <;> assumption⟩
 
 @[simp]
+theorem Tm.Valid.succ_iff {k} {n : Tm k} : Valid (.succ n) ↔ Valid n
+  := ⟨fun h => by cases h; assumption, fun h => by constructor; assumption⟩
+
+@[simp]
+theorem Tm.Valid.natrec_iff {k} {C : Tm (k + 1)} {s : Tm (k + 1)} {z n : Tm k}
+  : Valid (.natrec C s z n) ↔ Valid C ∧ Valid s ∧ Valid z ∧ Valid n
+  := ⟨fun h => by cases h; simp [*], fun h => by constructor <;> simp [*]⟩
+
+@[simp]
 theorem Tm.Valid.has_ty_iff {k} {A a : Tm k} : Valid (.has_ty A a) ↔ Valid A ∧ Valid a
   := ⟨fun h => by cases h; simp [*], fun h => by cases h; constructor <;> assumption⟩
 
@@ -118,7 +131,7 @@ inductive Tm.Lstn {l} (a : Tm l) : ∀ {r}, Tm r → Prop
 theorem Tm.Lstn.bounds {l r} {a : Tm l} {a' : Tm r} (h : Lstn a a') : r ≤ l
   := by induction h <;> omega
 
-theorem Tm.Lstn.zero {a a' : Tm 0}
+theorem Tm.Lstn.to_zero {a a' : Tm 0}
   (h : Lstn a a') : a = a' := by cases h with
   | refl => rfl
   | lst h => cases h.bounds
@@ -249,6 +262,28 @@ theorem Tm.Lstn.choose {l r A φ w} (h : Lstn (l := l) (r := r) (.choose A φ) w
     have ⟨A', φ', he, hA', hφ'⟩ := I
     exact ⟨A'.lst v, φ'.lst v, by simp [he], hA'.lst v, hφ'.lst v⟩
 
+theorem Tm.Lstn.zero {l r w} (h : Lstn (l := l) (r := r) .zero w) : w = .zero :=
+  by induction h <;> simp [*]
+
+theorem Tm.Lstn.succ {l r n w} (h : Lstn (l := l) (r := r) (.succ n) w)
+  : ∃n', w = .succ n' ∧ Lstn n n' :=
+  by induction h with
+  | refl => exact ⟨n, rfl, .refl⟩
+  | lst h v I =>
+    have ⟨n', he, hn'⟩ := I
+    exact ⟨n'.lst v, by simp [he], hn'.lst v⟩
+
+theorem Tm.Lstn.natrec {l r C s z n w}
+  (h : Lstn (l := l) (r := r) (.natrec C s z n) w)
+  : ∃C' s' z' n',
+      w = .natrec C' s' z' n' ∧ Lstn C C' ∧ Lstn s s' ∧ Lstn z z' ∧ Lstn n n' :=
+  by induction h with
+  | refl => exact ⟨C, s, z, n, rfl, .refl, .refl, .refl, .refl⟩
+  | lst h v I =>
+    have ⟨C', s', z', n', he, hC', hs', hz', hn'⟩ := I
+    exact ⟨C'.lst v, s'.lst v, z'.lst v, n'.lst v,
+      by simp [he], hC'.lst v, hs'.lst v, hz'.lst v, hn'.lst v⟩
+
 theorem Tm.Lstn.has_ty {l r A a w} (h : Lstn (l := l) (r := r) (.has_ty A a) w)
   : ∃A' a', w = .has_ty A' a' ∧ Lstn A A' ∧ Lstn a a' :=
   by induction h with
@@ -279,10 +314,10 @@ theorem Tm.LstBar.bounds {l r} {a b : Tm l} {a' b' : Tm r}
   (h : LstBar a b a' b') : r ≤ l := h.lhs.bounds
 
 theorem Tm.LstBar.zero_left {a b a' b' : Tm 0}
-  (h : LstBar a b a' b') : a = a' := h.lhs.zero
+  (h : LstBar a b a' b') : a = a' := h.lhs.to_zero
 
 theorem Tm.LstBar.zero_right {a b a' b' : Tm 0}
-  (h : LstBar a b a' b') : b = b' := h.rhs.zero
+  (h : LstBar a b a' b') : b = b' := h.rhs.to_zero
 
 theorem Tm.LstBar.bv {l r i a b}
   (h : LstBar (l := l) (r := r) (.bv i) (.bv i) a b)
@@ -312,7 +347,7 @@ theorem Tm.LstBar.eqn {l r al bl ar br wl wr}
   (h : LstBar (l := l) (r := r) (.eqn al bl) (.eqn ar br) wl wr)
   : ∃ al' bl' ar' br',
       wl = .eqn al' bl' ∧ wr = .eqn ar' br'
-      ∧ LstBar al ar al' ar' ∧ LstBar bl br bl' br'  :=
+      ∧ LstBar al ar al' ar' ∧ LstBar bl br bl' br' :=
   by induction h with
   | refl => exact ⟨al, bl, ar, br, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -325,7 +360,7 @@ theorem Tm.LstBar.pi {l r Al Bl Ar Br wl wr}
   (h : LstBar (l := l) (r := r) (.pi Al Bl) (.pi Ar Br) wl wr)
   : ∃ Al' Bl' Ar' Br',
       wl = .pi Al' Bl' ∧ wr = .pi Ar' Br'
-      ∧ LstBar Al Ar Al' Ar' ∧ LstBar Bl Br Bl' Br'  :=
+      ∧ LstBar Al Ar Al' Ar' ∧ LstBar Bl Br Bl' Br' :=
   by induction h with
   | refl => exact ⟨Al, Bl, Ar, Br, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -338,7 +373,7 @@ theorem Tm.LstBar.abs {l r Al bl Ar br wl wr}
   (h : LstBar (l := l) (r := r) (.abs Al bl) (.abs Ar br) wl wr)
   : ∃ Al' bl' Ar' br',
       wl = .abs Al' bl' ∧ wr = .abs Ar' br'
-      ∧ LstBar Al Ar Al' Ar' ∧ LstBar bl br bl' br'  :=
+      ∧ LstBar Al Ar Al' Ar' ∧ LstBar bl br bl' br' :=
   by induction h with
   | refl => exact ⟨Al, bl, Ar, br, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -351,7 +386,7 @@ theorem Tm.LstBar.app {l r fl al fr ar wl wr}
   (h : LstBar (l := l) (r := r) (.app fl al) (.app fr ar) wl wr)
   : ∃ fl' al' fr' ar',
       wl = .app fl' al' ∧ wr = .app fr' ar'
-      ∧ LstBar fl fr fl' fr' ∧ LstBar al ar al' ar'  :=
+      ∧ LstBar fl fr fl' fr' ∧ LstBar al ar al' ar' :=
   by induction h with
   | refl => exact ⟨fl, al, fr, ar, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -364,7 +399,7 @@ theorem Tm.LstBar.sigma {l r Al Bl Ar Br wl wr}
   (h : LstBar (l := l) (r := r) (.sigma Al Bl) (.sigma Ar Br) wl wr)
   : ∃ Al' Bl' Ar' Br',
       wl = .sigma Al' Bl' ∧ wr = .sigma Ar' Br'
-      ∧ LstBar Al Ar Al' Ar' ∧ LstBar Bl Br Bl' Br'  :=
+      ∧ LstBar Al Ar Al' Ar' ∧ LstBar Bl Br Bl' Br' :=
   by induction h with
   | refl => exact ⟨Al, Bl, Ar, Br, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -377,7 +412,7 @@ theorem Tm.LstBar.pair {l r al bl ar br wl wr}
   (h : LstBar (l := l) (r := r) (.pair al bl) (.pair ar br) wl wr)
   : ∃ al' bl' ar' br',
       wl = .pair al' bl' ∧ wr = .pair ar' br'
-      ∧ LstBar al ar al' ar' ∧ LstBar bl br bl' br'  :=
+      ∧ LstBar al ar al' ar' ∧ LstBar bl br bl' br' :=
   by induction h with
   | refl => exact ⟨al, bl, ar, br, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -390,7 +425,7 @@ theorem Tm.LstBar.fst {l r pl pr wl wr}
   (h : LstBar (l := l) (r := r) (.fst pl) (.fst pr) wl wr)
   : ∃ pl' pr',
       wl = .fst pl' ∧ wr = .fst pr'
-      ∧ LstBar pl pr pl' pr'  :=
+      ∧ LstBar pl pr pl' pr' :=
   by induction h with
   | refl => exact ⟨pl, pr, rfl, rfl, .refl⟩
   | lst h v I =>
@@ -403,7 +438,7 @@ theorem Tm.LstBar.snd {l r pl pr wl wr}
   (h : LstBar (l := l) (r := r) (.snd pl) (.snd pr) wl wr)
   : ∃ pl' pr',
       wl = .snd pl' ∧ wr = .snd pr'
-      ∧ LstBar pl pr pl' pr'  :=
+      ∧ LstBar pl pr pl' pr' :=
   by induction h with
   | refl => exact ⟨pl, pr, rfl, rfl, .refl⟩
   | lst h v I =>
@@ -416,7 +451,7 @@ theorem Tm.LstBar.dite {l r φl tl el φr tr er wl wr}
   (h : LstBar (l := l) (r := r) (.dite φl tl el) (.dite φr tr er) wl wr)
   : ∃ φl' tl' el' φr' tr' er',
       wl = .dite φl' tl' el' ∧ wr = .dite φr' tr' er'
-      ∧ LstBar φl φr φl' φr' ∧ LstBar tl tr tl' tr' ∧ LstBar el er el' er'  :=
+      ∧ LstBar φl φr φl' φr' ∧ LstBar tl tr tl' tr' ∧ LstBar el er el' er' :=
   by induction h with
   | refl => exact ⟨φl, tl, el, φr, tr, er, rfl, rfl, .refl, .refl, .refl⟩
   | lst h v I =>
@@ -429,7 +464,7 @@ theorem Tm.LstBar.trunc {l r Al Ar wl wr}
   (h : LstBar (l := l) (r := r) (.trunc Al) (.trunc Ar) wl wr)
   : ∃ Al' Ar',
       wl = .trunc Al' ∧ wr = .trunc Ar'
-      ∧ LstBar Al Ar Al' Ar'  :=
+      ∧ LstBar Al Ar Al' Ar' :=
   by induction h with
   | refl => exact ⟨Al, Ar, rfl, rfl, .refl⟩
   | lst h v I =>
@@ -442,7 +477,7 @@ theorem Tm.LstBar.choose {l r Al φl Ar φr wl wr}
   (h : LstBar (l := l) (r := r) (.choose Al φl) (.choose Ar φr) wl wr)
   : ∃ Al' φl' Ar' φr',
       wl = .choose Al' φl' ∧ wr = .choose Ar' φr'
-      ∧ LstBar Al Ar Al' Ar' ∧ LstBar φl φr φl' φr'  :=
+      ∧ LstBar Al Ar Al' Ar' ∧ LstBar φl φr φl' φr' :=
   by induction h with
   | refl => exact ⟨Al, φl, Ar, φr, rfl, rfl, .refl, .refl⟩
   | lst h v I =>
@@ -450,6 +485,41 @@ theorem Tm.LstBar.choose {l r Al φl Ar φr wl wr}
     exact ⟨
       Al'.lst v, φl'.lst v, Ar'.lst v, φr'.lst v,
       by simp [hl], by simp [hr], hA'.lst v, hφ'.lst v⟩
+
+theorem Tm.LstBar.zero {l r wl wr}
+  (h : LstBar (l := l) (r := r) .zero .zero wl wr) : wl = .zero ∧ wr = .zero :=
+  by simp [h.lhs.zero, h.rhs.zero]
+
+theorem Tm.LstBar.succ {l r nl nr wl wr}
+  (h : LstBar (l := l) (r := r) (.succ nl) (.succ nr) wl wr)
+  : ∃ nl' nr',
+      wl = .succ nl' ∧ wr = .succ nr'
+      ∧ LstBar nl nr nl' nr' :=
+  by induction h with
+  | refl => exact ⟨nl, nr, rfl, rfl, .refl⟩
+  | lst h v I =>
+    have ⟨nl', nr', hl, hr, hn'⟩ := I
+    exact ⟨
+      nl'.lst v, nr'.lst v,
+      by simp [hl], by simp [hr], hn'.lst v⟩
+
+theorem Tm.LstBar.natrec {l r Cl sl zl nl Cr sr zr nr wl wr}
+  (h : LstBar (l := l) (r := r) (.natrec Cl sl zl nl) (.natrec Cr sr zr nr) wl wr)
+  : ∃ Cl' sl' zl' nl' Cr' sr' zr' nr',
+      wl = .natrec Cl' sl' zl' nl' ∧ wr = .natrec Cr' sr' zr' nr'
+      ∧ LstBar Cl Cr Cl' Cr'
+      ∧ LstBar sl sr sl' sr'
+      ∧ LstBar zl zr zl' zr'
+      ∧ LstBar nl nr nl' nr' :=
+  by induction h with
+  | refl => exact ⟨Cl, sl, zl, nl, Cr, sr, zr, nr, rfl, rfl, .refl, .refl, .refl, .refl⟩
+  | lst h v I =>
+    have ⟨Cl', sl', zl', nl', Cr', sr', zr', nr', hl, hr, hC', hs', hz', hn'⟩ := I
+    exact ⟨
+      Cl'.lst v, sl'.lst v, zl'.lst v, nl'.lst v,
+      Cr'.lst v, sr'.lst v, zr'.lst v, nr'.lst v,
+      by simp [hl], by simp [hr],
+      hC'.lst v, hs'.lst v, hz'.lst v, hn'.lst v⟩
 
 theorem Tm.LstBar.has_ty {l r Al al Ar ar wl wr}
   (h : LstBar (l := l) (r := r) (.has_ty Al al) (.has_ty Ar ar) wl wr)

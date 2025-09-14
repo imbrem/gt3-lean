@@ -55,6 +55,12 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
     : LRwEq Γ A A'
     → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (φ.open y) (φ'.open y))
     → LRwEq Γ (.choose A φ) (.choose A' φ')
+  | zero {Γ} : LRwEq Γ .zero .zero
+  | succ {Γ} {n n'} : LRwEq Γ n n' → LRwEq Γ (.succ n) (.succ n')
+  | natrec {Γ} {C C' s  s' z  z' n n'} {L : Finset String}
+    : (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (C.open y) (C'.open y))
+    →  (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (s.open y) (s'.open y))
+    → LRwEq Γ z z' → LRwEq Γ n n' → LRwEq Γ (.natrec C s z n) (.natrec C' s' z' n')
   | has_ty {Γ} {A A' a a'} : LRwEq Γ A A' → LRwEq Γ a a' → LRwEq Γ (.has_ty A a) (.has_ty A' a')
   | invalid {Γ} : LRwEq Γ .invalid .invalid
   | wf {Γ} {a b} : WfEq Γ a b → LRwEq Γ a b
@@ -169,6 +175,10 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
     RwEq Γ (.dite φ l r) (.dite φ' l' r')
   | trunc {A A'} : RwEq Γ A A' → RwEq Γ (.trunc A) (.trunc A')
   | choose {A A' φ φ'} : RwEq Γ A A' → RwEq Γ φ φ' → RwEq Γ (.choose A φ) (.choose A' φ')
+  | zero : RwEq Γ .zero .zero
+  | succ {n n'} : RwEq Γ n n' → RwEq Γ (.succ n) (.succ n')
+  | natrec {C C' s  s' z  z' n n'} : RwEq Γ C C' → RwEq Γ s s' →
+    RwEq Γ z z' → RwEq Γ n n' → RwEq Γ (.natrec C s z n) (.natrec C' s' z' n')
   | has_ty {A A' a a'} : RwEq Γ A A' → RwEq Γ a a' → RwEq Γ (.has_ty A a) (.has_ty A' a')
   | invalid : RwEq Γ .invalid .invalid
   | wf_clamp {a b} : WfEq Γ (a.erase.clamp 0) (b.erase.clamp 0) → RwEq Γ a b
@@ -326,6 +336,32 @@ theorem Ctx.RwEq.lst_bar {Γ Δ} (h : PSub Γ Δ) {k} {a b : Tm k} {a' b'}
       · exact h.skip hx (hX h.left_ok)
       · apply Tm.LstBar.open; assumption
     }
+  | zero => simp [h'.zero]; rfl
+  | succ hn In =>
+    have _ := h'.succ;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    constructor
+    · apply In <;> assumption
+  | natrec hC hs hz hn IC Is In Iz =>
+    have _ := h'.natrec;
+    casesm* (∃_, _), (_ ∧ _), (_ = _)
+    rename_i C s z n C' s' z' n' hC' hs' hz' hn'
+    constructor
+    · {
+      intro x hx X hX y hy
+      apply IC
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+    · {
+      intro x hx X hX y hy
+      apply Is
+      · exact h.skip hx (hX h.left_ok)
+      · apply Tm.LstBar.open; assumption
+    }
+    --TODO: weird order...
+    · apply In <;> assumption
+    · apply Iz <;> assumption
   | has_ty hA ha IA Ia =>
     have _ := h'.has_ty;
     casesm* (∃_, _), (_ ∧ _), (_ = _)

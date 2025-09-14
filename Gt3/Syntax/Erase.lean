@@ -18,6 +18,9 @@ inductive OTm : Type
   | dite (φ l r : OTm) : OTm
   | trunc (A : OTm) : OTm
   | choose (A φ : OTm) : OTm
+  | zero : OTm
+  | succ (n : OTm) : OTm
+  | natrec (C s z n : OTm) : OTm
   | has_ty (A a : OTm) : OTm
   | invalid : OTm
 
@@ -40,6 +43,9 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .trunc A => .trunc A.erase
   | .choose A φ => .choose A.erase φ.erase
   | .has_ty A a => .has_ty A.erase a.erase
+  | .zero => .zero
+  | .succ n => .succ n.erase
+  | .natrec C s z n => .natrec C.erase s.erase z.erase n.erase
   | .invalid => .invalid
 
 def OTm.clamp (k : ℕ) : OTm → Tm k
@@ -60,6 +66,9 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .dite φ l r => .dite (φ.clamp k) (l.clamp (k + 1)) (r.clamp (k + 1))
   | .trunc A => .trunc (A.clamp k)
   | .choose A φ => .choose (A.clamp k) (φ.clamp (k + 1))
+  | .zero => .zero
+  | .succ n => .succ (n.clamp k)
+  | .natrec C s z n => .natrec (C.clamp (k + 1)) (s.clamp (k + 1)) (z.clamp k) (n.clamp k)
   | .has_ty A a => .has_ty (A.clamp k) (a.clamp k)
   | .invalid => .invalid
 
@@ -98,6 +107,8 @@ def OTm.fvs : OTm → Finset String
   | .dite φ l r => φ.fvs ∪ l.fvs ∪ r.fvs
   | .trunc A => A.fvs
   | .choose A φ => A.fvs ∪ φ.fvs
+  | .succ n => n.fvs
+  | .natrec C s z n => C.fvs ∪ s.fvs ∪ z.fvs ∪ n.fvs
   | .has_ty A a => A.fvs ∪ a.fvs
   | _ => ∅
 
@@ -124,6 +135,8 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .dite φ l r => φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
+  | .succ n => n.bvi
+  | .natrec C s z n => (C.bvi - 1) ⊔ (s.bvi - 1) ⊔ z.bvi ⊔ n.bvi
   | .has_ty A a => A.bvi ⊔ a.bvi
   | _ => 0
 
@@ -140,6 +153,8 @@ def OTm.bvi : OTm → ℕ
   | .dite φ l r => φ.bvi ⊔ (l.bvi - 1) ⊔ (r.bvi - 1)
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
+  | .succ n => n.bvi
+  | .natrec C s z n => (C.bvi - 1) ⊔ (s.bvi - 1) ⊔ z.bvi ⊔ n.bvi
   | .has_ty A a => A.bvi ⊔ a.bvi
   | _ => 0
 
@@ -203,6 +218,9 @@ def OTm.open (k : ℕ) (x : String) : OTm → OTm
   | .dite φ l r => .dite (φ.open k x) (l.open (k + 1) x) (r.open (k + 1) x)
   | .trunc A => .trunc (A.open k x)
   | .choose A φ => .choose (A.open k x) (φ.open (k + 1) x)
+  | .zero => .zero
+  | .succ n => .succ (n.open k x)
+  | .natrec C s z n => .natrec (C.open (k + 1) x) (s.open (k + 1) x) (z.open k x) (n.open k x)
   | .has_ty A a => .has_ty (A.open k x) (a.open k x)
   | .invalid => .invalid
 
@@ -277,6 +295,9 @@ def OTm.lst (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
   | .dite φ l r => .dite (φ.lst k v) (l.lst (k + 1) v) (r.lst (k + 1) v)
   | .trunc A => .trunc (A.lst k v)
   | .choose A φ => .choose (A.lst k v) (φ.lst (k + 1) v)
+  | .zero => .zero
+  | .succ n => .succ (n.lst k v)
+  | .natrec C s z n => .natrec (C.lst (k + 1) v) (s.lst (k + 1) v) (z.lst k v) (n.lst k v)
   | .has_ty A a => .has_ty (A.lst k v) (a.lst k v)
   | .invalid => .invalid
 
@@ -314,6 +335,9 @@ def OTm.wkn (k : ℕ) : OTm → OTm
   | .dite φ l r => .dite (φ.wkn k) (l.wkn (k + 1)) (r.wkn (k + 1))
   | .trunc A => .trunc (A.wkn k)
   | .choose A φ => .choose (A.wkn k) (φ.wkn (k + 1))
+  | .zero => .zero
+  | .succ n => .succ (n.wkn k)
+  | .natrec C s z n => .natrec (C.wkn (k + 1)) (s.wkn (k + 1)) (z.wkn k) (n.wkn k)
   | .has_ty A a => .has_ty (A.wkn k) (a.wkn k)
   | .invalid => .invalid
 
@@ -354,5 +378,8 @@ def OTm.subst (σ : Subst) : OTm → OTm
   | .dite φ l r => .dite (φ.subst σ) (l.subst σ.lift) (r.subst σ.lift)
   | .trunc A => .trunc (A.subst σ)
   | .choose A φ => .choose (A.subst σ) (φ.subst σ.lift)
+  | .zero => .zero
+  | .succ n => .succ (n.subst σ)
+  | .natrec C s z n => .natrec (C.subst σ.lift) (s.subst σ.lift) (z.subst σ) (n.subst σ)
   | .has_ty A a => .has_ty (A.subst σ) (a.subst σ)
   | .invalid => .invalid
