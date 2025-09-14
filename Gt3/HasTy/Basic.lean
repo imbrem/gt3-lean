@@ -43,6 +43,14 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hp : HasTy Γ (.sigma A B) p)
     (hBa : TyEq Γ (B.lst (.fst p)) Ba)
     : HasTy Γ Ba (.snd p)
+  | trunc {Γ : Ctx} {A : Tm 0} {ℓ : ℕ}
+    (hA : HasTy Γ (.univ ℓ) A)
+    : HasTy Γ (.univ 0) (.trunc A)
+  | choose' {Γ : Ctx} {A : Tm 0} {φ : Tm 1} {ℓ : ℕ} {L : Finset String}
+    (hA : HasTy Γ (.univ ℓ) A)
+    (hAI : IsInhab Γ A)
+    (hφ : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ 0) (φ.open x))
+    : HasTy Γ A (.choose A φ)
   | cast_level {Γ : Ctx} {ℓ A}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ (ℓ + 1)) A

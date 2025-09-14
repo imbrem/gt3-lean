@@ -53,6 +53,20 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hp : JEq Γ (.sigma A B) p p')
     (hBa : JEq Γ (.univ n) (B.lst (.fst p)) Ba)
     : JEq Γ Ba (.snd p) (.snd p')
+  -- | dite' {Γ : Ctx} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ℕ} {L : Finset String}
+  --   (hφ : JEq Γ (.univ 0) φ φ')
+  --   (hA : JEq Γ (.univ ℓ) A A)
+  --   (hl : ∀ x ∉ L, JEq (Γ.cons x φ) A (l.open x) (l'.open x))
+  --   (hr : ∀ x ∉ L, JEq (Γ.cons x φ.not) A (r.open x) (r'.open x))
+  --   : JEq Γ A (.dite φ l r) (.dite φ' l' r')
+  | trunc {Γ : Ctx} {A A' : Tm 0} {ℓ : ℕ}
+    (hA : JEq Γ (.univ ℓ) A A')
+    : JEq Γ (.univ 0) (.trunc A) (.trunc A')
+  | choose' {Γ : Ctx} {A A' : Tm 0} {φ φ' : Tm 1} {m n : ℕ} {L : Finset String}
+    (hA : JEq Γ (.univ m) A A')
+    (hAI : JEq Γ (.univ n) (.trunc A) .unit)
+    (hφ : ∀x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))
+    : JEq Γ A (.choose A φ) (.choose A' φ')
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
   | cons_ok {Γ : Ctx} {x : String} {A : Tm 0} {ℓ}
@@ -60,6 +74,12 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hx : x ∉ Γ.dv)
     (hA : JEq Γ (.univ ℓ) A A)
     : JEq (Γ.cons x A) .unit .null .null
+  -- Propositions
+  | trunc_inhab' {Γ : Ctx} {A a : Tm 0}
+    (ha : JEq Γ A a a)
+    (lhs_wf : JEq Γ (.univ 0) (.trunc A) (.trunc A))
+    (rhs_wf : JEq Γ (.univ 0) .unit .unit)
+    : JEq Γ (.univ 0) (.trunc A) .unit
   -- Reduction
   | beta_app' {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
     (hf : JEq Γ (A.pi B) (A.abs b) (A.abs b))
@@ -133,6 +153,17 @@ theorem Ctx.TyEq.lhs {Γ A B} (h : TyEq Γ A B) : IsTy Γ A := h.trans h.symm
 
 theorem Ctx.TyEq.rhs {Γ A B} (h : TyEq Γ A B) : IsTy Γ B := h.symm.lhs
 
+def Ctx.IsInhab (Γ : Ctx) (A : Tm 0) : Prop := TyEq Γ (.trunc A) .unit
+
+theorem Ctx.JEq.inhab_def {Γ ℓ A} (h : JEq Γ (.univ ℓ) (.trunc A) .unit)
+  : IsInhab Γ A := ⟨ℓ, h⟩
+
+theorem Ctx.TyEq.trunc {Γ A B} (h : TyEq Γ A B) : TyEq Γ (.trunc A) (.trunc B)
+  := have ⟨_, h⟩ := h; ⟨0, h.trunc⟩
+
+theorem Ctx.IsInhab.cast {Γ A B} (hAB : TyEq Γ A B) (hA : IsInhab Γ A)
+  : IsInhab Γ B := hAB.symm.trunc.trans hA
+
 def Ctx.IsUniv (Γ : Ctx) (A : Tm 0) : Prop := ∃ℓ, TyEq Γ A (.univ ℓ)
 
 theorem Ctx.IsUniv.cast {Γ A B} (hAB : TyEq Γ A B) (hB : IsUniv Γ B)
@@ -191,6 +222,10 @@ theorem Ctx.WfEq.ok {Γ a b} (h : WfEq Γ a b) : Ok Γ := have ⟨_, h⟩ := h; 
 
 theorem Ctx.IsWf.ok {Γ a} (h : IsWf Γ a) : Ok Γ := WfEq.ok h
 
+theorem Ctx.IsUniv.ok {Γ U} (h : IsUniv Γ U) : Ok Γ := have ⟨_, h⟩ := h; h.ok
+
+theorem Ctx.IsInhab.ok {Γ A} (h : IsInhab Γ A) : Ok Γ := have ⟨_, h⟩ := h; h.ok
+
 theorem Ctx.Ok.no_dup {Γ} (h : Ok Γ) : NoDup Γ := by induction h <;> constructor <;> assumption
 
 theorem Ctx.Ok.head {Γ x A} (h : Ok (Ctx.cons Γ x A)) : x ∉ Γ.dv ∧ IsTy Γ A
@@ -247,6 +282,13 @@ theorem Ctx.JEq.snd_f {Γ} {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L
         (fun x hx => (hB x hx).cast_level_le (by simp)) hA hp
         (hBa.cast_level_le (by simp))
 
+theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {m : ℕ} {L : Finset String}
+  (hA : JEq Γ (.univ m) A A')
+  (hAI : IsInhab Γ A)
+  (hφ : ∀ x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))
+  : JEq Γ A (.choose A φ) (.choose A' φ') :=
+  have ⟨_, hAI⟩ := hAI;  .choose' hA hAI hφ
+
 syntax "jeq_congr_f" : tactic
 
 macro_rules
@@ -264,13 +306,14 @@ macro_rules
     | apply Ctx.JEq.pair'
     | apply Ctx.JEq.fst'
     | apply Ctx.JEq.snd_f
+    -- | apply Ctx.JEq.dite
+    | apply Ctx.JEq.trunc
+    | apply Ctx.JEq.choose
   )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
 
 theorem Ctx.IsUniv.univ {Γ ℓ} (h : Ok Γ) : IsUniv Γ (.univ ℓ) := ⟨ℓ, IsTy.univ h⟩
-
-theorem Ctx.IsUniv.ok {Γ U} (h : IsUniv Γ U) : Ok Γ := have ⟨_, h⟩ := h; h.ok
 
 theorem Ctx.IsUniv.is_ty {Γ U} (h : IsUniv Γ U) : IsTy Γ U := have ⟨_, h⟩ := h; h.lhs
 

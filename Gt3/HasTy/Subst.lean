@@ -26,6 +26,9 @@ theorem Ctx.JEq.ls1 {Γ σ Δ A a b} (hσ : S1 Γ σ Δ) (h : JEq Δ A a b)
 theorem Ctx.TyEq.ls1 {Γ σ Δ A B} (hσ : S1 Γ σ Δ) (h : TyEq Δ A B)
   : TyEq Γ (σ • A) (σ • B) := have ⟨_, h⟩ := h; ⟨_, h.ls1 hσ⟩
 
+theorem Ctx.IsInhab.ls1 {Γ σ Δ A} (hσ : S1 Γ σ Δ) (h : IsInhab Δ A)
+  : IsInhab Γ (σ • A) := have ⟨_, h⟩ := h; ⟨_, h.ls1 hσ⟩
+
 theorem Ctx.Lookup.s1 {Γ σ Δ} (hσ : S1 Γ σ Δ) {x A} (hx : Lookup Δ x A)
   : HasTy Γ (σ • A) (σ.get x) := by induction hx with
   | here => exact hσ.tm
@@ -84,7 +87,7 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
     constructor <;>
     first
     | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst])
-      ; (first | apply_assumption | apply TyEq.ls1)
+      ; (first | apply_assumption | apply TyEq.ls1 | apply IsInhab.ls1)
       <;> assumption
     | exact hσ.src_ok
     | {

@@ -41,6 +41,14 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
     (hp : HasTy Γ (.sigma A B) p)
     (hBa : TyEq Γ (B.lst (.fst p)) Ba)
     : InnerTy Γ Ba (.snd p)
+  | trunc {Γ : Ctx} {A : Tm 0} {ℓ : ℕ}
+    (hA : HasTy Γ (.univ ℓ) A)
+    : InnerTy Γ (.univ 0) (.trunc A)
+  | choose' {Γ : Ctx} {A : Tm 0} {φ : Tm 1} {ℓ : ℕ} {L : Finset String}
+    (hA : HasTy Γ (.univ ℓ) A)
+    (hAI : IsInhab Γ A)
+    (hφ : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ 0) (φ.open x))
+    : InnerTy Γ A (.choose A φ)
 
 theorem Ctx.InnerTy.has_ty {Γ A a} (h : InnerTy Γ A a) : HasTy Γ A a
   := by cases h <;> constructor <;> assumption
@@ -119,19 +127,3 @@ theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
   have ⟨_, hpi⟩ := hpi.lhs_ty.inner_ty;
   cases hpi with
   | pi hA hB => exact .app_f (fun x hx => (hB x hx).refl) hA.refl hf ha hBa
-
-syntax "jeq_congr" : tactic
-
-macro_rules
-  | `(tactic| jeq_congr_f) => `(tactic| first
-    | apply Ctx.JEq.fv
-    | apply Ctx.JEq.univ
-    | apply Ctx.JEq.empty
-    | apply Ctx.JEq.unit
-    | apply Ctx.JEq.null
-    | apply Ctx.JEq.eqn
-    | apply Ctx.JEq.pi
-    | apply Ctx.JEq.abs
-    | apply Ctx.JEq.app
-    | apply Ctx.JEq.sigma
-  )

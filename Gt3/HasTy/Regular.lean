@@ -56,10 +56,16 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
     | {
       -- Cases with binding
       apply Cmp.of_cast
-      · constructor <;> first | assumption | apply JEq.ty_eq; assumption
+      · constructor
+        <;> first | assumption | apply JEq.ty_eq; assumption
       · constructor <;> first
         | assumption
         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
+        | {
+          apply Ctx.IsInhab.cast
+          · apply JEq.ty_eq; assumption
+          · apply JEq.inhab_def; assumption
+        }
         --| intros; apply HasTy.cast_top_symm₂ <;> apply_assumption <;> assumption
         | apply Ctx.HasTy.lst_cf_cast <;> assumption
         | apply Ctx.HasTy.cast' <;> assumption
@@ -67,6 +73,7 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
                                                   | apply Ctx.JEq.lhs_is_ty; assumption
                                                   | apply Ctx.JEq.fst' <;> assumption
       · first
+        | apply JEq.ty_eq; assumption
         | apply TyEq.symm; apply JEq.ty_eq; assumption
         | (ty_eq_constructor'
           <;> intros

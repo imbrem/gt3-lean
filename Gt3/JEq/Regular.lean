@@ -85,6 +85,9 @@ theorem Ctx.IsTy.sigma {Γ A B} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ (.sigma A B)
   := have ⟨x, hx⟩ := L.exists_notMem; TyEq.sigma (hB x hx).ok.ty hB
 
+theorem Ctx.IsTy.trunc {Γ A} (hA : IsTy Γ A) : IsTy Γ (.trunc A) :=
+  have ⟨_, hA⟩ := hA; ⟨0, hA.trunc⟩
+
 theorem Ctx.JEq.app_r {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
@@ -113,6 +116,7 @@ macro_rules
     | apply Ctx.IsTy.unit
     | apply Ctx.IsTy.pi
     | apply Ctx.IsTy.sigma
+    | apply Ctx.IsTy.trunc
   )
 
 theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by induction h with
@@ -125,12 +129,17 @@ theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by inductio
     · apply JEq.rhs_is_ty; assumption
   | _ =>
     first | assumption
+          | apply JEq.lhs_is_ty; assumption
           | apply JEq.rhs_is_ty; assumption
           | (is_ty_constructor'
             <;> intros
             <;> (first | assumption | apply JEq.lhs_is_ty | apply Ctx.IsTy.ok)
             <;> apply_assumption
             <;> assumption)
+
+-- theorem Ctx.JEq.trunc_inhab {Γ A a b} (h : JEq Γ A a b) : JEq Γ (.univ 0) (.trunc A) .unit :=
+--   have ⟨_, hA⟩ := h.regular
+--   .trunc_inhab' sorry (.choose (L := Γ.dv) sorry sorry (fun x hx => )) (.unit h.ok)
 
 -- theorem Ctx.JEq.cast_cmp {Γ A B a b} (h : JEq Γ A a b) (h' : Cmp Γ B a b) : JEq Γ B a b := by
 --   induction h generalizing B with

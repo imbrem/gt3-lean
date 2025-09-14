@@ -56,6 +56,12 @@ theorem Ctx.WfEq.psub {Γ Δ} (h : PSub Γ Δ) {a b : Tm 0} (hab : WfEq Δ a b)
 theorem Ctx.IsWf.psub {Γ Δ} (h : PSub Γ Δ) {a : Tm 0} (ha : IsWf Δ a)
   : IsWf Γ a := WfEq.psub h ha
 
+theorem Ctx.IsUniv.psub {Γ Δ} (h : PSub Γ Δ) {A : Tm 0} (hA : IsUniv Δ A)
+  : IsUniv Γ A := have ⟨ℓ, hA⟩ := hA; ⟨ℓ, hA.psub h⟩
+
+theorem Ctx.IsInhab.psub {Γ Δ} (h : PSub Γ Δ) {A : Tm 0} (hA : IsInhab Δ A)
+  : IsInhab Γ A := have ⟨a, hA⟩ := hA; ⟨a, hA.psub h⟩
+
 theorem Ctx.PSub.cons {Γ Δ} (h : PSub Γ Δ)
   {x A} (hx : x ∉ Γ.dv) (hΔA : IsTy Δ A)
   : PSub (Γ.cons x A) (Δ.cons x A) where
