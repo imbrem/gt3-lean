@@ -59,10 +59,10 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
                     (.univ ℓ) (C.open x))
     (hs : ∀x ∉ L, HasTy (Γ.cons x .nats)
                     (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x))
-    (hz : JEq Γ (C.lst .zero) z z')
-    (hn : JEq Γ .nats n n')
-    (hCn : JEq Γ (.univ ℓ') (C.lst n) Cn)
-    : JEq Γ Cn (.natrec C s z n) (.natrec C' s' z' n')
+    (hz : HasTy Γ (C.lst .zero) z)
+    (hn : HasTy Γ .nats n)
+    (hCn : TyEq Γ (C.lst n) Cn)
+    : HasTy Γ Cn (.natrec C s z n)
   | cast_level {Γ} {ℓ A}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ (ℓ + 1)) A

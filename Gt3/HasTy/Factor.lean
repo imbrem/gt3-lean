@@ -52,6 +52,15 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | nats {Γ} (hΓ : Ok Γ) : InnerTy Γ (.univ 1) .nats
   | zero {Γ} (hΓ : Ok Γ) : InnerTy Γ .nats .zero
   | succ {Γ} {n} (hn : HasTy Γ .nats n) : InnerTy Γ .nats (.succ n)
+  | natrec {Γ ℓ C s z n Cn} {L : Finset String}
+    (hC : ∀x ∉ L, HasTy (Γ.cons x .nats)
+                    (.univ ℓ) (C.open x))
+    (hs : ∀x ∉ L, HasTy (Γ.cons x .nats)
+                    (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x))
+    (hz : HasTy Γ (C.lst .zero) z)
+    (hn : HasTy Γ .nats n)
+    (hCn : TyEq Γ (C.lst n) Cn)
+    : InnerTy Γ Cn (.natrec C s z n)
 
 theorem Ctx.InnerTy.has_ty {Γ A a} (h : InnerTy Γ A a) : HasTy Γ A a
   := by cases h <;> constructor <;> assumption

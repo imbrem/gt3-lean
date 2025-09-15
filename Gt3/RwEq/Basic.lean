@@ -14,6 +14,8 @@ theorem Ctx.WfEq.rhs_valid {Γ a b} (h : WfEq Γ a b) : Tm.Valid b := h.rhs.vali
 
 def Ctx.RwTy (Γ : Ctx) : Set (Tm 0) := { X | Ok Γ → IsTy Γ X }
 
+@[simp] theorem Ctx.nats_rw_ty (Γ : Ctx) : .nats ∈ Γ.RwTy := fun h => .nats h
+
 theorem Ctx.RwTy.of_has_ty {Γ ℓ A} (h : HasTy Γ (.univ ℓ) A) : A ∈ RwTy Γ := fun _ => h.is_ty
 
 theorem Ctx.RwTy.of_has_ty_jeq {Γ ℓ U A A'}
@@ -98,6 +100,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
           apply_assumption <;> first
           | assumption
           | apply RwTy.of_has_ty; assumption | apply Or.inl; apply_assumption; exact hxK
+          | simp
         }
       }
     | inr hb =>
@@ -130,7 +133,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
           } | {
             apply Or.inr;
             apply_assumption; exact hxK
-          }
+          } | simp
         }
       }
 

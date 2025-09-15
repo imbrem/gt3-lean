@@ -13,8 +13,10 @@ theorem Ctx.HasTy.psub {Γ Δ} (h : PSub Γ Δ) {A a : Tm 0} (hab : HasTy Δ A a
       have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ Γ.dv := by rw [<-Finset.notMem_union]; exact hx
       apply_assumption
       · exact hL
-      · apply PSub.cons'
-        <;> first | assumption | apply HasTy.is_ty <;> apply_assumption <;> assumption
+      · apply h.cons' hΓ
+        <;> first | assumption | apply HasTy.is_ty
+        <;> (first | apply HasTy.nats | apply_assumption) <;>
+        first | assumption | exact h.left_ok | exact h.right_ok
     }
     | exact h.left_ok
     | apply Ctx.TyEq.psub <;> assumption
