@@ -18,13 +18,16 @@ inductive Tm.Valid : ∀ {k}, Tm k → Prop
   | dite {φ l r} : Valid φ → Valid l → Valid r → Valid (.dite φ l r)
   | trunc {A} : Valid A → Valid (.trunc A)
   | choose {A φ} : Valid A → Valid φ → Valid (.choose A φ)
+  | nats : Valid .nats
   | zero : Valid .zero
   | succ {n} : Valid n → Valid (.succ n)
   | natrec {C s z n} : Valid C → Valid s → Valid z → Valid n → Valid (.natrec C s z n)
   | has_ty {A a} : Valid A → Valid a → Valid (.has_ty A a)
 
 attribute [simp]
-  Tm.Valid.fv Tm.Valid.bv Tm.Valid.univ Tm.Valid.empty Tm.Valid.unit Tm.Valid.null Tm.Valid.zero
+  Tm.Valid.fv Tm.Valid.bv
+  Tm.Valid.univ Tm.Valid.empty Tm.Valid.unit Tm.Valid.null
+  Tm.Valid.nats Tm.Valid.zero
 
 @[simp]
 theorem Tm.Valid.eqn_iff {k} {a b : Tm k} : Valid (.eqn a b) ↔ Valid a ∧ Valid b
@@ -265,6 +268,9 @@ theorem Tm.Lstn.choose {l r A φ w} (h : Lstn (l := l) (r := r) (.choose A φ) w
 theorem Tm.Lstn.zero {l r w} (h : Lstn (l := l) (r := r) .zero w) : w = .zero :=
   by induction h <;> simp [*]
 
+theorem Tm.Lstn.nats {l r w} (h : Lstn (l := l) (r := r) .nats w) : w = .nats :=
+  by induction h <;> simp [*]
+
 theorem Tm.Lstn.succ {l r n w} (h : Lstn (l := l) (r := r) (.succ n) w)
   : ∃n', w = .succ n' ∧ Lstn n n' :=
   by induction h with
@@ -485,6 +491,10 @@ theorem Tm.LstBar.choose {l r Al φl Ar φr wl wr}
     exact ⟨
       Al'.lst v, φl'.lst v, Ar'.lst v, φr'.lst v,
       by simp [hl], by simp [hr], hA'.lst v, hφ'.lst v⟩
+
+theorem Tm.LstBar.nats {l r wl wr}
+  (h : LstBar (l := l) (r := r) .nats .nats wl wr) : wl = .nats ∧ wr = .nats :=
+  by simp [h.lhs.nats, h.rhs.nats]
 
 theorem Tm.LstBar.zero {l r wl wr}
   (h : LstBar (l := l) (r := r) .zero .zero wl wr) : wl = .zero ∧ wr = .zero :=

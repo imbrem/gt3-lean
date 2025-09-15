@@ -18,6 +18,7 @@ inductive OTm : Type
   | dite (φ l r : OTm) : OTm
   | trunc (A : OTm) : OTm
   | choose (A φ : OTm) : OTm
+  | nats : OTm
   | zero : OTm
   | succ (n : OTm) : OTm
   | natrec (C s z n : OTm) : OTm
@@ -42,10 +43,11 @@ def Tm.erase {k : ℕ} : Tm k → OTm
   | .dite φ l r => .dite φ.erase l.erase r.erase
   | .trunc A => .trunc A.erase
   | .choose A φ => .choose A.erase φ.erase
-  | .has_ty A a => .has_ty A.erase a.erase
+  | .nats => .nats
   | .zero => .zero
   | .succ n => .succ n.erase
   | .natrec C s z n => .natrec C.erase s.erase z.erase n.erase
+  | .has_ty A a => .has_ty A.erase a.erase
   | .invalid => .invalid
 
 def OTm.clamp (k : ℕ) : OTm → Tm k
@@ -66,6 +68,7 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .dite φ l r => .dite (φ.clamp k) (l.clamp (k + 1)) (r.clamp (k + 1))
   | .trunc A => .trunc (A.clamp k)
   | .choose A φ => .choose (A.clamp k) (φ.clamp (k + 1))
+  | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.clamp k)
   | .natrec C s z n => .natrec (C.clamp (k + 1)) (s.clamp (k + 1)) (z.clamp k) (n.clamp k)
@@ -218,6 +221,7 @@ def OTm.open (k : ℕ) (x : String) : OTm → OTm
   | .dite φ l r => .dite (φ.open k x) (l.open (k + 1) x) (r.open (k + 1) x)
   | .trunc A => .trunc (A.open k x)
   | .choose A φ => .choose (A.open k x) (φ.open (k + 1) x)
+  | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.open k x)
   | .natrec C s z n => .natrec (C.open (k + 1) x) (s.open (k + 1) x) (z.open k x) (n.open k x)
@@ -295,6 +299,7 @@ def OTm.lst (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
   | .dite φ l r => .dite (φ.lst k v) (l.lst (k + 1) v) (r.lst (k + 1) v)
   | .trunc A => .trunc (A.lst k v)
   | .choose A φ => .choose (A.lst k v) (φ.lst (k + 1) v)
+  | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.lst k v)
   | .natrec C s z n => .natrec (C.lst (k + 1) v) (s.lst (k + 1) v) (z.lst k v) (n.lst k v)
@@ -335,6 +340,7 @@ def OTm.wkn (k : ℕ) : OTm → OTm
   | .dite φ l r => .dite (φ.wkn k) (l.wkn (k + 1)) (r.wkn (k + 1))
   | .trunc A => .trunc (A.wkn k)
   | .choose A φ => .choose (A.wkn k) (φ.wkn (k + 1))
+  | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.wkn k)
   | .natrec C s z n => .natrec (C.wkn (k + 1)) (s.wkn (k + 1)) (z.wkn k) (n.wkn k)
@@ -378,6 +384,7 @@ def OTm.subst (σ : Subst) : OTm → OTm
   | .dite φ l r => .dite (φ.subst σ) (l.subst σ.lift) (r.subst σ.lift)
   | .trunc A => .trunc (A.subst σ)
   | .choose A φ => .choose (A.subst σ) (φ.subst σ.lift)
+  | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.subst σ)
   | .natrec C s z n => .natrec (C.subst σ.lift) (s.subst σ.lift) (z.subst σ) (n.subst σ)

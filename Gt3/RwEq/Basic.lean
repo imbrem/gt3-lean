@@ -55,6 +55,7 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
     : LRwEq Γ A A'
     → (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (φ.open y) (φ'.open y))
     → LRwEq Γ (.choose A φ) (.choose A' φ')
+  | nats {Γ} : LRwEq Γ .nats .nats
   | zero {Γ} : LRwEq Γ .zero .zero
   | succ {Γ} {n n'} : LRwEq Γ n n' → LRwEq Γ (.succ n) (.succ n')
   | natrec {Γ} {C C' s  s' z  z' n n'} {L : Finset String}
@@ -175,6 +176,7 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
     RwEq Γ (.dite φ l r) (.dite φ' l' r')
   | trunc {A A'} : RwEq Γ A A' → RwEq Γ (.trunc A) (.trunc A')
   | choose {A A' φ φ'} : RwEq Γ A A' → RwEq Γ φ φ' → RwEq Γ (.choose A φ) (.choose A' φ')
+  | nats : RwEq Γ .nats .nats
   | zero : RwEq Γ .zero .zero
   | succ {n n'} : RwEq Γ n n' → RwEq Γ (.succ n) (.succ n')
   | natrec {C C' s  s' z  z' n n'} : RwEq Γ C C' → RwEq Γ s s' →
@@ -336,6 +338,7 @@ theorem Ctx.RwEq.lst_bar {Γ Δ} (h : PSub Γ Δ) {k} {a b : Tm k} {a' b'}
       · exact h.skip hx (hX h.left_ok)
       · apply Tm.LstBar.open; assumption
     }
+  | nats => simp [h'.nats]; rfl
   | zero => simp [h'.zero]; rfl
   | succ hn In =>
     have _ := h'.succ;
