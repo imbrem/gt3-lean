@@ -1,63 +1,66 @@
 import Gt3.JEq.Basic
 
 inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
-  | fv {Γ : Ctx} {x : String} {A : Tm 0} (hΓ : Ok Γ) (hA : Lookup Γ x A) : HasTy Γ A (.fv x)
-  | univ {Γ : Ctx} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ (ℓ + 1)) (.univ ℓ)
-  | empty {Γ : Ctx} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ ℓ) .empty
-  | unit {Γ : Ctx} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ ℓ) .unit
-  | null {Γ : Ctx} (hΓ : Ok Γ) : HasTy Γ .unit .null
-  | eqn {Γ : Ctx} {A a b : Tm 0} {ℓ : ℕ}
+  | fv {Γ} {x : String} {A : Tm 0} (hΓ : Ok Γ) (hA : Lookup Γ x A) : HasTy Γ A (.fv x)
+  | univ {Γ} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ (ℓ + 1)) (.univ ℓ)
+  | empty {Γ} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ ℓ) .empty
+  | unit {Γ} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ ℓ) .unit
+  | null {Γ} (hΓ : Ok Γ) : HasTy Γ .unit .null
+  | eqn {Γ} {A a b : Tm 0} {ℓ : ℕ}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : HasTy Γ (.univ ℓ) (.eqn a b)
-  | pi {Γ : Ctx} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : HasTy Γ (.univ ℓ) (.pi A B)
-  | abs {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs {Γ} {A : Tm 0} {B b : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A)
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
     : HasTy Γ (A.pi B) (A.abs b)
-  | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | app' {Γ} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hA : HasTy Γ (.univ m) A)
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : HasTy Γ Ba (f.app a)
-  | sigma {Γ : Ctx} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | sigma {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : HasTy Γ (.univ ℓ) (.sigma A B)
-  | pair {Γ : Ctx} {A a b : Tm 0} {B : Tm 1} {m n : ℕ} {L : Finset String}
+  | pair {Γ} {A a b : Tm 0} {B : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
     : HasTy Γ (.sigma A B) (.pair a b)
-  | fst' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p : Tm 0} {m n : ℕ} {L : Finset String}
+  | fst' {Γ}  {A : Tm 0} {B : Tm 1} {p : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hA : HasTy Γ (.univ m) A)
     (hp : HasTy Γ (.sigma A B) p)
     : HasTy Γ A (.fst p)
-  | snd' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | snd' {Γ}  {A : Tm 0} {B : Tm 1} {p Ba : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hA : HasTy Γ (.univ m) A)
     (hp : HasTy Γ (.sigma A B) p)
     (hBa : TyEq Γ (B.lst (.fst p)) Ba)
     : HasTy Γ Ba (.snd p)
-  | trunc {Γ : Ctx} {A : Tm 0} {ℓ : ℕ}
+  | trunc {Γ} {A : Tm 0} {ℓ : ℕ}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ 0) (.trunc A)
-  | choose' {Γ : Ctx} {A : Tm 0} {φ : Tm 1} {ℓ : ℕ} {L : Finset String}
+  | choose' {Γ} {A : Tm 0} {φ : Tm 1} {ℓ : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ ℓ) A)
     (hAI : IsInhab Γ A)
     (hφ : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ 0) (φ.open x))
     : HasTy Γ A (.choose A φ)
-  | cast_level {Γ : Ctx} {ℓ A}
+  | nats {Γ} (hΓ : Ok Γ) : HasTy Γ (.univ 1) .nats
+  | zero {Γ} (hΓ : Ok Γ) : HasTy Γ .nats .zero
+  | succ {Γ} {n} (hn : HasTy Γ .nats n) : HasTy Γ .nats (.succ n)
+  | cast_level {Γ} {ℓ A}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ (ℓ + 1)) A
-  | cast {Γ : Ctx} {A A' a : Tm 0}
+  | cast {Γ} {A A' a : Tm 0}
     (hA : TyEq Γ A A') (ha : HasTy Γ A a)
     : HasTy Γ A' a
-  | transfer {Γ : Ctx} {A B a : Tm 0}
+  | transfer {Γ} {A B a : Tm 0}
     (hA : HasTy Γ A a) (hB : JEq Γ B a a)
     : HasTy Γ B a
 

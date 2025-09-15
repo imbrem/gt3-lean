@@ -103,6 +103,7 @@ macro_rules
     | apply Ctx.IsTy.univ
     | apply Ctx.IsTy.empty
     | apply Ctx.IsTy.unit
+    | apply Ctx.IsTy.nats
     | apply Ctx.TyEq.pi
     | apply Ctx.TyEq.sigma
   )
@@ -114,6 +115,7 @@ macro_rules
     | apply Ctx.IsTy.univ
     | apply Ctx.IsTy.empty
     | apply Ctx.IsTy.unit
+    | apply Ctx.IsTy.nats
     | apply Ctx.IsTy.pi
     | apply Ctx.IsTy.sigma
     | apply Ctx.IsTy.trunc

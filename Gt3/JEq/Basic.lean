@@ -2,86 +2,89 @@ import Gt3.Ctx
 
 inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   -- Congruence rules
-  | fv' {Γ : Ctx} {x : String} {A : Tm 0}
+  | fv' {Γ} {x : String} {A : Tm 0}
     (hΓ : JEq Γ .unit .null .null)
     (hx : Ctx.Lookup Γ x A)
     : JEq Γ A (Tm.fv x) (Tm.fv x)
-  | univ' {Γ : Ctx} {ℓ}
+  | univ' {Γ} {ℓ}
     : JEq Γ .unit .null .null → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
-  | empty' {Γ : Ctx} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .empty .empty
-  | unit' {Γ : Ctx} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .unit .unit
-  | eqn {Γ : Ctx} {A a a' b b' : Tm 0} {ℓ : ℕ}
+  | empty' {Γ} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .empty .empty
+  | unit' {Γ} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .unit .unit
+  | eqn {Γ} {A a a' b b' : Tm 0} {ℓ : ℕ}
     (ha : JEq Γ A a a')
     (hb : JEq Γ A b b')
     : JEq Γ (.univ ℓ) (.eqn a b) (.eqn a' b')
-  | pi {Γ : Ctx} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | pi {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
-  | abs {Γ : Ctx} {A A' : Tm 0} {B b b' : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
     : JEq Γ (A.pi B) (A.abs b) (A'.abs b')
-  | app' {Γ : Ctx} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | app' {Γ} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hf : JEq Γ (A.pi B) f f')
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
     : JEq Γ Ba (f.app a) (f'.app a')
-  | sigma {Γ : Ctx} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | sigma {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.sigma A B) (.sigma A' B')
-  | pair' {Γ : Ctx} {A A' a a' b b' : Tm 0} {B B' : Tm 1} {m n : ℕ} {L : Finset String}
+  | pair' {Γ} {A A' a a' b b' : Tm 0} {B B' : Tm 1} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hA : JEq Γ (.univ m) A A')
     (ha : JEq Γ A a a')
     (hb : JEq Γ (B.lst a) b b')
     : JEq Γ (.sigma A B) (.pair a b) (.pair a' b')
-  | fst' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p p' : Tm 0} {m n : ℕ} {L : Finset String}
+  | fst' {Γ}  {A : Tm 0} {B : Tm 1} {p p' : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hp : JEq Γ (.sigma A B) p p')
     : JEq Γ A (.fst p) (.fst p')
-  | snd' {Γ : Ctx}  {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | snd' {Γ}  {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hp : JEq Γ (.sigma A B) p p')
     (hBa : JEq Γ (.univ n) (B.lst (.fst p)) Ba)
     : JEq Γ Ba (.snd p) (.snd p')
-  -- | dite' {Γ : Ctx} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ℕ} {L : Finset String}
+  -- | dite' {Γ} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ℕ} {L : Finset String}
   --   (hφ : JEq Γ (.univ 0) φ φ')
   --   (hA : JEq Γ (.univ ℓ) A A)
   --   (hl : ∀ x ∉ L, JEq (Γ.cons x φ) A (l.open x) (l'.open x))
   --   (hr : ∀ x ∉ L, JEq (Γ.cons x φ.not) A (r.open x) (r'.open x))
   --   : JEq Γ A (.dite φ l r) (.dite φ' l' r')
-  | trunc {Γ : Ctx} {A A' : Tm 0} {ℓ : ℕ}
+  | trunc {Γ} {A A' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     : JEq Γ (.univ 0) (.trunc A) (.trunc A')
-  | choose' {Γ : Ctx} {A A' : Tm 0} {φ φ' : Tm 1} {m n : ℕ} {L : Finset String}
+  | choose' {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hAI : JEq Γ (.univ n) (.trunc A) .unit)
     (hφ : ∀x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))
     : JEq Γ A (.choose A φ) (.choose A' φ')
+  | nats' {Γ} : JEq Γ .unit .null .null → JEq Γ (.univ 1) .nats .nats
+  | zero' {Γ} : JEq Γ .unit .null .null → JEq Γ .nats .zero .zero
+  | succ {Γ n n'} : JEq Γ .nats n n' → JEq Γ .nats (.succ n) (.succ n')
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
-  | cons_ok {Γ : Ctx} {x : String} {A : Tm 0} {ℓ}
+  | cons_ok {Γ} {x : String} {A : Tm 0} {ℓ}
     (hΓ : JEq Γ .unit .null .null)
     (hx : x ∉ Γ.dv)
     (hA : JEq Γ (.univ ℓ) A A)
     : JEq (Γ.cons x A) .unit .null .null
   -- Propositions
-  | trunc_inhab' {Γ : Ctx} {A a : Tm 0}
+  | trunc_inhab' {Γ} {A a : Tm 0}
     (ha : JEq Γ A a a)
     (lhs_wf : JEq Γ (.univ 0) (.trunc A) (.trunc A))
     (rhs_wf : JEq Γ (.univ 0) .unit .unit)
     : JEq Γ (.univ 0) (.trunc A) .unit
   -- Reduction
-  | beta_app' {Γ : Ctx} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
+  | beta_app' {Γ} {A : Tm 0} {B b : Tm 1} {a ba Ba : Tm 0}
     (hf : JEq Γ (A.pi B) (A.abs b) (A.abs b))
     (ha : JEq Γ A a a)
     (lhs_wf : JEq Γ Ba (.app (A.abs b) a) (.app (A.abs b) a))
@@ -89,24 +92,24 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hba : JEq Γ Ba (b.lst a) ba)
     : JEq Γ Ba (.app (A.abs b) a) ba
   -- Reflexivity and extensionality
-  | eqn_rfl {Γ : Ctx} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
-  | eqn_ext {Γ : Ctx} {A a b : Tm 0}
+  | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
+  | eqn_ext {Γ} {A a b : Tm 0}
     : JEq Γ A a a → JEq Γ A b b → JEq Γ (.univ 0) (.eqn a b) .unit → JEq Γ A a b
   -- Symmetry and transitivity
-  | symm {Γ : Ctx} {A a b : Tm 0} : JEq Γ A a b → JEq Γ A b a
-  | trans {Γ : Ctx} {A a b c : Tm 0}
+  | symm {Γ} {A a b : Tm 0} : JEq Γ A a b → JEq Γ A b a
+  | trans {Γ} {A a b c : Tm 0}
     (hab : JEq Γ A a b)
     (hbc : JEq Γ A b c)
     : JEq Γ A a c
   -- Casting
-  | cast_level {Γ : Ctx} {A A' : Tm 0} {ℓ : ℕ}
+  | cast_level {Γ} {A A' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     : JEq Γ (.univ (ℓ + 1)) A A'
-  | cast' {Γ : Ctx} {A A' a a' : Tm 0} {ℓ : ℕ}
+  | cast' {Γ} {A A' a a' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     (ha : JEq Γ A a a')
     : JEq Γ A' a a'
-  | transfer' {Γ : Ctx} {A B a b : Tm 0}
+  | transfer' {Γ} {A B a b : Tm 0}
     (hA : JEq Γ A a b) (ha : JEq Γ B a a)
     : JEq Γ B a b
 
@@ -205,7 +208,7 @@ theorem Ctx.HasTy'.has_ty_univ {Γ U A} (h : HasTy' Γ U A) (hU : IsUniv Γ U) :
 
 inductive Ctx.Ok : Ctx → Prop
   | nil : Ok .nil
-  | cons {Γ : Ctx} {x : String} {A : Tm 0}
+  | cons {Γ} {x : String} {A : Tm 0}
   (hΓ : Ok Γ) (hx : x ∉ Γ.dv) (hA : IsTy Γ A)
   : Ok (Γ.cons x A)
 
@@ -258,6 +261,12 @@ theorem Ctx.JEq.empty {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ ℓ) .empty .empty 
 theorem Ctx.JEq.univ {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
   := .univ' (.null h)
 
+theorem Ctx.JEq.nats {Γ} (h : Ok Γ) : JEq Γ (.univ 1) .nats .nats
+  := .nats' (.null h)
+
+theorem Ctx.JEq.zero {Γ} (h : Ok Γ) : JEq Γ .nats .zero .zero
+  := .zero' (.null h)
+
 theorem Ctx.IsTy.top_cf {Γ A} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ A
   := have ⟨x, hx⟩ := L.exists_notMem; (hB x hx).ok.ty
@@ -309,6 +318,9 @@ macro_rules
     -- | apply Ctx.JEq.dite
     | apply Ctx.JEq.trunc
     | apply Ctx.JEq.choose
+    | apply Ctx.JEq.nats
+    | apply Ctx.JEq.zero
+    | apply Ctx.JEq.succ
   )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
@@ -323,26 +335,15 @@ theorem Ctx.IsTy.empty {Γ} (h : Ok Γ) : IsTy Γ .empty := ⟨0, .empty h⟩
 
 theorem Ctx.IsTy.unit {Γ} (h : Ok Γ) : IsTy Γ .unit := ⟨0, .unit h⟩
 
+theorem Ctx.IsTy.nats {Γ} (h : Ok Γ) : IsTy Γ .nats := ⟨1, .nats h⟩
+
 @[simp] theorem Ctx.IsTy.univ_iff {Γ ℓ} : IsTy Γ (.univ ℓ) ↔ Ok Γ := ⟨IsTy.ok, IsTy.univ⟩
 
 @[simp] theorem Ctx.IsTy.empty_iff {Γ} : IsTy Γ .empty ↔ Ok Γ := ⟨IsTy.ok, IsTy.empty⟩
 
 @[simp] theorem Ctx.IsTy.unit_iff {Γ} : IsTy Γ .unit ↔ Ok Γ := ⟨IsTy.ok, IsTy.unit⟩
 
-syntax "jeq_congr" : tactic
-
-macro_rules
-  | `(tactic| jeq_congr) => `(tactic| first
-    | apply Ctx.JEq.fv
-    | apply Ctx.JEq.univ
-    | apply Ctx.JEq.empty
-    | apply Ctx.JEq.unit
-    | apply Ctx.JEq.null
-    | apply Ctx.JEq.eqn
-    | apply Ctx.JEq.pi
-    | apply Ctx.JEq.abs
-    | apply Ctx.JEq.app
-  )
+@[simp] theorem Ctx.IsTy.nats_iff {Γ} : IsTy Γ .nats ↔ Ok Γ := ⟨IsTy.ok, IsTy.nats⟩
 
 theorem Ctx.Ok.iff_null {Γ} : JEq Γ .unit .null .null ↔ Ok Γ := ⟨JEq.ok, JEq.null⟩
 
