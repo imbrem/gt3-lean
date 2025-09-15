@@ -70,6 +70,14 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | nats' {Γ} : JEq Γ .unit .null .null → JEq Γ (.univ 1) .nats .nats
   | zero' {Γ} : JEq Γ .unit .null .null → JEq Γ .nats .zero .zero
   | succ {Γ n n'} : JEq Γ .nats n n' → JEq Γ .nats (.succ n) (.succ n')
+  | natrec' {Γ ℓ C C' s s' z z' n n' ℓ' Cn} {L : Finset String}
+    (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
+    (hs : ∀x ∉ L, JEq (Γ.cons x .nats)
+                      (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x) (s'.open x))
+    (hz : JEq Γ (C.lst .zero) z z')
+    (hn : JEq Γ .nats n n')
+    (hCn : JEq Γ (.univ ℓ') (C.lst n) Cn)
+    : JEq Γ Cn (.natrec C s z n) (.natrec C' s' z' n')
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
   | cons_ok {Γ} {x : String} {A : Tm 0} {ℓ}
@@ -298,6 +306,16 @@ theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {m : ℕ} {L : Finset 
   : JEq Γ A (.choose A φ) (.choose A' φ') :=
   have ⟨_, hAI⟩ := hAI;  .choose' hA hAI hφ
 
+theorem Ctx.JEq.natrec {Γ ℓ C C' s s' z z' n n' Cn} {L : Finset String}
+  (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
+    (hs : ∀ x ∉ L, JEq (Γ.cons x .nats)
+                      (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x) (s'.open x))
+    (hz : JEq Γ (C.lst .zero) z z')
+    (hn : JEq Γ .nats n n')
+    (hCn : TyEq Γ (C.lst n) Cn)
+    : JEq Γ Cn (.natrec C s z n) (.natrec C' s' z' n')
+  := have ⟨_, hCn⟩ := hCn; .natrec' hC hs hz hn hCn
+
 syntax "jeq_congr_f" : tactic
 
 macro_rules
@@ -321,6 +339,7 @@ macro_rules
     | apply Ctx.JEq.nats
     | apply Ctx.JEq.zero
     | apply Ctx.JEq.succ
+    | apply Ctx.JEq.natrec
   )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩

@@ -71,6 +71,12 @@ theorem Ctx.SEq.lift1_clamped {Γ σ Δ x A A' ℓ}
   (hσ.wk0 hxΓ hAΓ).cons' hAΓ' hAΓ' hxΔ hAΔ.lhs_is_ty
   hΓ hΓ
 
+theorem Ctx.SEq.lift1_nat_clamped {Γ σ Δ x}
+  (hσ : SEq Γ σ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
+  (hx : σ.IdAt x)
+  : SEq (Γ.cons x .nats) σ σ (Δ.cons x .nats)
+  := Ctx.SEq.lift1_clamped hσ hxΓ hxΔ (.nats hσ.src_ok) (.nats hσ.trg_ok) hx
+
 def Ctx.SEq.src {Γ σ τ Δ} (_ : SEq Γ σ τ Δ) : Ctx := Γ
 
 def Ctx.SEq.trg {Γ σ τ Δ} (_ : SEq Γ σ τ Δ) : Ctx := Δ
@@ -87,6 +93,9 @@ theorem Ctx.JEq.subst_open_cofinite_clamped_helper {L : Finset String} {Γ : Ctx
   : JEq (Γ.cons x A) ((σ • B).open x) ((σ • b).open x) ((σ • b').open x)
   := by convert h using 1 <;> rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
 
+theorem Tm.smul_lst {k} (v : VSubst) (t : Tm (k + 1)) : v • (t.lst .zero) = (v • t).lst .zero
+  := by rw [Tm.ls_lst, Tm.smul_zero]
+
 theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b}
   (h : JEq Δ A a b) (hK : σ.Clamped K)
   : JEq Γ (σ • A) (σ • a) (σ • b) := by induction h generalizing Γ with
@@ -98,10 +107,46 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | transfer' => apply transfer' <;> apply_assumption <;> assumption
   | nil_ok => exact .null hσ.src_ok
   | cons_ok => apply_assumption; cases hσ; assumption
+  | natrec' hC hs hz hn hCn IC Is Iz In ICN =>
+    constructor
+    · {
+      intro x hx
+      rename Finset String => L
+      have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
+        := by simp only [<-Finset.notMem_union]; exact hx
+      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
+      · exact hK
+      · exact hxK
+      · apply_assumption
+        <;> (first | assumption | apply SEq.lift1_clamped | apply SEq.lift1_nat_clamped)
+        <;> apply_assumption
+        <;> assumption
+    }
+    · {
+      intro x hx
+      rename Finset String => L
+      have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
+        := by simp only [<-Finset.notMem_union]; exact hx
+      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
+      · exact hK
+      · exact hxK
+      · simp only [<-Tm.smul_def]
+        rw [Tm.open_ls_not_mem]
+        convert Is _ hxL (hσ.lift1_nat_clamped hxΓ hxΔ (hK x hxK))
+        · sorry
+        · sorry
+    }
+    · (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
+      ; (apply_assumption <;> assumption)
+    · (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
+      ; (apply_assumption <;> assumption)
+    · first
+    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
+      ; (apply_assumption <;> assumption)
   | _ =>
     constructor <;>
     first
-    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst])
+    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
       ; (apply_assumption <;> assumption)
     | {
       intro x hx
@@ -112,7 +157,7 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
       · exact hK
       · exact hxK
       · apply_assumption
-        <;> first | assumption | apply SEq.lift1_clamped
+        <;> (first | assumption | apply SEq.lift1_clamped | apply SEq.lift1_nat_clamped)
         <;> apply_assumption
         <;> assumption
     }

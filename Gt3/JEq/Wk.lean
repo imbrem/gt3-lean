@@ -39,8 +39,10 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
       have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ Γ.dv := by rw [<-Finset.notMem_union]; exact hx
       apply_assumption
       · exact hL
-      · apply PSub.cons'
-        <;> first | assumption | apply JEq.lhs_is_ty <;> apply_assumption <;> assumption
+      · apply h.cons' hΓ <;> apply JEq.lhs_is_ty
+        <;> first | exact (.nats h.left_ok)
+                  | exact (.nats h.right_ok)
+                  | apply_assumption <;> assumption
     }
     | apply h.is_perm; assumption
 

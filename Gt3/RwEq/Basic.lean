@@ -1,7 +1,7 @@
 import Gt3.JEq.Basic
 import Gt3.HasTy.Factor
 import Gt3.Syntax.Erase
-import Gt3.Syntax.Subst
+import Gt3.Syntax.LstBar
 
 theorem Ctx.HasTy.valid {Γ A a} (h : HasTy Γ A a) : Tm.Valid a := by
   induction h <;> simp [Tm.forall_cf_open_valid_iff] at * <;> simp [*]
