@@ -63,9 +63,9 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | trunc {Γ} {A A' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     : JEq Γ (.univ 0) (.trunc A) (.trunc A')
-  | choose' {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {m n : ℕ} {L : Finset String}
-    (hA : JEq Γ (.univ m) A A')
-    (hAI : JEq Γ (.univ n) (.trunc A) .unit)
+  | choose' {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ℕ} {L : Finset String}
+    (hA : JEq Γ (.univ ℓ) A A')
+    (hAI : JEq Γ (.univ 0) (.trunc A) .unit)
     (hφ : ∀x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))
     : JEq Γ A (.choose A φ) (.choose A' φ')
   | nats' {Γ} : JEq Γ .unit .null .null → JEq Γ (.univ 1) .nats .nats
@@ -131,6 +131,16 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (lhs_wf : JEq Γ Csn (.natrec C s z (.succ n)) (.natrec C s z (.succ n)))
     (rhs_wf : JEq Γ Csn ((s.lst n).app (.natrec C s z n)) ((s.lst n).app (.natrec C s z n)))
     : JEq Γ Csn (.natrec C s z (.succ n)) ((s.lst n).app (.natrec C s z n))
+  -- -- Specification
+  | choose_spec' {Γ A φ φc ℓ} {L : Finset String}
+    (hA : JEq Γ (.univ ℓ) A A)
+    (hAI : JEq Γ (.univ 0) (.trunc A) .unit)
+    (hφ : ∀x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ.open x))
+    (hAφI : JEq Γ (.univ 0) (.exists A φ) .unit)
+    (hφc : JEq Γ (.univ 0) (φ.lst (.choose A φ)) φc)
+    (lhs_wf : JEq Γ (.univ 0) (φ.lst (.choose A φ)) (φ.lst (.choose A φ)))
+    (rhs_wf : JEq Γ (.univ 0) φc φc)
+    : JEq Γ (.univ 0) (φ.lst (.choose A φ)) φc
   -- Reflexivity and extensionality
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}
@@ -334,12 +344,12 @@ theorem Ctx.JEq.snd_f {Γ} {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L
         (fun x hx => (hB x hx).cast_level_le (by simp)) hA hp
         (hBa.cast_level_le (by simp))
 
-theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {m : ℕ} {L : Finset String}
-  (hA : JEq Γ (.univ m) A A')
+theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ℕ} {L : Finset String}
+  (hA : JEq Γ (.univ ℓ) A A')
   (hAI : IsInhab Γ A)
   (hφ : ∀ x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))
   : JEq Γ A (.choose A φ) (.choose A' φ') :=
-  have ⟨_, hAI⟩ := hAI;  .choose' hA hAI hφ
+  have ⟨_, hAI⟩ := hAI;  .choose' hA (hAI.transfer' (.trunc hA.lhs_ty')) hφ
 
 theorem Ctx.JEq.natrec {Γ ℓ C C' s s' z z' n n' Cn} {L : Finset String}
   (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))

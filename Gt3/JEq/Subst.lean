@@ -128,11 +128,12 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | nil_ok => exact .null hσ.src_ok
   | cons_ok => apply_assumption; cases hσ; assumption
   | _ =>
-    (try simp only [Tm.smul_app, Tm.smul_natrec, Tm.ls_lst, Tm.smul_succ])
+    (try simp only [Tm.smul_app, Tm.smul_natrec, Tm.ls_lst, Tm.smul_succ, Tm.smul_choose])
     constructor <;>
     first
     | (try simp only [
-        <-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_succ, <-Tm.smul_lst, <-Tm.ls_lst_null
+        <-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_succ, <-Tm.smul_lst, <-Tm.ls_lst_null,
+        <-Tm.smul_choose
       ])
       ; (apply_assumption <;> assumption)
     | {
