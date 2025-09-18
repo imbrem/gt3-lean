@@ -113,6 +113,24 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (rhs_wf : JEq Γ A (r.lst .null) (r.lst .null))
     (hlu : JEq Γ A (r.lst .null) ru)
     : JEq Γ A (.dite Tm.empty l r) ru
+  | beta_natrec_zero' {Γ ℓ C s z ℓ' Cz} {L : Finset String}
+    (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C.open x))
+    (hs : ∀x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s.open x))
+    (hz : JEq Γ (C.lst .zero) z z)
+    (hCn : JEq Γ (.univ ℓ') (C.lst .zero) Cz)
+    (lhs_wf : JEq Γ Cz (.natrec C s z .zero) (.natrec C s z .zero))
+    (rhs_wf : JEq Γ Cz z z)
+    : JEq Γ Cz (.natrec C s z .zero) z
+  | beta_natrec_succ' {Γ ℓ C s z n ℓ' r Csn} {L : Finset String}
+    (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C.open x))
+    (hs : ∀x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s.open x))
+    (hz : JEq Γ (C.lst .zero) z z)
+    (hn : JEq Γ .nats n n)
+    (hCn : JEq Γ (.univ ℓ') (C.lst (.succ n)) Csn)
+    (hr : JEq Γ Csn ((s.lst n).app (.natrec C s z n)) r)
+    (lhs_wf : JEq Γ Csn (.natrec C s z (.succ n)) (.natrec C s z (.succ n)))
+    (rhs_wf : JEq Γ Csn ((s.lst n).app (.natrec C s z n)) ((s.lst n).app (.natrec C s z n)))
+    : JEq Γ Csn (.natrec C s z (.succ n)) ((s.lst n).app (.natrec C s z n))
   -- Reflexivity and extensionality
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}
