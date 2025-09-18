@@ -308,7 +308,7 @@ inductive Tm.LstBar {l} (a b : Tm l) : ∀ {r}, Tm r → Tm r → Prop
 
 theorem Tm.LstBar.open {l r} {a b : Tm l} {a' b' : Tm (r + 1)}
   (h : LstBar a b a' b') (x) : LstBar a b (a'.open x) (b'.open x)
-  := by convert h.lst (.fv x) <;> simp only [lst_fv]
+  := by convert h.lst (.fv x) <;> simp only [lst_of_fv]
 
 theorem Tm.LstBar.lhs {l r} {a b : Tm l} {a' b' : Tm r} (h : LstBar a b a' b') : Lstn a a'
   := by induction h <;> constructor; assumption

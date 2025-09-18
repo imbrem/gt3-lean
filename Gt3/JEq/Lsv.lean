@@ -85,6 +85,13 @@ theorem Ctx.IsTy.lst_cf_is_ty' {Γ : Ctx} {A a a'} {B : Tm 1} {L : Finset String
   (ha : Ctx.JEq Γ A a a') : IsTy Γ (B.lst a)
   := TyEq.lst_cf hB ha.lhs_ty'
 
+theorem Ctx.JEq.lst_cf_cast_ty {Γ : Ctx} {ℓ A a a' Ba} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
+  (ha : JEq Γ A a a')
+  (hBa : TyEq Γ (B.lst a) Ba)
+  : TyEq Γ (B'.lst a') Ba
+  := (TyEq.lst_cf (fun x hx => (hB x hx).ty_eq) ha).symm.trans hBa
+
 theorem Ctx.JEq.lst_cf_cast_lhs {Γ : Ctx} {ℓ A a a' Ba} {B B' : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
   (ha : JEq Γ A a a')
@@ -136,3 +143,29 @@ theorem Ctx.JEq.lst_cf {Γ : Ctx} {A a a'} {B b b' : Tm 1} {L : Finset String}
       (.abs hA hB hbr) ha.rhs_ty' (app_eq.rhs_ty'.cast ⟨_, hB'⟩)
       hba' hba'
   exact hba.symm.trans (app_eq.trans (hB'.symm.cast' hba'))
+
+theorem Ctx.JEq.succArrow {Γ : Ctx} {C C' : Tm 1} {ℓ} {L : Finset String}
+  (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x)) (hℓ : 1 ≤ ℓ)
+  : ∀ x ∉ L, Ctx.JEq (Γ.cons x .nats) (.univ ℓ) ((Tm.succArrow C).open x) ((Tm.succArrow C').open x)
+  := fun x hx => by
+  have hCx := hC x hx
+  have hCsx
+    := JEq.lst_cf_univ (a := .succ (.fv x)) (a' := .succ (.fv x))
+    (fun y hy => by
+      have hy : y ∉ insert x L := by exact hy
+      simp at hy
+      exact (hC y hy.2).wk1 (y := x) (C := .nats) (by simp [Ne.symm hy.1, hCx.ok.var])
+              (.nats hCx.ok.tail)
+    )
+    (.succ (.top_var hCx.ok))
+  convert JEq.arr hCx hCsx (le_refl ℓ) (le_refl ℓ) hℓ <;> simp [Tm.open_succArrow]
+
+theorem Ctx.TyEq.succArrow' {Γ : Ctx} {C C' : Tm 1} {ℓ} {L : Finset String}
+  (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
+  : ∀ x ∉ L, TyEq (Γ.cons x .nats) ((Tm.succArrow C).open x) ((Tm.succArrow C').open x)
+  := fun x hx => ⟨ℓ + 1, JEq.succArrow (fun x hx => (hC x hx).cast_level) (by simp) x hx⟩
+
+theorem Ctx.TyEq.succArrow {Γ : Ctx} {C C' : Tm 1} {L : Finset String}
+  (hC : ∀ x ∉ L, TyEq (Γ.cons x .nats) (C.open x) (C'.open x))
+  : ∀ x ∉ L, TyEq (Γ.cons x .nats) ((Tm.succArrow C).open x) ((Tm.succArrow C').open x)
+  :=have ⟨_, hC⟩ := TyEq.max_univ' hC; Ctx.TyEq.succArrow' (fun x hx => (hC x hx).cast_level)

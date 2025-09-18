@@ -6,7 +6,7 @@ theorem Ctx.JEq.to_cf {Γ : Ctx} {x} {A} {B a b : Tm 1}
   : ∀ y ∉ Γ.dv , JEq (Γ.cons y A) (B.open y) (a.open y) (b.open y) := by
   intro y hy
   convert h.ls1' (SEq.rename_top hy h.ok.var h.ok.ty)
-  <;> rw [Tm.ls_lset, Tm.lsv_open (hx := ‹_›), Tm.lst_fv]
+  <;> rw [Tm.ls_lset, Tm.lsv_open (hx := ‹_›), Tm.lst_of_fv]
 
 theorem Ctx.JEq.to_cf_univ {Γ : Ctx} {x} {A ℓ} {a b : Tm 1}
   (h : JEq (Γ.cons x A) (.univ ℓ) (a.open x) (b.open x))

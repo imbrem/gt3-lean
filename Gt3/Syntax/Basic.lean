@@ -252,7 +252,7 @@ def Tm.lst {k : ℕ} (t : Tm (k + 1)) (v : Tm 0) : Tm k := match t with
   | .invalid => .invalid
 
 @[simp]
-theorem Tm.lst_of_fv {k : ℕ} (x : String) (v : Tm 0)
+theorem Tm.lst_fv {k : ℕ} (x : String) (v : Tm 0)
   : (Tm.fv (k := (k + 1)) x).lst v = .fv x
   := by simp [lst]
 
@@ -482,7 +482,7 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
         nats zero succ natrec has_ty invalid)
   | .invalid => invalid
 
-theorem Tm.lst_fv {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.lst (.fv x)) = t.open x
+theorem Tm.lst_of_fv {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.lst (.fv x)) = t.open x
   := by induction t using succIndOn <;> simp [lst, Tm.open, castLE, *]
 
 theorem Tm.lst_cast_succ {k : ℕ} (t : Tm k) (v : Tm 0)
@@ -510,7 +510,7 @@ theorem Tm.lst_castAdd_succ {k : ℕ} (n : ℕ) (t : Tm k) (v : Tm 0)
 
 theorem Tm.open_cast_succ {k : ℕ} (t : Tm k) (x : String)
   : (t.castLE (Nat.le_succ k)).open x = t
-  := by rw [<-lst_fv, lst_cast_succ]
+  := by rw [<-lst_of_fv, lst_cast_succ]
 
 @[simp]
 theorem Tm.open_castSucc {k : ℕ} (t : Tm k) (x : String)
@@ -519,6 +519,11 @@ theorem Tm.open_castSucc {k : ℕ} (t : Tm k) (x : String)
 theorem Tm.open_cast_lt {lo hi : ℕ} (h : lo < hi + 1) (t : Tm lo) (x : String)
   : (t.castLE (le_of_lt h)).open x = t.castLE (m := hi) (by omega)
   := by rw [<-castLE_castLE (m := hi), open_cast_succ]
+
+@[simp]
+theorem Tm.open_cast_zero {k : ℕ} (t : Tm 0) (x : String)
+  : (t.castLE (Nat.zero_le (k + 1))).open x = t.castLE (Nat.zero_le k)
+  := by rw [<-castLE_castLE (m := k), open_cast_succ]
 
 -- @[simp]
 -- theorem Tm.open_coe_succ {k : ℕ} (t : Tm k) (x : String)
@@ -891,7 +896,7 @@ theorem Tm.ls_lst {k : ℕ} (t : Tm (k + 1)) (v : VSubst) (u : Tm 0)
 
 theorem Tm.ls_open {k : ℕ} (t : Tm (k + 1)) (v : VSubst) (x : String)
   : v • (t.open x) = (v • t).lst (v.get x)
-  := by rw [<-lst_fv, ls_lst]; rfl
+  := by rw [<-lst_of_fv, ls_lst]; rfl
 
 def Tm.VSubst.set (v : VSubst) (x : String) (t : Tm 0) : VSubst
   := fun y => if y = x then t else v.get y
@@ -913,13 +918,13 @@ theorem Tm.VSubst.get_lift_same {k v x} :
 theorem Tm.open_ls_id_at {k : ℕ} (t : Tm (k + 1))
   (v : VSubst) (x : String) (hx : v.IdAt x)
   : (v • t).open x = v • (t.open x)
-  := by rw [ls_open, hx.get, lst_fv]
+  := by rw [ls_open, hx.get, lst_of_fv]
 
 theorem Tm.open_ls_not_mem {k : ℕ} (t : Tm (k + 1))
   (v : VSubst) (x : String) (hx : x ∉ t.fvs)
   : (v • t).open x = (v.lift x) • (t.open x)
   := by
-  rw [ls_open, VSubst.get_lift_same, lst_fv]
+  rw [ls_open, VSubst.get_lift_same, lst_of_fv]
   congr 1
   apply Tm.ls_eqOn_fvs
   intro y hy
@@ -939,9 +944,7 @@ theorem Tm.open_lsv_ne {k : ℕ} (t : Tm (k + 1))
   := by induction t using succIndOn with
   | fv =>
     simp only [lsv]
-    split
-    · simp [lsv, *]; rw [open_cast_lt]; omega
-    · simp [lsv, *]
+    split <;> simp [lsv, *]
   | bv i => cases i using Fin.lastCases <;> simp [lsv, «open», hx]
   | _ => simp [lsv, *]
 

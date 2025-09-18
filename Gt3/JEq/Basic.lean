@@ -1,4 +1,5 @@
 import Gt3.Ctx
+import Gt3.Syntax.Subst
 
 inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   -- Congruence rules
@@ -72,8 +73,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | succ {Γ n n'} : JEq Γ .nats n n' → JEq Γ .nats (.succ n) (.succ n')
   | natrec' {Γ ℓ C C' s s' z z' n n' ℓ' Cn} {L : Finset String}
     (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
-    (hs : ∀x ∉ L, JEq (Γ.cons x .nats)
-                      (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x) (s'.open x))
+    (hs : ∀x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s'.open x))
     (hz : JEq Γ (C.lst .zero) z z')
     (hn : JEq Γ .nats n n')
     (hCn : JEq Γ (.univ ℓ') (C.lst n) Cn)
@@ -308,8 +308,7 @@ theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {m : ℕ} {L : Finset 
 
 theorem Ctx.JEq.natrec {Γ ℓ C C' s s' z z' n n' Cn} {L : Finset String}
   (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
-    (hs : ∀ x ∉ L, JEq (Γ.cons x .nats)
-                      (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x) (s'.open x))
+    (hs : ∀ x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s'.open x))
     (hz : JEq Γ (C.lst .zero) z z')
     (hn : JEq Γ .nats n n')
     (hCn : TyEq Γ (C.lst n) Cn)

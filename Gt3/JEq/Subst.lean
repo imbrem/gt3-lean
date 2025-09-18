@@ -107,42 +107,6 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | transfer' => apply transfer' <;> apply_assumption <;> assumption
   | nil_ok => exact .null hσ.src_ok
   | cons_ok => apply_assumption; cases hσ; assumption
-  | natrec' hC hs hz hn hCn IC Is Iz In ICN =>
-    constructor
-    · {
-      intro x hx
-      rename Finset String => L
-      have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
-        := by simp only [<-Finset.notMem_union]; exact hx
-      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
-      · exact hK
-      · exact hxK
-      · apply_assumption
-        <;> (first | assumption | apply SEq.lift1_clamped | apply SEq.lift1_nat_clamped)
-        <;> apply_assumption
-        <;> assumption
-    }
-    · {
-      intro x hx
-      rename Finset String => L
-      have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
-        := by simp only [<-Finset.notMem_union]; exact hx
-      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
-      · exact hK
-      · exact hxK
-      · simp only [<-Tm.smul_def]
-        rw [Tm.open_ls_not_mem]
-        convert Is _ hxL (hσ.lift1_nat_clamped hxΓ hxΔ (hK x hxK))
-        · sorry
-        · sorry
-    }
-    · (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
-      ; (apply_assumption <;> assumption)
-    · (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
-      ; (apply_assumption <;> assumption)
-    · first
-    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
-      ; (apply_assumption <;> assumption)
   | _ =>
     constructor <;>
     first
@@ -156,7 +120,8 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
       first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
       · exact hK
       · exact hxK
-      · apply_assumption
+      · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := hK x hxK)])
+        apply_assumption
         <;> (first | assumption | apply SEq.lift1_clamped | apply SEq.lift1_nat_clamped)
         <;> apply_assumption
         <;> assumption

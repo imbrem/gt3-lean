@@ -64,6 +64,12 @@ theorem Ctx.S1.lift_clamped {Γ σ Δ x A ℓ}
     · exact .here _ _ _
   (hσ.wk0 hxΓ hAΓ).cons' hAΓ' hxΔ hAΔ.is_ty hΓ
 
+theorem Ctx.S1.lift_nat_clamped {Γ σ Δ x}
+  (hσ : S1 Γ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
+  (hx : σ.IdAt x)
+  : S1 (Γ.cons x .nats) σ (Δ.cons x .nats)
+  := Ctx.S1.lift_clamped hσ hxΓ hxΔ (.nats hσ.src_ok) (.nats hσ.trg_ok) hx
+
 theorem Ctx.HasTy.subst_open_cofinite_k_clamped_helper {L : Finset String} {Γ : Ctx} {σ : Tm.VSubst}
   (hL : σ.Clamped L) {A B : Tm 0} {b : Tm 1}
   {x} (hx : x ∉ L) (h : HasTy (Γ.cons x A) B (σ • b.open x))
@@ -83,12 +89,10 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
   | cast_level => apply cast_level; apply_assumption; assumption
   | cast => apply cast <;> (first | apply_assumption | apply TyEq.ls1) <;> assumption
   | transfer hA hB IA => exact (IA hσ).transfer (hB.ls1 hσ)
-  | natrec =>
-    sorry
   | _ =>
     constructor <;>
     first
-    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst])
+    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
       ; (first | apply_assumption | apply TyEq.ls1 | apply IsInhab.ls1)
       <;> assumption
     | exact hσ.src_ok
@@ -100,8 +104,9 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
       first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
       · exact hK
       · exact hxK
-      · apply_assumption
-        <;> first | assumption | apply S1.lift_clamped
+      · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := hK x hxK)])
+        apply_assumption
+        <;> (first | assumption | apply S1.lift_clamped | apply S1.lift_nat_clamped)
         <;> apply_assumption
         <;> assumption
     }

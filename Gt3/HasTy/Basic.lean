@@ -57,8 +57,7 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | natrec {Γ ℓ C s z n Cn} {L : Finset String}
     (hC : ∀x ∉ L, HasTy (Γ.cons x .nats)
                     (.univ ℓ) (C.open x))
-    (hs : ∀x ∉ L, HasTy (Γ.cons x .nats)
-                    (.pi (C.open x) (C.lst (.succ (.fv x))).castSucc) (s.open x))
+    (hs : ∀x ∉ L, HasTy (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x))
     (hz : HasTy Γ (C.lst .zero) z)
     (hn : HasTy Γ .nats n)
     (hCn : TyEq Γ (C.lst n) Cn)

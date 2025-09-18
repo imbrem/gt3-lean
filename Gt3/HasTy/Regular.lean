@@ -31,11 +31,29 @@ theorem Ctx.Cmp.of_cast {Γ A B a b}
   (ha : HasTy Γ A a) (hb : HasTy Γ B b) (hAB : TyEq Γ A B) : Cmp Γ A a b
   := ⟨ha, hb.cast hAB.symm⟩
 
+theorem Ctx.HasTy.succArrow_cast {Γ : Ctx} {ℓ} {C C' s : Tm 1} {L : Finset String}
+  (hC : ∀ x ∉ L, Ctx.JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
+  (hs : ∀ x ∉ L, Ctx.HasTy (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x))
+  : ∀ x ∉ L, Ctx.HasTy (Γ.cons x .nats) ((Tm.succArrow C').open x) (s.open x)
+  := fun x hx => (hs x hx).cast (TyEq.succArrow' hC x hx)
+
+theorem Ctx.HasTy.lst_cast {Γ : Ctx} {ℓ} {A a a' b : Tm 0} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
+  (ha : Ctx.JEq Γ A a a')
+  (hb : Ctx.HasTy Γ (B.lst a) b)
+  : Ctx.HasTy Γ (B'.lst a') b
+  := hb.cast (TyEq.lst_cf (fun x hx => (hB x hx).ty_eq) ha)
+
+theorem Ctx.HasTy.lst_cast_zero {Γ : Ctx} {ℓ} {b : Tm 0} {B B' : Tm 1} {L : Finset String}
+  (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x .nats) (.univ ℓ) (B.open x) (B'.open x))
+  (hb : Ctx.HasTy Γ (B.lst .zero) b)
+  : Ctx.HasTy Γ (B'.lst .zero) b
+  := hb.lst_cast hB (.zero hb.ok)
+
 theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction h with
   | nil_ok | cons_ok =>
       constructor <;> constructor <;> constructor
       <;> first | assumption | apply JEq.ok; assumption | apply JEq.lhs_is_ty; assumption
-  | natrec' => sorry
   | cast' => apply Cmp.cast' <;> assumption
   | transfer' hA hB IA IB => exact ⟨IB.right, IA.right.transfer (hA.transfer' hB.rhs_ty').rhs_ty'⟩
   | _ =>
@@ -70,7 +88,9 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
         --| intros; apply HasTy.cast_top_symm₂ <;> apply_assumption <;> assumption
         | apply Ctx.HasTy.lst_cf_cast <;> assumption
         | apply Ctx.HasTy.cast' <;> assumption
-        | apply Ctx.JEq.lst_cf_cast_lhs <;> first | assumption
+        | apply Ctx.HasTy.succArrow_cast <;> assumption
+        | apply Ctx.HasTy.lst_cast_zero <;> assumption
+        | apply Ctx.JEq.lst_cf_cast_ty <;> first | assumption
                                                   | apply Ctx.JEq.lhs_is_ty; assumption
                                                   | apply Ctx.JEq.fst' <;> assumption
       · first
