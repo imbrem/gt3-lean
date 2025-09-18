@@ -131,16 +131,16 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (lhs_wf : JEq Γ Csn (.natrec C s z (.succ n)) (.natrec C s z (.succ n)))
     (rhs_wf : JEq Γ Csn ((s.lst n).app (.natrec C s z n)) ((s.lst n).app (.natrec C s z n)))
     : JEq Γ Csn (.natrec C s z (.succ n)) ((s.lst n).app (.natrec C s z n))
-  -- -- Specification
+  -- Specification
   | choose_spec' {Γ A φ φc ℓ} {L : Finset String}
     (hA : JEq Γ (.univ ℓ) A A)
     (hAI : JEq Γ (.univ 0) (.trunc A) .unit)
     (hφ : ∀x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ.open x))
     (hAφI : JEq Γ (.univ 0) (.exists A φ) .unit)
     (hφc : JEq Γ (.univ 0) (φ.lst (.choose A φ)) φc)
-    (lhs_wf : JEq Γ (.univ 0) (φ.lst (.choose A φ)) (φ.lst (.choose A φ)))
-    (rhs_wf : JEq Γ (.univ 0) φc φc)
-    : JEq Γ (.univ 0) (φ.lst (.choose A φ)) φc
+    (lhs_wf : JEq Γ (.univ 0) φc φc)
+    (rhs_wf : JEq Γ (.univ 0) .unit .unit)
+    : JEq Γ (.univ 0) φc .unit
   -- Reflexivity and extensionality
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}

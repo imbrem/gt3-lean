@@ -116,6 +116,37 @@ theorem Ctx.JEq.subst_open_cofinite_clamped_helper {L : Finset String} {Γ : Ctx
 theorem Tm.smul_lst {k} (v : VSubst) (t : Tm (k + 1)) : v • (t.lst .zero) = (v • t).lst .zero
   := by rw [Tm.ls_lst, Tm.smul_zero]
 
+macro "ls1_tactic_helper" hσ:ident K:ident hK:ident : tactic =>
+  `(tactic| first
+    | (try simp only [
+        <-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_succ, <-Tm.smul_lst, <-Tm.ls_lst_null,
+        <-Tm.smul_choose
+      ])
+      ; (apply_assumption <;> assumption)
+    | {
+      intro x hx
+      rename Finset String => L
+      have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ ($K) ∧ x ∉ L ∧ x ∉ ($hσ).src.dv ∧ x ∉ ($hσ).trg.dv
+        := by simp only [<-Finset.notMem_union]; exact hx
+      first
+        | apply Ctx.JEq.subst_open_cofinite_clamped_helper
+        | apply Ctx.JEq.subst_open_cofinite_k_clamped_helper
+      · exact ($hK)
+      · exact hxK
+      · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := ($hK) x hxK)])
+        apply_assumption
+        <;> (first  | assumption
+                    | apply Ctx.SEq.lift1_clamped
+                    | apply Ctx.SEq.lift1_not_clamped
+                    | apply Ctx.SEq.lift1_nat_clamped
+                    | apply Ctx.SEq.lift1_unit_clamped
+                    | apply Ctx.SEq.lift1_not_empty_clamped)
+        <;> apply_assumption
+        <;> assumption
+    }
+  )
+
+
 theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b}
   (h : JEq Δ A a b) (hK : σ.Clamped K)
   : JEq Γ (σ • A) (σ • a) (σ • b) := by induction h generalizing Γ with
@@ -127,34 +158,10 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | transfer' => apply transfer' <;> apply_assumption <;> assumption
   | nil_ok => exact .null hσ.src_ok
   | cons_ok => apply_assumption; cases hσ; assumption
+  | eqn_rfl => apply eqn_rfl <;> ls1_tactic_helper hσ K hK
   | _ =>
     (try simp only [Tm.smul_app, Tm.smul_natrec, Tm.ls_lst, Tm.smul_succ, Tm.smul_choose])
-    constructor <;>
-    first
-    | (try simp only [
-        <-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_succ, <-Tm.smul_lst, <-Tm.ls_lst_null,
-        <-Tm.smul_choose
-      ])
-      ; (apply_assumption <;> assumption)
-    | {
-      intro x hx
-      rename Finset String => L
-      have ⟨hxK, hxL, hxΓ, hxΔ⟩ : x ∉ K ∧ x ∉ L ∧ x ∉ hσ.src.dv ∧ x ∉ hσ.trg.dv
-        := by simp only [<-Finset.notMem_union]; exact hx
-      first | apply subst_open_cofinite_clamped_helper | apply subst_open_cofinite_k_clamped_helper
-      · exact hK
-      · exact hxK
-      · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := hK x hxK)])
-        apply_assumption
-        <;> (first  | assumption
-                    | apply SEq.lift1_clamped
-                    | apply SEq.lift1_not_clamped
-                    | apply SEq.lift1_nat_clamped
-                    | apply SEq.lift1_unit_clamped
-                    | apply SEq.lift1_not_empty_clamped)
-        <;> apply_assumption
-        <;> assumption
-    }
+    constructor <;> ls1_tactic_helper hσ K hK
 
 theorem Ctx.SEq.castEqOn {Γ σ τ σ' τ' Δ}
   (hστ : SEq Γ σ τ Δ) (hσ : σ.EqOn Δ.dv σ') (hτ : τ.EqOn Δ.dv τ')

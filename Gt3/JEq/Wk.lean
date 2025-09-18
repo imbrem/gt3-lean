@@ -21,6 +21,24 @@ theorem Ctx.PSub.cons' {Γ Δ} (h : PSub Γ Δ)
   right_ok := h.right_ok.cons (Finset.not_mem_subset h.dv hx) hΔA
   is_perm := h.is_perm.cons x A
 
+macro "psub_tactic_helper" h:ident Γ:ident : tactic =>
+  `(tactic| first
+    | apply_assumption <;> assumption
+    | {
+      rename Finset String => L
+      intro x hx
+      have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ ($Γ).dv := by rw [<-Finset.notMem_union]; exact hx
+      apply_assumption
+      · exact hL
+      · apply ($h).cons' hΓ
+        <;> (first | assumption | apply Ctx.IsTy.not | apply Ctx.JEq.lhs_is_ty)
+        <;> (first | apply Ctx.JEq.nats | apply Ctx.JEq.unit | apply Ctx.JEq.empty
+                   | apply_assumption)
+        <;> first | assumption | exact ($h).left_ok | exact ($h).right_ok
+    }
+    | apply ($h).is_perm; assumption
+  )
+
 theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b)
   : JEq Γ A a b := by
   induction hab generalizing Γ with
@@ -30,21 +48,8 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption
   | transfer' => apply transfer' <;> apply_assumption <;> assumption
-  | _ =>
-    constructor <;> first
-    | apply_assumption <;> assumption
-    | {
-      rename Finset String => L
-      intro x hx
-      have ⟨hL, hΓ⟩ : x ∉ L ∧ x ∉ Γ.dv := by rw [<-Finset.notMem_union]; exact hx
-      apply_assumption
-      · exact hL
-      · apply h.cons' hΓ
-        <;> (first | assumption | apply IsTy.not | apply JEq.lhs_is_ty)
-        <;> (first | apply JEq.nats | apply JEq.unit | apply JEq.empty | apply_assumption)
-        <;> first | assumption | exact h.left_ok | exact h.right_ok
-    }
-    | apply h.is_perm; assumption
+  | eqn_rfl => apply eqn_rfl <;> psub_tactic_helper h Γ
+  | _ => constructor <;> psub_tactic_helper h Γ
 
 theorem Ctx.TyEq.psub {Γ Δ} (h : PSub Γ Δ) {A B : Tm 0} (hAB : TyEq Δ A B)
   : TyEq Γ A B := have ⟨ℓ, hAB⟩ := hAB; ⟨ℓ, hAB.psub h⟩
