@@ -1,5 +1,5 @@
 import Gt3.Ctx
-import Gt3.Syntax.Subst
+import Gt3.Syntax.Logic
 
 inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   -- Congruence rules
@@ -54,12 +54,12 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hp : JEq Γ (.sigma A B) p p')
     (hBa : JEq Γ (.univ n) (B.lst (.fst p)) Ba)
     : JEq Γ Ba (.snd p) (.snd p')
-  -- | dite' {Γ} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ℕ} {L : Finset String}
-  --   (hφ : JEq Γ (.univ 0) φ φ')
-  --   (hA : JEq Γ (.univ ℓ) A A)
-  --   (hl : ∀ x ∉ L, JEq (Γ.cons x φ) A (l.open x) (l'.open x))
-  --   (hr : ∀ x ∉ L, JEq (Γ.cons x φ.not) A (r.open x) (r'.open x))
-  --   : JEq Γ A (.dite φ l r) (.dite φ' l' r')
+  | dite' {Γ} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ℕ} {L : Finset String}
+    (hφ : JEq Γ (.univ 0) φ φ')
+    (hA : JEq Γ (.univ ℓ) A A)
+    (hl : ∀ x ∉ L, JEq (Γ.cons x φ) A (l.open x) (l'.open x))
+    (hr : ∀ x ∉ L, JEq (Γ.cons x φ.not) A (r.open x) (r'.open x))
+    : JEq Γ A (.dite φ l r) (.dite φ' l' r')
   | trunc {Γ} {A A' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     : JEq Γ (.univ 0) (.trunc A) (.trunc A')
@@ -269,6 +269,9 @@ theorem Ctx.JEq.empty {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ ℓ) .empty .empty 
 theorem Ctx.JEq.univ {Γ} {ℓ} (h : Ok Γ) : JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
   := .univ' (.null h)
 
+theorem Ctx.JEq.not {Γ φ φ'} (hφ : JEq Γ (.univ 0) φ φ')
+  : JEq Γ (.univ 0) (φ.not) (φ'.not) := .eqn hφ (.empty hφ.ok)
+
 theorem Ctx.JEq.nats {Γ} (h : Ok Γ) : JEq Γ (.univ 1) .nats .nats
   := .nats' (.null h)
 
@@ -332,7 +335,7 @@ macro_rules
     | apply Ctx.JEq.pair'
     | apply Ctx.JEq.fst'
     | apply Ctx.JEq.snd_f
-    -- | apply Ctx.JEq.dite
+    | apply Ctx.JEq.dite'
     | apply Ctx.JEq.trunc
     | apply Ctx.JEq.choose
     | apply Ctx.JEq.nats
@@ -362,6 +365,12 @@ theorem Ctx.IsTy.nats {Γ} (h : Ok Γ) : IsTy Γ .nats := ⟨1, .nats h⟩
 @[simp] theorem Ctx.IsTy.unit_iff {Γ} : IsTy Γ .unit ↔ Ok Γ := ⟨IsTy.ok, IsTy.unit⟩
 
 @[simp] theorem Ctx.IsTy.nats_iff {Γ} : IsTy Γ .nats ↔ Ok Γ := ⟨IsTy.ok, IsTy.nats⟩
+
+theorem Ctx.TyEq.not {Γ φ φ'} (h : JEq Γ (.univ 0) φ φ') : TyEq Γ (φ.not) (φ'.not) := h.not.ty_eq
+
+theorem Ctx.IsTy.not {Γ φ φ'} (h : JEq Γ (.univ 0) φ φ') : IsTy Γ (φ.not) := h.not.lhs_is_ty
+
+theorem Ctx.IsTy.not_rhs {Γ φ φ'} (h : JEq Γ (.univ 0) φ φ') : IsTy Γ (φ'.not) := h.not.rhs_is_ty
 
 theorem Ctx.Ok.iff_null {Γ} : JEq Γ .unit .null .null ↔ Ok Γ := ⟨JEq.ok, JEq.null⟩
 

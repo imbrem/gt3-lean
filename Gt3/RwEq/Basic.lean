@@ -77,6 +77,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
     cases hab with
     | inl ha => have Iab := Iac (.inl ha); exact Iab.trans (Icb (.inl Iab.rhs_ty))
     | inr hb => have Icb := Icb (.inr hb); exact (Iac (.inr Icb.lhs_ty)).trans Icb
+  | dite => sorry
   | _ =>
     cases hab with
     | inl ha =>

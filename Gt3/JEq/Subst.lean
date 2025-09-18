@@ -71,6 +71,14 @@ theorem Ctx.SEq.lift1_clamped {Γ σ Δ x A A' ℓ}
   (hσ.wk0 hxΓ hAΓ).cons' hAΓ' hAΓ' hxΔ hAΔ.lhs_is_ty
   hΓ hΓ
 
+
+theorem Ctx.SEq.lift1_not_clamped {Γ σ Δ x φ φ'}
+  (hσ : SEq Γ σ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
+  (hφΓ : JEq Γ (.univ 0) (σ • φ) (σ • φ')) (hφΔ : JEq Δ (.univ 0) φ φ')
+  (hx : σ.IdAt x)
+  : SEq (Γ.cons x (σ • φ).not) σ σ (Δ.cons x φ.not)
+  := lift1_clamped hσ hxΓ hxΔ hφΓ.not hφΔ.not hx
+
 theorem Ctx.SEq.lift1_nat_clamped {Γ σ Δ x}
   (hσ : SEq Γ σ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
   (hx : σ.IdAt x)
@@ -122,7 +130,9 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
       · exact hxK
       · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := hK x hxK)])
         apply_assumption
-        <;> (first | assumption | apply SEq.lift1_clamped | apply SEq.lift1_nat_clamped)
+        <;> (first  | assumption
+                    | apply SEq.lift1_clamped
+                    | apply SEq.lift1_not_clamped | apply SEq.lift1_nat_clamped)
         <;> apply_assumption
         <;> assumption
     }

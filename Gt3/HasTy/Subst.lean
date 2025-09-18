@@ -64,6 +64,13 @@ theorem Ctx.S1.lift_clamped {Γ σ Δ x A ℓ}
     · exact .here _ _ _
   (hσ.wk0 hxΓ hAΓ).cons' hAΓ' hxΔ hAΔ.is_ty hΓ
 
+theorem Ctx.S1.lift_not_clamped {Γ σ Δ x φ}
+  (hσ : S1 Γ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
+  (hφΓ : HasTy Γ (.univ 0) (σ • φ)) (hφΔ : HasTy Δ (.univ 0) φ)
+  (hx : σ.IdAt x)
+  : S1 (Γ.cons x (σ • φ).not) σ (Δ.cons x φ.not)
+  := lift_clamped hσ hxΓ hxΔ hφΓ.not hφΔ.not hx
+
 theorem Ctx.S1.lift_nat_clamped {Γ σ Δ x}
   (hσ : S1 Γ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
   (hx : σ.IdAt x)
@@ -106,7 +113,9 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
       · exact hxK
       · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := hK x hxK)])
         apply_assumption
-        <;> (first | assumption | apply S1.lift_clamped | apply S1.lift_nat_clamped)
+        <;> (first  | assumption
+                    | apply S1.lift_clamped | apply S1.lift_not_clamped
+                    | apply S1.lift_nat_clamped)
         <;> apply_assumption
         <;> assumption
     }

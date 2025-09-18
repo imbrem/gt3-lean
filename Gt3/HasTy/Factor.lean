@@ -41,6 +41,12 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
     (hp : HasTy Γ (.sigma A B) p)
     (hBa : TyEq Γ (B.lst (.fst p)) Ba)
     : InnerTy Γ Ba (.snd p)
+  | dite' {Γ} {φ A : Tm 0} {l r : Tm 1} {ℓ : ℕ} {L : Finset String}
+    (hφ : HasTy Γ (.univ 0) φ)
+    (hA : HasTy Γ (.univ ℓ) A)
+    (hl : ∀ x ∉ L, HasTy (Γ.cons x φ) A (l.open x))
+    (hr : ∀ x ∉ L, HasTy (Γ.cons x φ.not) A (r.open x))
+    : InnerTy Γ A (.dite φ l r)
   | trunc {Γ} {A : Tm 0} {ℓ : ℕ}
     (hA : HasTy Γ (.univ ℓ) A)
     : InnerTy Γ (.univ 0) (.trunc A)

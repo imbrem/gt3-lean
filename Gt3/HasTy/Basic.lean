@@ -43,6 +43,12 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hp : HasTy Γ (.sigma A B) p)
     (hBa : TyEq Γ (B.lst (.fst p)) Ba)
     : HasTy Γ Ba (.snd p)
+  | dite' {Γ} {φ A : Tm 0} {l r : Tm 1} {ℓ : ℕ} {L : Finset String}
+    (hφ : HasTy Γ (.univ 0) φ)
+    (hA : HasTy Γ (.univ ℓ) A)
+    (hl : ∀ x ∉ L, HasTy (Γ.cons x φ) A (l.open x))
+    (hr : ∀ x ∉ L, HasTy (Γ.cons x φ.not) A (r.open x))
+    : HasTy Γ A (.dite φ l r)
   | trunc {Γ} {A : Tm 0} {ℓ : ℕ}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ 0) (.trunc A)
@@ -76,6 +82,9 @@ theorem Ctx.HasTy.cast' {Γ ℓ A A' a} (hA : JEq Γ (.univ ℓ) A A') (ha : Has
   : HasTy Γ A' a := .cast hA.ty_eq ha
 
 theorem Ctx.HasTy.ok {Γ A a} (h : HasTy Γ A a) : Ok Γ := by induction h <;> assumption
+
+theorem Ctx.HasTy.not {Γ φ} (hφ : HasTy Γ (.univ 0) φ) : HasTy Γ (.univ 0) φ.not
+  := .eqn hφ (.empty hφ.ok)
 
 theorem Ctx.HasTy.refl {Γ A a} (h : HasTy Γ A a) : JEq Γ A a a := by induction h with
   | cast_level _ IA => exact IA.cast_level

@@ -14,7 +14,7 @@ theorem Ctx.HasTy.psub {Γ Δ} (h : PSub Γ Δ) {A a : Tm 0} (hab : HasTy Δ A a
       apply_assumption
       · exact hL
       · apply h.cons' hΓ
-        <;> first | assumption | apply HasTy.is_ty
+        <;> (first | assumption | (apply IsTy.not; apply HasTy.refl) | apply HasTy.is_ty)
         <;> (first | apply HasTy.nats | apply_assumption) <;>
         first | assumption | exact h.left_ok | exact h.right_ok
     }
