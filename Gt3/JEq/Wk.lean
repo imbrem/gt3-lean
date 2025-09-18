@@ -111,6 +111,12 @@ theorem Ctx.JEq.arr {Γ A A' B B' n m ℓ}
   : JEq Γ (.univ ℓ) (.arr A B) (.arr A' B')
   := .pi (L := Γ.dv) hA (fun x hx => (by convert hB.wk0 hx hA.lhs_is_ty <;> simp)) hn hm hℓ
 
+theorem Ctx.JEq.prod {Γ A A' B B' n m ℓ}
+  (hA : JEq Γ (.univ n) A A') (hB : JEq Γ (.univ m) B B')
+  (hn : n ≤ ℓ) (hm : m ≤ ℓ) (hℓ : 1 ≤ ℓ)
+  : JEq Γ (.univ ℓ) (.prod A B) (.prod A' B')
+  := .sigma (L := Γ.dv) hA (fun x hx => (by convert hB.wk0 hx hA.lhs_is_ty <;> simp)) hn hm hℓ
+
 theorem Ctx.JEq.wk1 {Γ : Ctx} {x A B a b}
   (hab : JEq (Γ.cons x A) B a b) {y C} (hy : y ∉ insert x Γ.dv) (hC : Γ.IsTy C)
   : JEq ((Γ.cons y C).cons x A) B a b

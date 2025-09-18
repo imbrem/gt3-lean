@@ -318,6 +318,15 @@ theorem Ctx.JEq.natrec {Γ ℓ C C' s s' z z' n n' Cn} {L : Finset String}
     : JEq Γ Cn (.natrec C s z n) (.natrec C' s' z' n')
   := have ⟨_, hCn⟩ := hCn; .natrec' hC hs hz hn hCn
 
+theorem Ctx.JEq.ite' {Γ A φ φ' l l' r r' ℓ} {L : Finset String}
+  (hφ : JEq Γ (.univ 0) φ φ')
+  (hA : JEq Γ (.univ ℓ) A A)
+  (hl : ∀ x ∉ L, JEq (Γ.cons x φ) A l l')
+  (hr : ∀ x ∉ L, JEq (Γ.cons x φ.not) A r r')
+  : JEq Γ A (.ite φ l r) (.ite φ' l' r')
+  := .dite' hφ hA (fun x hx => (by convert hl x hx <;> simp))
+                  (fun x hx => (by convert hr x hx <;> simp))
+
 syntax "jeq_congr_f" : tactic
 
 macro_rules

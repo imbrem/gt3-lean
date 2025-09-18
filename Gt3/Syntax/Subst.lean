@@ -119,6 +119,16 @@ theorem Tm.lst_prod {k} (A B : Tm (k + 1)) (v : Tm 0)
 theorem Tm.open_prod {k} (A B : Tm (k + 1)) (x : String)
   : (Tm.prod A B).open x = .prod (A.open x) (B.open x) := by simp [prod]
 
+def Tm.ite {k} (φ l r : Tm k) : Tm k := .dite φ (↑₀ l) (↑₀ r)
+
+@[simp]
+theorem Tm.lst_ite {k} (φ l r : Tm (k + 1)) (v : Tm 0)
+   : (Tm.ite φ l r).lst v = .ite (φ.lst v) (l.lst v) (r.lst v) := by simp [ite]
+
+@[simp]
+theorem Tm.open_ite {k} (φ l r : Tm (k + 1)) (x : String)
+  : (Tm.ite φ l r).open x = .ite (φ.open x) (l.open x) (r.open x) := by simp [ite]
+
 @[simp]
 def Tm.st {k : ℕ} (t : Tm (k + 1)) (v : Tm k) : Tm k := match t with
   | .fv y => .fv y
