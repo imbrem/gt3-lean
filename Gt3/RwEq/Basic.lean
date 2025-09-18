@@ -22,6 +22,13 @@ theorem Ctx.RwTy.of_has_ty_jeq {Γ ℓ U A A'}
   (h : HasTy Γ (.univ ℓ) A')
   (h' : JEq Γ U A A') : A ∈ RwTy Γ := fun _ => (h'.rtr h).lhs_is_ty
 
+theorem Ctx.RwTy.of_has_ty_not {Γ φ} (h : HasTy Γ (.univ 0) φ) : φ.not ∈ RwTy Γ
+  := fun _ => h.not.is_ty
+
+theorem Ctx.RwTy.of_has_ty_not_jeq {Γ U φ φ'}
+  (h : HasTy Γ (.univ 0) φ')
+  (h' : JEq Γ U φ φ') : φ.not ∈ RwTy Γ := fun _ => (h'.rtr h).not.lhs_is_ty
+
 inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
   | fv {Γ} (x) : LRwEq Γ (.fv x) (.fv x)
   | univ {Γ} (ℓ) : LRwEq Γ (.univ ℓ) (.univ ℓ)
@@ -77,7 +84,6 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
     cases hab with
     | inl ha => have Iab := Iac (.inl ha); exact Iab.trans (Icb (.inl Iab.rhs_ty))
     | inr hb => have Icb := Icb (.inr hb); exact (Iac (.inr Icb.lhs_ty)).trans Icb
-  | dite => sorry
   | _ =>
     cases hab with
     | inl ha =>
@@ -100,7 +106,8 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
           have ⟨hxK, hxL⟩ : x ∉ K ∧ x ∉ L := by rw [<-Finset.notMem_union]; exact hx
           apply_assumption <;> first
           | assumption
-          | apply RwTy.of_has_ty; assumption | apply Or.inl; apply_assumption; exact hxK
+          | apply RwTy.of_has_ty;
+            (try apply HasTy.not) ; assumption | apply Or.inl; apply_assumption; exact hxK
           | simp
         }
       }
@@ -128,7 +135,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
           apply_assumption <;> first
           | assumption
           | {
-            apply RwTy.of_has_ty_jeq
+            first | apply RwTy.of_has_ty_not_jeq | apply RwTy.of_has_ty_jeq
             · assumption
             · apply JEq.rhs_ty'; apply_assumption; apply Or.inr; assumption
           } | {

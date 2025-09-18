@@ -204,6 +204,10 @@ theorem Ctx.HasTy.cast_top_symm' {Γ x ℓ A B C a}
   (hAB : JEq Γ (.univ ℓ) B A) (h : HasTy (Γ.cons x B) C a)
   : HasTy (Γ.cons x A) C a := h.cast_top' hAB.symm
 
+theorem Ctx.HasTy.cast_top_not_symm' {Γ x φ φ' A a}
+  (hφ : JEq Γ (.univ 0) φ φ') (h : HasTy (Γ.cons x φ.not) A a)
+  : HasTy (Γ.cons x φ'.not) A a := h.cast_top_symm' hφ.not
+
 theorem Ctx.HasTy.cast_top_symm₂ {Γ x ℓ ℓ' A B C D a}
   (hAB : JEq Γ (.univ ℓ) B A) (h : HasTy (Γ.cons x B) C a) (hCD : JEq (Γ.cons x B) (.univ ℓ') C D)
   : HasTy (Γ.cons x A) D a := .cast' (.cast_top' hAB.symm hCD) (h.cast_top' hAB.symm)

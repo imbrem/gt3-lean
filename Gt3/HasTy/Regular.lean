@@ -56,7 +56,6 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
       <;> first | assumption | apply JEq.ok; assumption | apply JEq.lhs_is_ty; assumption
   | cast' => apply Cmp.cast' <;> assumption
   | transfer' hA hB IA IB => exact ⟨IB.right, IA.right.transfer (hA.transfer' hB.rhs_ty').rhs_ty'⟩
-  | dite' => sorry
   | _ =>
     simp only [Ctx.Cmp, forall_and] at *
     casesm* _ ∧ _
@@ -81,6 +80,7 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
       · constructor <;> first
         | assumption
         | intros; apply HasTy.cast_top_symm' <;> apply_assumption; assumption
+        | intros; apply HasTy.cast_top_not_symm' <;> apply_assumption; assumption
         | {
           apply Ctx.IsInhab.cast
           · apply JEq.ty_eq; assumption
