@@ -71,7 +71,6 @@ theorem Ctx.SEq.lift1_clamped {Γ σ Δ x A A' ℓ}
   (hσ.wk0 hxΓ hAΓ).cons' hAΓ' hAΓ' hxΔ hAΔ.lhs_is_ty
   hΓ hΓ
 
-
 theorem Ctx.SEq.lift1_not_clamped {Γ σ Δ x φ φ'}
   (hσ : SEq Γ σ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
   (hφΓ : JEq Γ (.univ 0) (σ • φ) (σ • φ')) (hφΔ : JEq Δ (.univ 0) φ φ')
@@ -84,6 +83,19 @@ theorem Ctx.SEq.lift1_nat_clamped {Γ σ Δ x}
   (hx : σ.IdAt x)
   : SEq (Γ.cons x .nats) σ σ (Δ.cons x .nats)
   := Ctx.SEq.lift1_clamped hσ hxΓ hxΔ (.nats hσ.src_ok) (.nats hσ.trg_ok) hx
+
+theorem Ctx.SEq.lift1_unit_clamped {Γ σ Δ x}
+  (hσ : SEq Γ σ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
+  (hx : σ.IdAt x)
+  : SEq (Γ.cons x .unit) σ σ (Δ.cons x .unit)
+  := Ctx.SEq.lift1_clamped (ℓ := 0) hσ hxΓ hxΔ (.unit hσ.src_ok) (.unit hσ.trg_ok) hx
+
+theorem Ctx.SEq.lift1_not_empty_clamped {Γ σ Δ x}
+  (hσ : SEq Γ σ σ Δ) (hxΓ : x ∉ Γ.dv) (hxΔ : x ∉ Δ.dv)
+  (hx : σ.IdAt x)
+  : SEq (Γ.cons x Tm.empty.not) σ σ (Δ.cons x Tm.empty.not)
+  := Ctx.SEq.lift1_clamped
+    (ℓ := 0) hσ hxΓ hxΔ (.not (.empty hσ.src_ok)) (.not (.empty hσ.trg_ok)) hx
 
 def Ctx.SEq.src {Γ σ τ Δ} (_ : SEq Γ σ τ Δ) : Ctx := Γ
 
@@ -118,7 +130,7 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | _ =>
     constructor <;>
     first
-    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst])
+    | (try simp only [<-Tm.smul_def, <-Tm.ls_lst, <-Tm.smul_fst, <-Tm.smul_lst, <-Tm.ls_lst_null])
       ; (apply_assumption <;> assumption)
     | {
       intro x hx
@@ -132,7 +144,10 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
         apply_assumption
         <;> (first  | assumption
                     | apply SEq.lift1_clamped
-                    | apply SEq.lift1_not_clamped | apply SEq.lift1_nat_clamped)
+                    | apply SEq.lift1_not_clamped
+                    | apply SEq.lift1_nat_clamped
+                    | apply SEq.lift1_unit_clamped
+                    | apply SEq.lift1_not_empty_clamped)
         <;> apply_assumption
         <;> assumption
     }

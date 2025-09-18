@@ -41,7 +41,7 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
       · exact hL
       · apply h.cons' hΓ
         <;> (first | assumption | apply IsTy.not | apply JEq.lhs_is_ty)
-        <;> (first | apply JEq.nats | apply_assumption)
+        <;> (first | apply JEq.nats | apply JEq.unit | apply JEq.empty | apply_assumption)
         <;> first | assumption | exact h.left_ok | exact h.right_ok
     }
     | apply h.is_perm; assumption

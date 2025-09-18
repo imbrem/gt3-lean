@@ -99,6 +99,20 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (rhs_wf : JEq Γ Ba ba ba)
     (hba : JEq Γ Ba (b.lst a) ba)
     : JEq Γ Ba (.app (A.abs b) a) ba
+  | beta_dite_tt' {Γ} {A : Tm 0} {l r : Tm 1} {lu} {ℓ : ℕ} {L : Finset String}
+    (hA : JEq Γ (.univ ℓ) A A)
+    (hl : ∀ x ∉ L, JEq (Γ.cons x .unit) A (l.open x) (l.open x))
+    (lhs_wf : JEq Γ A (.dite Tm.unit l r) (.dite Tm.unit l r))
+    (rhs_wf : JEq Γ A (l.lst .null) (l.lst .null))
+    (hlu : JEq Γ A (l.lst .null) lu)
+    : JEq Γ A (.dite Tm.unit l r) lu
+  | beta_dite_ff' {Γ} {A : Tm 0} {l r : Tm 1} {ru} {ℓ : ℕ} {L : Finset String}
+    (hA : JEq Γ (.univ ℓ) A A)
+    (hl : ∀ x ∉ L, JEq (Γ.cons x Tm.empty.not) A (r.open x) (r.open x))
+    (lhs_wf : JEq Γ A (.dite Tm.empty l r) (.dite Tm.empty l r))
+    (rhs_wf : JEq Γ A (r.lst .null) (r.lst .null))
+    (hlu : JEq Γ A (r.lst .null) ru)
+    : JEq Γ A (.dite Tm.empty l r) ru
   -- Reflexivity and extensionality
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}

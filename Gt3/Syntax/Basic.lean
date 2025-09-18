@@ -894,6 +894,10 @@ theorem Tm.ls_lst {k : ℕ} (t : Tm (k + 1)) (v : VSubst) (u : Tm 0)
   | bv i => cases i using Fin.lastCases <;> simp [lst, castLE_lst]
   | _ => simp [*]
 
+theorem Tm.ls_lst_null {k : ℕ} (t : Tm (k + 1)) (v : VSubst)
+  : v • (t.lst .null) = (v • t).lst .null
+  := by simp [ls_lst]
+
 theorem Tm.ls_open {k : ℕ} (t : Tm (k + 1)) (v : VSubst) (x : String)
   : v • (t.open x) = (v • t).lst (v.get x)
   := by rw [<-lst_of_fv, ls_lst]; rfl
