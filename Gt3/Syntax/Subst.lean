@@ -59,7 +59,7 @@ theorem Tm.wk0_lst {k} (t : Tm (k + 1)) (v : Tm 0) : ↑₀ (t.lst v) = (↑₀ 
   := t.wkn_lst_le v (Nat.zero_le _)
 
 @[simp]
-theorem Tm.lst_wk0 {k} (t : Tm (k + 1)) (v : Tm 0) : (↑₀ t).lst v = ↑₀ (t.lst v)
+theorem Tm.lst_wk0_succ {k} (t : Tm (k + 1)) (v : Tm 0) : (↑₀ t).lst v = ↑₀ (t.lst v)
   := (t.wk0_lst v).symm
 
 theorem Tm.wkn_open_le {k j} (t : Tm (k + 1)) (x : String) (hj : j ≤ k)
@@ -95,6 +95,9 @@ theorem Tm.wk0_cast_zero {k} (t : Tm 0)
 @[simp]
 theorem Tm.wk0_tm_zero (t : Tm 0) : t.wk0 = t.castLE (Nat.zero_le 1)
   := by convert t.wk0_cast_zero; simp
+
+theorem Tm.lst_wk0 (t : Tm 0) (v : Tm 0) : (↑₀ t).lst v = t
+  := by simp
 
 theorem Tm.open_wk0 (t : Tm 0) (x : String) : (↑₀ t).open x = t
   := by simp

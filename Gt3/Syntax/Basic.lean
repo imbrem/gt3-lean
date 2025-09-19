@@ -508,6 +508,11 @@ theorem Tm.lst_castAdd_succ {k : ℕ} (n : ℕ) (t : Tm k) (v : Tm 0)
   : (t.castAdd (n + 1)).lst v = t.castAdd n
   := by rw [castAdd_succ, lst_castSucc]
 
+@[simp]
+theorem Tm.lst_cast_zero {k : ℕ} (t : Tm 0) (v : Tm 0)
+  : (t.castLE (Nat.zero_le (k + 1))).lst v = t.castLE (Nat.zero_le k)
+  := by rw [<-castLE_castLE (m := k), lst_cast_succ]
+
 theorem Tm.open_cast_succ {k : ℕ} (t : Tm k) (x : String)
   : (t.castLE (Nat.le_succ k)).open x = t
   := by rw [<-lst_of_fv, lst_cast_succ]
