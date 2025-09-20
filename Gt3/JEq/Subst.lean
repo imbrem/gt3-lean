@@ -113,6 +113,16 @@ theorem Ctx.JEq.subst_open_cofinite_clamped_helper {L : Finset String} {Γ : Ctx
   : JEq (Γ.cons x A) ((σ • B).open x) ((σ • b).open x) ((σ • b').open x)
   := by convert h using 1 <;> rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
 
+theorem Ctx.JEq.subst_open_cofinite_clamped_app_helper {L : Finset String} {Γ : Ctx} {σ : Tm.VSubst}
+  (hL : σ.Clamped L) {A f g : Tm 0} {B : Tm 1}
+  {x} (hx : x ∉ L) (h : JEq (Γ.cons x A) (σ • B.open x) (σ • (f.app (.fv x))) (σ • (g.app (.fv x))))
+  : JEq (Γ.cons x A) ((σ • B).open x) ((σ • f).app (.fv x)) ((σ • g).app (.fv x))
+  := by
+  convert h using 1
+  · rw [Tm.open_ls_clamped (hv := hL) (hx := hx)]
+  · simp [hL.get x hx]
+  · simp [hL.get x hx]
+
 theorem Tm.smul_lst {k} (v : VSubst) (t : Tm (k + 1)) : v • (t.lst .zero) = (v • t).lst .zero
   := by rw [Tm.ls_lst, Tm.smul_zero]
 
@@ -131,6 +141,7 @@ macro "ls1_tactic_helper" hσ:ident K:ident hK:ident : tactic =>
       first
         | apply Ctx.JEq.subst_open_cofinite_clamped_helper
         | apply Ctx.JEq.subst_open_cofinite_k_clamped_helper
+        | apply Ctx.JEq.subst_open_cofinite_clamped_app_helper
       · exact ($hK)
       · exact hxK
       · (try simp only [<-Tm.smul_def, <-Tm.smul_succArrow_open (hx := ($hK) x hxK)])
@@ -145,7 +156,6 @@ macro "ls1_tactic_helper" hσ:ident K:ident hK:ident : tactic =>
         <;> assumption
     }
   )
-
 
 theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ Δ) {A a b}
   (h : JEq Δ A a b) (hK : σ.Clamped K)
