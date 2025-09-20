@@ -156,13 +156,21 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (rhs_wf : JEq Γ (.univ 0) .unit .unit)
     : JEq Γ (.univ 0) φc .unit
   -- Reflexivity and extensionality
-  | funext' {Γ} {A : Tm 0} {B : Tm 1} {f g : Tm 0} {m n} {L : Finset String}
+  | pi_ext' {Γ} {A : Tm 0} {B : Tm 1} {f g : Tm 0} {m n} {L : Finset String}
     (hA : JEq Γ (.univ m) A A)
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hf : JEq Γ (A.pi B) f f)
     (hg : JEq Γ (A.pi B) g g)
     (hfg : ∀x ∉ L, JEq (Γ.cons x A) (B.open x) (f.app (.fv x)) (g.app (.fv x)))
     : JEq Γ (A.pi B) f g
+  | sigma_ext' {Γ} {A : Tm 0} {B : Tm 1} {p q : Tm 0} {m n} {L : Finset String}
+    (hA : JEq Γ (.univ m) A A)
+    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
+    (hp : JEq Γ (.sigma A B) p p)
+    (hq : JEq Γ (.sigma A B) q q)
+    (hpq1 : JEq Γ A (.fst p) (.fst q))
+    (hpq2 : JEq Γ (B.lst (.fst p)) (.snd p) (.snd q))
+    : JEq Γ (.sigma A B) p q
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}
     : JEq Γ A a a → JEq Γ A b b → JEq Γ (.univ 0) (.eqn a b) .unit → JEq Γ A a b
