@@ -101,6 +101,7 @@ theorem Ctx.JEq.cmp {Γ A a b} (h : JEq Γ A a b) : Cmp Γ A a b := by induction
           <;> intros
           <;> first | exact L | apply JEq.ty_eq <;> apply_assumption <;> assumption
                               | apply HasTy.is_ty; apply_assumption; assumption
+                              | apply JEq.ok <;> assumption
           )
     }
 
@@ -127,3 +128,8 @@ theorem Ctx.IsWf.has_ty {Γ a} (h : IsWf Γ a) : ∃A, HasTy Γ A a := has_ty_de
 
 theorem Ctx.IsTy.def_has_ty {Γ A} : IsTy Γ A ↔ ∃ℓ, HasTy Γ (.univ ℓ) A := by
   simp only [IsTy, TyEq, <-JEq.refl_iff]
+
+theorem Ctx.IsTy.has_ty {Γ A} (h : IsTy Γ A) : ∃ℓ, HasTy Γ (.univ ℓ) A := IsTy.def_has_ty.mp h
+
+theorem Ctx.HasTy.m_has_ty {Γ A a} (h : HasTy Γ A a) : HasTy Γ .unit (.has_ty A a)
+  := have ⟨_, hA⟩ := h.regular.has_ty; .m_has_ty' hA h

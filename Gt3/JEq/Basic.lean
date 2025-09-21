@@ -78,6 +78,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hn : JEq Γ .nats n n')
     (hCn : JEq Γ (.univ ℓ') (C.lst n) Cn)
     : JEq Γ Cn (.natrec C s z n) (.natrec C' s' z' n')
+  -- Meta
+  | m_has_ty' {Γ} {A A' a a' : Tm 0} {ℓ}
+    (hA : JEq Γ (.univ ℓ) A A')
+    (ha : JEq Γ A a a')
+    : JEq Γ .unit (.has_ty A a) (.has_ty A' a')
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
   | cons_ok {Γ} {x : String} {A : Tm 0} {ℓ}
@@ -422,6 +427,7 @@ macro_rules
     | apply Ctx.JEq.zero
     | apply Ctx.JEq.succ
     | apply Ctx.JEq.natrec
+    | apply Ctx.JEq.m_has_ty'
   )
 
 theorem Ctx.IsTy.univ {Γ ℓ} (h : Ok Γ) : IsTy Γ (.univ ℓ) := ⟨ℓ + 1, .univ h⟩
@@ -524,3 +530,42 @@ theorem Ctx.JEq.top_var {Γ : Ctx} {x A} (h : Ok (Γ.cons x A)) : JEq (Γ.cons x
 theorem Ctx.JEq.top_var_iff {Γ : Ctx} {x A}
   : JEq (Γ.cons x A) A (.fv x) (.fv x) ↔ Ok (Γ.cons x A)
   := ⟨JEq.ok, JEq.top_var⟩
+
+theorem Ctx.JEq.cf_scoped {Γ : Ctx} {A : Tm 0} {B a b : String → Tm 0}
+  {L : Finset String} (h : ∀ x ∉ L, JEq (Γ.cons x A) (B x) (a x) (b x))
+  : Γ.dv ⊆ L := by
+  intro x hx
+  by_contra hx'
+  exact (h x hx').ok.var hx
+
+theorem Ctx.JEq.ty_scoped_cf {Γ : Ctx} {A : Tm 0} {B : Tm 1} {a b : String → Tm 0}
+  {L : Finset String} (h : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (a x) (b x))
+  : B.fvs ⊆ Γ.dv := by
+  intro y hy
+  have ⟨x, hx⟩ := (insert y L).exists_notMem
+  simp at hx
+  have hB := ((h x hx.2).ty_scoped)
+  have hxy := ((B.subset_fvs_open x).trans hB) hy
+  simp at hxy
+  cases hxy
+  · exact (Ne.symm hx.1 ‹_›).elim
+  · assumption
+
+theorem Ctx.JEq.lhs_scoped_cf
+  {Γ : Ctx} {A : Tm 0} {B : String → Tm 0} {a : Tm 1} {b : String → Tm 0}
+  {L : Finset String} (h : ∀ x ∉ L, JEq (Γ.cons x A) (B x) (a.open x) (b x))
+  : a.fvs ⊆ Γ.dv := by
+  intro y hy
+  have ⟨x, hx⟩ := (insert y L).exists_notMem
+  simp at hx
+  have ha := ((h x hx.2).lhs_scoped)
+  have hxy := ((a.subset_fvs_open x).trans ha) hy
+  simp at hxy
+  cases hxy
+  · exact (Ne.symm hx.1 ‹_›).elim
+  · assumption
+
+theorem Ctx.JEq.rhs_scoped_cf
+  {Γ : Ctx} {A : Tm 0} {B : String → Tm 0} {a : String → Tm 0} {b : Tm 1}
+  {L : Finset String} (h : ∀ x ∉ L, JEq (Γ.cons x A) (B x) (a x) (b.open x)) : b.fvs ⊆ Γ.dv
+  := lhs_scoped_cf (fun x hx => (h x hx).symm)

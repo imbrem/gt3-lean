@@ -225,7 +225,6 @@ theorem Ctx.IsTy.wk0_lset {Γ x A B} (hA : IsTy Γ A) (hx : x ∉ Γ.dv) (hB : I
   intro z hz; simp [Tm.get_lset]; intro h; cases h
   exact (hx (hA.scoped hz)).elim
 
-
 theorem Ctx.SEq.lset {Γ x y} (hΓ : Ok Γ) (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (a b : Tm 0)
   : SEq Γ (.lset a x) (.lset b y) Γ :=
   (SEq.one hΓ).castEqOn
@@ -248,6 +247,36 @@ theorem Ctx.SEq.rename_top' {Γ x y A B} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (
 
 theorem Ctx.SEq.rename_top {Γ x y A} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hA : IsTy Γ A)
   : SEq (Γ.cons x A) (.lset (.fv x) y) (.lset (.fv x) y) (Γ.cons y A) := rename_top' hx hy hA
+
+theorem Ctx.Ok.top_scoped {Γ : Ctx} {x A} (hΓ : Ok (Γ.cons x A)) : x ∉ A.fvs
+  := Finset.not_mem_subset hΓ.ty.scoped hΓ.var
+
+theorem Ctx.JEq.rename_top {Γ : Ctx} {x A B a b}
+  (h : JEq (Γ.cons x A) B a b)
+  : ∀ y ∉ Γ.dv, JEq (Γ.cons y A) (B.lsv x (.fv y)) (a.lsv x (.fv y)) (b.lsv x (.fv y))
+  := fun y hy => by
+  have hxy := SEq.rename_top hy h.ok.var h.ok.ty
+  convert h.ls1' hxy using 0
+  simp only [Tm.ls_lset]
+
+theorem Ctx.JEq.top_quant_exact {Γ : Ctx} {A} {B a b : Tm 1} {L : Finset String}
+  (h : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (a.open x) (b.open x))
+  : ∀ y ∉ Γ.dv, JEq (Γ.cons y A) (B.open y) (a.open y) (b.open y)
+  := fun y hy => by
+  have ⟨x, hx⟩ := L.exists_notMem
+  have hxe := h x hx
+  convert hxe.rename_top y hy <;> rw [Tm.lsv_open, Tm.lst_of_fv]
+  · exact Finset.not_mem_subset (ty_scoped_cf h) hxe.ok.var
+  · exact Finset.not_mem_subset (lhs_scoped_cf h) hxe.ok.var
+  · exact Finset.not_mem_subset (rhs_scoped_cf h) hxe.ok.var
+
+theorem Ctx.JEq.top_quant_exact_k {Γ : Ctx} {A B} {a b : Tm 1} {L : Finset String}
+  (h : ∀ x ∉ L, JEq (Γ.cons x A) B (a.open x) (b.open x))
+  : ∀ y ∉ Γ.dv, JEq (Γ.cons y A) B (a.open y) (b.open y)
+  := fun y hy => by
+  rw [<-B.open_cast_succ y]
+  apply top_quant_exact _ y hy (L := L)
+  simp; exact h
 
 theorem Ctx.JEq.ps {Γ Δ} (hσ : PSEq Γ Δ) {A a b} (h : JEq Δ A a b)
   : JEq Γ A a b := by convert h.ls1' hσ <;> simp

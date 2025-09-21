@@ -147,21 +147,3 @@ theorem Ctx.JEq.ite_k {Γ A φ φ' l l' r r'}
   have ⟨_, hA⟩ := hl.regular;
   .ite' (L := Γ.dv) hφ hA (fun _ hx => hl.wk0 hx hφ.lhs_is_ty)
                           (fun _ hx => hr.wk0 hx hφ.not.lhs_is_ty)
-
--- theorem Ctx.JEq.bete_ite_tt' {Γ} {A l r : Tm 0} {ℓ : ℕ} {L : Finset String}
---     (hl : ∀ x ∉ L, JEq (Γ.cons x .unit) A l l)
---     (hr : ∀ x ∉ L, JEq (Γ.cons x Tm.unit.not) A r r)
---     : JEq Γ A (.ite .unit l r) l
---     := sorry
-
--- theorem Ctx.JEq.trunc_inhab {Γ A a b} (h : JEq Γ A a b) : JEq Γ (.univ 0) (.trunc A) .unit :=
---   have ⟨_, hA⟩ := h.regular
---   .trunc_inhab' sorry (.choose (L := Γ.dv) sorry sorry (fun x hx => )) (.unit h.ok)
-
--- theorem Ctx.JEq.cast_cmp {Γ A B a b} (h : JEq Γ A a b) (h' : Cmp Γ B a b) : JEq Γ B a b := by
---   induction h generalizing B with
---   | fv => exact h'.left
---   | univ => exact h'.left
---   | eqn =>
---     sorry
---   | _ => sorry

@@ -594,6 +594,11 @@ theorem Tm.close_open {k : ℕ} (t : Tm (k + 1)) (x : String) (h : x ∉ t.fvs)
   | bv i => cases i using Fin.lastCases <;> simp [open_bv, close]
   | _ => simp at h; grind [Tm.open, close]
 
+theorem Tm.subset_fvs_open {k : ℕ} (t : Tm (k + 1)) (x : String) : t.fvs ⊆ (t.open x).fvs
+  := by induction t using succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [«open»]
+  | _ => simp <;> repeat first | assumption | apply Finset.union_subset_union
+
 theorem Tm.fvs_open {k : ℕ} (t : Tm (k + 1)) (x : String) : (t.open x).fvs ⊆ insert x t.fvs
   := by induction t using succIndOn with
   | bv i => cases i using Fin.lastCases <;> simp [«open»]

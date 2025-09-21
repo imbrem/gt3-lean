@@ -68,6 +68,10 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hn : HasTy Γ .nats n)
     (hCn : TyEq Γ (C.lst n) Cn)
     : HasTy Γ Cn (.natrec C s z n)
+  | m_has_ty' {Γ} {A a : Tm 0} {ℓ}
+    (hA : HasTy Γ (.univ ℓ) A)
+    (ha : HasTy Γ A a)
+    : HasTy Γ .unit (.has_ty A a)
   | cast_level {Γ} {ℓ A}
     (hA : HasTy Γ (.univ ℓ) A)
     : HasTy Γ (.univ (ℓ + 1)) A
@@ -97,6 +101,12 @@ theorem Ctx.HasTy.is_wf {Γ A a} (h : HasTy Γ A a) : IsWf Γ a := h.refl.lhs_is
 theorem Ctx.HasTy.scoped_all {Γ A a} (h : HasTy Γ A a)
   : Scoped Γ ∧ A.fvs ⊆ Γ.dv ∧ a.fvs ⊆ Γ.dv := by simp [h.refl.scoped_all]
 
+theorem Ctx.HasTy.ctx_scoped {Γ A a} (h : HasTy Γ A a) : Ctx.Scoped Γ := h.refl.ctx_scoped
+
+theorem Ctx.HasTy.ty_scoped {Γ A a} (h : HasTy Γ A a) : A.fvs ⊆ Γ.dv := h.refl.ty_scoped
+
+theorem Ctx.HasTy.tm_scoped {Γ A a} (h : HasTy Γ A a) : a.fvs ⊆ Γ.dv := h.refl.lhs_scoped
+
 theorem Ctx.HasTy.is_ty {Γ ℓ A} (h : HasTy Γ (.univ ℓ) A) : IsTy Γ A := h.refl.lhs_is_ty
 
 theorem Ctx.HasTy.top_var {Γ : Ctx} {x A} (h : Ok (Γ.cons x A)) : HasTy (Γ.cons x A) A (.fv x)
@@ -117,3 +127,30 @@ theorem Ctx.WfEq.ltr {Γ A a b} (hab : WfEq Γ a b) (hA : HasTy Γ A a) : JEq Γ
 
 theorem Ctx.WfEq.rtr {Γ A a b} (hab : WfEq Γ a b) (hA : HasTy Γ A b) : JEq Γ A a b
   := have ⟨_, hab⟩ := hab; hab.rtr hA
+
+theorem Ctx.HasTy.ty_scoped_cf {Γ : Ctx} {A : Tm 0} {B : Tm 1} {a : String → Tm 0}
+  {L : Finset String} (h : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (a x))
+  : B.fvs ⊆ Γ.dv := by
+  intro y hy
+  have ⟨x, hx⟩ := (insert y L).exists_notMem
+  simp at hx
+  have hB := ((h x hx.2).ty_scoped)
+  have hxy := ((B.subset_fvs_open x).trans hB) hy
+  simp at hxy
+  cases hxy
+  · exact (Ne.symm hx.1 ‹_›).elim
+  · assumption
+
+theorem Ctx.HasTy.tm_scoped_cf
+  {Γ : Ctx} {A : Tm 0} {B : String → Tm 0} {a : Tm 1}
+  {L : Finset String} (h : ∀ x ∉ L, HasTy (Γ.cons x A) (B x) (a.open x))
+  : a.fvs ⊆ Γ.dv := by
+  intro y hy
+  have ⟨x, hx⟩ := (insert y L).exists_notMem
+  simp at hx
+  have ha := ((h x hx.2).tm_scoped)
+  have hxy := ((a.subset_fvs_open x).trans ha) hy
+  simp at hxy
+  cases hxy
+  · exact (Ne.symm hx.1 ‹_›).elim
+  · assumption

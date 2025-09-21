@@ -187,6 +187,32 @@ theorem Ctx.S1.rename_top' {Γ x y A B} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (h
 theorem Ctx.S1.rename_top {Γ x y A} (hx : x ∉ Γ.dv) (hy : y ∉ Γ.dv) (hA : IsTy Γ A)
   : S1 (Γ.cons x A) (.lset (.fv x) y) (Γ.cons y A) := rename_top' hx hy hA
 
+theorem Ctx.HasTy.rename_top {Γ : Ctx} {x A B a}
+  (h : HasTy (Γ.cons x A) B a)
+  : ∀ y ∉ Γ.dv, HasTy (Γ.cons y A) (B.lsv x (.fv y)) (a.lsv x (.fv y))
+  := fun y hy => by
+  have hxy := S1.rename_top hy h.ok.var h.ok.ty
+  convert h.ls hxy using 0
+  simp only [Tm.ls_lset]
+
+theorem Ctx.HasTy.top_quant_exact {Γ : Ctx} {A} {B a : Tm 1} {L : Finset String}
+  (h : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (a.open x))
+  : ∀ y ∉ Γ.dv, HasTy (Γ.cons y A) (B.open y) (a.open y)
+  := fun y hy => by
+  have ⟨x, hx⟩ := L.exists_notMem
+  have hxe := h x hx
+  convert hxe.rename_top y hy <;> rw [Tm.lsv_open, Tm.lst_of_fv]
+  · exact Finset.not_mem_subset (ty_scoped_cf h) hxe.ok.var
+  · exact Finset.not_mem_subset (tm_scoped_cf h) hxe.ok.var
+
+theorem Ctx.HasTy.top_quant_exact_k {Γ : Ctx} {A B} {a : Tm 1} {L : Finset String}
+  (h : ∀ x ∉ L, HasTy (Γ.cons x A) B (a.open x))
+  : ∀ y ∉ Γ.dv, HasTy (Γ.cons y A) B (a.open y)
+  := fun y hy => by
+  rw [<-B.open_cast_succ y]
+  apply top_quant_exact _ y hy (L := L)
+  simp; exact h
+
 theorem Ctx.HasTy.ps' {Γ Δ} (hσ : PSEq' Γ Δ) {A a} (h : HasTy Δ A a)
   : HasTy Γ A a := by convert h.ls hσ <;> simp
 
