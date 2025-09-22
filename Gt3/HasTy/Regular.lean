@@ -134,6 +134,8 @@ theorem Ctx.IsTy.has_ty {Γ A} (h : IsTy Γ A) : ∃ℓ, HasTy Γ (.univ ℓ) A 
 theorem Ctx.HasTy.m_has_ty {Γ A a} (h : HasTy Γ A a) : HasTy Γ .unit (.has_ty A a)
   := have ⟨_, hA⟩ := h.regular.has_ty; .m_has_ty' hA h
 
+theorem Ctx.HasTy.inhab {Γ A a} (h : HasTy Γ A a) : IsInhab Γ A := h.refl.inhab
+
 theorem Ctx.HasTy.abs {Γ A} {B b : Tm 1} {L : Finset String}
   (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
   : HasTy Γ (.pi A B) (.abs A b)
@@ -142,6 +144,21 @@ theorem Ctx.HasTy.abs {Γ A} {B b : Tm 1} {L : Finset String}
   have ⟨_, hA⟩ := (hb x hx).ok.ty;
   have ⟨_, hB⟩ := IsTy.max_univ' (fun x hx => (hb x hx).regular);
   HasTy.abs' hA.lhs_ty (fun x hx => (hB x hx).lhs_ty) hb
+
+theorem Ctx.HasTy.pair {Γ} {A a b : Tm 0} {B : Tm 1} {n : ℕ} {L : Finset String}
+    (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
+    : HasTy Γ (.sigma A B) (.pair a b) :=
+    have ⟨_, hA⟩ := ha.regular.has_ty;
+    .pair' hA hB ha hb
+
+-- theorem Ctx.HasTy.choose {Γ} {A : Tm 0} {φ : Tm 1} {ℓ : ℕ} {L : Finset String}
+--     (hAI : IsInhab Γ A)
+--     (hφ : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ 0) (φ.open x))
+--     : HasTy Γ A (.choose A φ)
+--     :=
+--     have ⟨_, hA⟩ := hAI.is_ty;
+--     .choose' hA hAI hφ
 
 theorem Ctx.HasTy.lsv {Γ : Ctx} {A B a b : Tm 0} {x : String}
   (hb : Ctx.HasTy (Γ.cons x A) B b) (ha : Ctx.HasTy Γ A a)

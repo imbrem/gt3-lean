@@ -139,6 +139,10 @@ theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by inductio
             <;> apply_assumption
             <;> assumption)
 
+theorem Ctx.JEq.inhab {Γ A a b} (h : JEq Γ A a b) : IsInhab Γ A :=
+  have ⟨_, hA⟩ := h.regular;
+  ⟨0, .trunc_inhab' h.lhs_ty' (.trunc hA) (.unit h.ok)⟩
+
 theorem Ctx.JEq.ite_k {Γ A φ φ' l l' r r'}
   (hφ : JEq Γ (.univ 0) φ φ')
   (hl : JEq Γ A l l')

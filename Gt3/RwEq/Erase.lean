@@ -292,8 +292,21 @@ theorem Ctx.KIsWfUnder.param {Γ A B} (h : KIsWfUnder Γ A B) : KIsTy Γ A
 theorem Ctx.KIsWfUnder.param_lc {Γ A B} (h : KIsWfUnder Γ A B) : A.bvi = 0
   := h.param.lc
 
+theorem Ctx.KIsWfUnder.bvi_open_helper {Γ A B} (h : KIsWfUnder Γ A B) (x) (hx : x ∉ Γ.dv)
+  : (B.open 0 x).bvi = 0 := (h x hx).lc
+
+theorem Ctx.KIsWfUnder.bvi {Γ A B} (h : KIsWfUnder Γ A B)
+  : B.bvi ≤ 1 := by
+  have ⟨x, hx⟩ := Γ.dv.exists_notMem
+  have ho : (B.open 0 x).bvi = 0 := h.bvi_open_helper x hx
+  exact OTm.bvi_of_open_le 0 B x (by simp [ho])
+
 def Ctx.KIsTyUnder (Γ : Ctx) (A B : OTm) : Prop
   := ∀ x ∉ Γ.dv, KIsTy (Γ.cons x (A.clamp 0)) (B.open 0 x)
+
+theorem Ctx.KIsTyUnder.get {Γ A B} (h : KIsTyUnder Γ A B)
+  : IsTyUnder Γ (A.clamp 0) (B.clamp 1)
+  := fun x hx => by convert (h x hx).get; simp [OTm.clamp_succ_open]
 
 theorem Ctx.KIsTyUnder.param {Γ A B} (h : KIsTyUnder Γ A B) : KIsTy Γ A
   := have ⟨x, hx⟩ := Γ.dv.exists_notMem; (h x hx).ok.ty
@@ -303,6 +316,14 @@ theorem Ctx.KHasTyUnder.ty {Γ A B b} (h : KHasTyUnder Γ A B b) : KIsTyUnder Γ
 
 theorem Ctx.KIsTyUnder.wf {Γ A B} (h : KIsTyUnder Γ A B) : KIsWfUnder Γ A B
   := fun x hx => (h x hx).wf
+
+theorem Ctx.KIsTyUnder.max_univ {Γ A B} (h : KIsTyUnder Γ A B) : ∃ ℓ, KHasTyUnder Γ A (.univ ℓ) B
+  := by
+  have ⟨ℓ, h⟩ := IsTy.max_univ' (fun x hx => h.get x hx)
+  exists ℓ
+  intro x hx
+  convert h x hx
+  simp [KHasTy, HasTy', JEq.refl_iff, OTm.clamp_succ_open, OTm.clamp]
 
 theorem Ctx.KHasTyUnder.is_wf {Γ A B b} (h : KHasTyUnder Γ A B b) : KIsWfUnder Γ A b
   := fun x hx => (h x hx).is_wf
@@ -346,26 +367,84 @@ theorem Ctx.KHasTy.sigma {Γ A B ℓ}
     hA (fun x hx => by convert (hB x hx).get; simp [OTm.clamp_succ_open])
     (le_refl ℓ) (le_refl ℓ) hℓ
 
--- theorem Ctx.KHasTy.pair {Γ A B a b}
---   (hB : KIsTyUnder Γ A B) (ha : KHasTy Γ A a) (hb : KHasTy Γ (B.lst 0 a) b)
---   : KHasTy Γ (.sigma A B) (.pair a b)
---   := sorry
+theorem Ctx.KHasTy.pair {Γ A B a b}
+  (hB : KIsTyUnder Γ A B) (ha : KHasTy Γ A a) (hb : KHasTy Γ (B.lst 0 a) b)
+  : KHasTy Γ (.sigma A B) (.pair a b) :=
+  have ⟨ℓ, hB⟩ := hB.max_univ
+  HasTy.pair
+    (fun x hx => by convert (hB x hx).get; simp [OTm.clamp_succ_open]) ha
+    (by convert hb.get; simp [OTm.clamp_lst (h := ha.is_wf.lc)])
 
---TODO: fst
+theorem Ctx.KHasTy.fst {Γ A B p} (hp : KHasTy Γ (.sigma A B) p) : KHasTy Γ A (.fst p) :=
+  HasTy.fst hp
 
---TODO: snd
+theorem Ctx.KHasTy.snd {Γ A B p} (hp : KHasTy Γ (.sigma A B) p)
+  : KHasTy Γ (B.lst 0 (.fst p)) (.snd p)
+  := by convert HasTy.snd hp; simp [KHasTy, OTm.clamp_lst (h := hp.fst.is_wf.lc), OTm.clamp]
 
---TODO: dite, ite, and friends
+def Ctx.KIsProp (Γ : Ctx) (φ : OTm) : Prop := KHasTy Γ (.univ 0) φ
 
---TODO: trunc
+theorem Ctx.KHasTy.dite {Γ φ A l r}
+  (hφ : KIsProp Γ φ) (hA : KIsTy Γ A) (hl : KHasTyUnder Γ φ A l) (hr : KHasTyUnder Γ φ.not A r)
+  : KHasTy Γ A (.dite φ l r) :=
+  have ⟨_, hA'⟩ := hA.get.has_ty; .dite' hφ hA'
+  (fun x hx => by
+    have hAi := A.open_bvi 0 x (by simp [hA.lc]);
+    convert (hl x hx).get <;> simp [OTm.clamp_succ_open, hAi]
+  ) (fun x hx => by
+    have hAi := A.open_bvi 0 x (by simp [hA.lc]);
+    convert (hr x hx).get <;> simp [OTm.clamp_succ_open, hAi]
+  )
 
---TODO: choose
+theorem Ctx.KHasTy.trunc {Γ A} (hA : KIsTy Γ A) : KIsProp Γ (.trunc A)
+  := have ⟨_, hA⟩ := hA.get.has_ty; HasTy.trunc hA
 
---TODO: succ
+def Ctx.KIsInhab (Γ : Ctx) (A : OTm) : Prop := ∃ a, KHasTy Γ A a
 
---TODO: natrec
+theorem Ctx.KHasTy.inhab {Γ A a} (h : KHasTy Γ A a) : KIsInhab Γ A := ⟨a, h⟩
 
---TODO: closure runes
+theorem Ctx.KIsInhab.get {Γ A} (h : KIsInhab Γ A) : IsInhab Γ (A.clamp 0) :=
+  have ⟨_, ha⟩ := h; ha.get.inhab
+
+theorem Ctx.KIsInhab.is_ty {Γ A} (h : KIsInhab Γ A) : KIsTy Γ A := have ⟨_, ha⟩ := h; ha.regular
+
+theorem Ctx.KIsInhab.wf {Γ A} (h : KIsInhab Γ A) : KIsWf Γ A := h.is_ty.wf
+
+def Ctx.KIsPropUnder (Γ : Ctx) (A φ : OTm) : Prop := KHasTyUnder Γ A (.univ 0) φ
+
+theorem Ctx.KHasTy.choose {Γ A φ}
+  (hA : KIsInhab Γ A) (hφ : KIsPropUnder Γ A φ)
+  : KHasTy Γ A (.choose A φ) :=
+  have ⟨_, hA'⟩ := hA.is_ty.has_ty;
+  HasTy.choose' hA' hA.get (fun x hx => by convert (hφ x hx).get; simp [OTm.clamp_succ_open])
+
+theorem Ctx.KHasTy.succ {Γ n} (hn : KHasTy Γ .nats n) : KHasTy Γ .nats (.succ n)
+  := HasTy.succ hn
+
+theorem Ctx.KHasTy.natrec {Γ C s z n}
+  (hC : KIsTyUnder Γ .nats C)
+  (hs : KHasTyUnder Γ .nats (.arr C (C.st 0 (.succ (.bv 0)))) s)
+  (hz : KHasTy Γ (C.lst 0 .zero) z)
+  (hn : KHasTy Γ .nats n) : KHasTy Γ (C.lst 0 n) (.natrec C s z n)
+  := by
+  have ⟨_, hC'⟩ := hC.max_univ
+  apply HasTy.natrec (L := Γ.dv)
+  · intro x hx; convert (hC' x hx).get; simp only [OTm.clamp_succ_open]
+  · intro x hx; convert (hs x hx).get
+    · rw [
+        <-OTm.succArrow_zero, OTm.open_succArrow, OTm.clamp_arr, Tm.open_succArrow,
+        OTm.clamp_succ_open, OTm.clamp_lst
+      ]
+      · simp [OTm.clamp]
+      · simp [OTm.bvi]
+      · exact hC'.is_wf.bvi
+    · simp only [OTm.clamp_succ_open]
+  · convert hz.get; rw [OTm.clamp_lst (h := by simp [OTm.bvi])]; simp [OTm.clamp]
+  · exact hn.get
+  · rw [OTm.clamp_lst (h := hn.is_wf.lc)]
+    apply IsTy.lst_cf'
+    · intro x hx; convert (hC x hx).get; simp only [OTm.clamp_succ_open]
+    · exact hn.refl
 
 theorem Ctx.KHasTy.lst {Γ A B a b}
   (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a)

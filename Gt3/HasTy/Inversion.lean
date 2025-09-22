@@ -59,6 +59,18 @@ theorem Ctx.HasTy.app {Γ} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0}
     : HasTy Γ Ba (f.app a)
     := (hf.app_e ha).cast hBa
 
+theorem Ctx.HasTy.fst {Γ A B p}
+  (hp : HasTy Γ (.sigma A B) p) : HasTy Γ A (p.fst) :=
+  have ⟨_, hA⟩ := hp.regular_sigma_arg_ty
+  have ⟨_, hB⟩ := hp.regular_sigma_res_ty
+  .fst' hB hA hp
+
+theorem Ctx.HasTy.snd {Γ A B p}
+  (hp : HasTy Γ (.sigma A B) p) : HasTy Γ (B.lst (p.fst)) (p.snd) :=
+  have ⟨_, hA⟩ := hp.regular_sigma_arg_ty
+  have ⟨_, hB⟩ := hp.regular_sigma_res_ty
+  .snd' hB hA hp (IsTy.lst_cf' (fun x hx => (hB x hx).is_ty) (HasTy.fst hp).refl)
+
 theorem Ctx.HasTy.of_has_ty_general {Γ U A a P} (h : HasTy Γ U P) (hP : P = .has_ty A a)
   : HasTy Γ A a := by induction h with
   | m_has_ty' hA ha => cases hP; exact ha
@@ -75,3 +87,20 @@ theorem Ctx.IsWf.to_has_ty {Γ A a} (h : IsWf Γ (.has_ty A a)) : HasTy Γ A a
 
 theorem Ctx.HasTy.wf_iff {Γ A a} : IsWf Γ (.has_ty A a) ↔ HasTy Γ A a
   := ⟨IsWf.to_has_ty, fun h => (m_has_ty h).is_wf⟩
+
+theorem Ctx.HasTy.trunc_is_ty_general {Γ U A P} (h : HasTy Γ U P) (hP : P = .trunc A)
+  : IsTy Γ A := by induction h with
+  | trunc hA => cases hP; exact ⟨_, hA.refl⟩
+  | _ => cases hP <;> apply_assumption <;> rfl
+
+theorem Ctx.HasTy.trunc_is_ty {Γ U A} (h : HasTy Γ U (.trunc A)) : IsTy Γ A
+  := trunc_is_ty_general h rfl
+
+theorem Ctx.IsWf.trunc_is_ty {Γ A} (h : IsWf Γ (.trunc A)) : IsTy Γ A
+  := have ⟨_, h⟩ := h.has_ty; h.trunc_is_ty
+
+theorem Ctx.IsWf.trunc {Γ A} (h : IsTy Γ A) : IsWf Γ (.trunc A)
+  := have ⟨_, h⟩ := h; ⟨_, h.trunc⟩
+
+theorem Ctx.IsWf.trunc_wf_iff {Γ A} : IsWf Γ (.trunc A) ↔ IsTy Γ A
+  := ⟨trunc_is_ty, trunc⟩

@@ -1,4 +1,4 @@
-import Gt3.Syntax.Basic
+import Gt3.Syntax.Subst
 
 inductive OTm : Type
   | fv (x : String) : OTm
@@ -332,6 +332,18 @@ theorem OTm.open_bvi (t : OTm) (k : ℕ) (x : String) (h : t.bvi ≤ k) : t.open
     simp [bvi] at h
     simp [*]
 
+theorem OTm.bvi_open_le
+  (k : ℕ) (t : OTm) (x : String) (h : t.bvi ≤ k) : (t.open k x).bvi ≤ k := by
+  induction t generalizing k with
+  | bv i => simp; split_ifs <;> simp [bvi] at * <;> omega
+  | _ => simp [bvi] at * <;> grind
+
+theorem OTm.bvi_of_open_le
+  (k : ℕ) (t : OTm) (x : String) (h : (t.open k x).bvi ≤ k) : t.bvi ≤ k + 1 := by
+  induction t generalizing k with
+  | bv i => simp [bvi] at *; split_ifs at h <;> simp [bvi] at * <;> omega
+  | _ => simp [bvi] at * <;> grind
+
 theorem OTm.clamp_lst (k : ℕ) (t : OTm) (v : OTm) (h : v.bvi = 0)
   : (t.lst k v).clamp k = (t.clamp (k + 1)).lst (v.clamp 0) := by induction t generalizing k with
   | bv i =>
@@ -394,6 +406,21 @@ def OTm.wkn (k : ℕ) : OTm → OTm
 
 theorem OTm.wkn_of_bvi_le (k : ℕ) (t : OTm) (h : t.bvi ≤ k) : t.wkn k = t := by
   induction t generalizing k <;> grind [wkn, bvi]
+
+theorem OTm.clamp_wkn_succ_le (lo hi : ℕ) (t : OTm) (h : lo ≤ hi)
+  : (t.wkn lo).clamp (hi + 1) = (t.clamp hi).wkn lo := by
+  induction t generalizing lo hi with
+  | bv i =>
+    simp only [wkn, clamp]
+    split_ifs
+    · simp [Tm.wkn, clamp, *]
+      split
+      · simp
+      · omega
+    · simp [Tm.wkn, clamp]; omega
+    · simp [Tm.wkn, clamp, *]
+    · simp [Tm.wkn, clamp]; omega
+  | _ => simp [wkn, clamp, Tm.wkn, *]
 
 @[simp]
 def OTm.close (k : ℕ) (x : String) : OTm → OTm
@@ -539,6 +566,50 @@ theorem OTm.st_eq_lst (t : OTm) (k : ℕ) (v : OTm) (hv : v.bvi = 0)
   have hv' := v.wkn_of_bvi_le 0 (by simp [hv])
   induction t generalizing k v <;> simp [*]
 
+theorem Tm.erase_wkn {k : ℕ} (t : Tm k) (n : ℕ)
+  : (t.wkn n).erase = t.erase.wkn n
+  := by induction t generalizing n with
+  | bv i => simp [Tm.erase, OTm.wkn, wkn]; split_ifs <;> rfl
+  | _ => simp [Tm.erase, OTm.wkn, wkn, *]
+
+theorem Tm.erase_st {k : ℕ} (t : Tm (k + 1)) (v : Tm k)
+  : (t.st v).erase = t.erase.st k v.erase
+  := by induction t using Tm.succIndOn with
+  | bv i => cases i using Fin.lastCases <;> simp [Tm.erase, Tm.st]
+  | _ => simp [Tm.erase, Tm.wk0, Tm.erase_wkn, *]
+
+theorem OTm.st_wkn (t : OTm) (k : ℕ) (v : OTm) (ht : t.bvi ≤ k + 1)
+  : (t.wkn k).st (k + 1) v = t.st k v := by
+  induction t generalizing k v with
+  | bv i =>
+    simp [st, wkn]
+    split_ifs
+    · simp; intro; omega
+    · simp [*]
+    · simp [bvi] at ht; omega
+  | _ =>
+    (try simp [bvi] at ht)
+    simp [st, wkn] <;> (try constructorm* _ ∧ _) <;> apply_assumption <;> simp [*]
+
+theorem OTm.bvi_wkn (t : OTm) (k : ℕ) (ht : t.bvi ≤ k)
+  : (t.wkn k).bvi ≤ k + 1 := by
+  induction t generalizing k with
+  | bv i => simp; split_ifs <;> simp [bvi] at * <;> omega
+  | _ => simp [bvi] at * <;> grind
+
+-- theorem OTm.bvi_st_of_le (t : OTm) (k : ℕ) (v : OTm) (l) (ht : t.bvi ≤ l) (hv : v.bvi ≤ l)
+--   : (t.st k v).bvi ≤ l := by
+--   --have hv₀ : (v.wkn 0).bvi ≤ l + 1 := sorry
+--   induction t generalizing k v l with
+--   | bv i => stop simp [st]; split_ifs <;> simp [bvi] at * <;> omega
+--   | natrec =>
+--     simp [bvi] at ht
+--     simp [bvi] <;> (try constructorm* _ ∧ _) <;> apply_assumption <;> simp [*]
+--   | _ =>
+--     stop
+--     simp only [st, bvi, max_le_iff]
+--     sorry
+
 def OTm.Subst : Type := ℕ → OTm
 
 def OTm.Subst.mk (f : ℕ → OTm) : Subst := f
@@ -582,3 +653,68 @@ def OTm.subst (σ : Subst) : OTm → OTm
   | .natrec C s z n => .natrec (C.subst σ.lift) (s.subst σ.lift) (z.subst σ) (n.subst σ)
   | .has_ty A a => .has_ty (A.subst σ) (a.subst σ)
   | .invalid => .invalid
+
+def OTm.arr (A B : OTm) : OTm := .pi A (B.wkn 0)
+
+theorem OTm.open_wkn_succ_le {lo hi} (h : lo ≤ hi) (t : OTm) (x : String)
+  : (t.wkn lo).open (hi + 1) x = (t.open hi x).wkn lo
+  := by induction t generalizing lo hi with
+  | bv i =>
+    simp [«open»]
+    split_ifs
+    · simp only [«open», wkn]; split_ifs <;> first | rfl | omega
+    · omega
+    · simp only [«open», wkn]; split_ifs <;> first | rfl | omega
+    · simp [*]
+    · simp [*]
+    · simp only [«open», wkn]; split_ifs <;> (try simp) <;> omega
+  | _ => simp [*]
+
+theorem OTm.open_arr (A B : OTm) (k : ℕ) (x : String)
+  : (A.arr B).open k x = (A.open k x).arr (B.open k x) := by
+  simp [arr, «open», OTm.open_wkn_succ_le]
+
+def OTm.not (φ : OTm) : OTm := .eqn φ .empty
+
+theorem OTm.clamp_arr (A B : OTm) (k : ℕ)
+  : (A.arr B).clamp k = (A.clamp k).arr (B.clamp k) := by
+  simp only [arr, clamp, Nat.zero_le, clamp_wkn_succ_le]; rfl
+
+def OTm.sth (t : OTm) (k : ℕ) (v : OTm) := (t.wkn k).st (k + 1) v
+
+theorem Tm.erase_sth {k : ℕ} (t : Tm (k + 1)) (v : Tm (k + 1))
+  : (t.sth v).erase = t.erase.sth k v.erase
+  := by simp only [sth, erase_st, erase_wkn, OTm.sth]
+
+def OTm.succIn (t : OTm) (k : ℕ) : OTm := t.sth k (OTm.bv k).succ
+
+theorem Tm.erase_succIn {k : ℕ} (t : Tm (k + 1))
+  : (t.succIn).erase = t.erase.succIn k
+  := by simp only [succIn, erase_sth, erase, Fin.val_last, OTm.succIn]
+
+def OTm.succArrow (A : OTm) (k : ℕ) : OTm := A.arr (A.succIn k)
+
+theorem OTm.succArrow_zero (A : OTm) (hA : A.bvi ≤ 1)
+  : A.succArrow 0 = A.arr (A.st 0 (OTm.bv 0).succ) := by
+  simp [succArrow, succIn, sth]
+  rw [A.st_wkn]
+  exact hA
+
+theorem Tm.erase_arr {k : ℕ} (A B : Tm k)
+  : (A.arr B).erase = A.erase.arr B.erase
+  := by simp only [arr, wk0, erase, erase_wkn, OTm.arr]
+
+theorem Tm.erase_succArrow {k : ℕ} (A : Tm (k + 1))
+  : A.succArrow.erase = A.erase.succArrow k
+  := by simp only [succArrow, erase_arr, erase_succIn, OTm.succArrow]
+
+theorem OTm.open_succIn (t : OTm) (k : ℕ) (x : String)
+  : (t.succIn k).open k x = (t.lst k (OTm.fv x).succ) := by
+  simp only [succIn, sth]
+  induction t generalizing k with
+  | bv i => repeat first | omega | simp [*] | split_ifs
+  | _ => simp [*]
+
+theorem OTm.open_succArrow (A : OTm) (k : ℕ) (x : String)
+  : (A.succArrow k).open k x = (A.open k x).arr (A.lst k (OTm.fv x).succ) := by
+  simp only [succArrow, open_arr, open_succIn]
