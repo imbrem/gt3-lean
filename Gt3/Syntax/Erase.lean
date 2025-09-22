@@ -534,6 +534,11 @@ theorem OTm.st_bvi (t : OTm) (k : ℕ) (v : OTm) (h : t.bvi ≤ k) : t.st k v = 
     simp [bvi] at h
     simp [*]
 
+theorem OTm.st_eq_lst (t : OTm) (k : ℕ) (v : OTm) (hv : v.bvi = 0)
+  : t.st k v = t.lst k v := by
+  have hv' := v.wkn_of_bvi_le 0 (by simp [hv])
+  induction t generalizing k v <;> simp [*]
+
 def OTm.Subst : Type := ℕ → OTm
 
 def OTm.Subst.mk (f : ℕ → OTm) : Subst := f

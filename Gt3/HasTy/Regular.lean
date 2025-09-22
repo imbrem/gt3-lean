@@ -142,3 +142,21 @@ theorem Ctx.HasTy.abs {Γ A} {B b : Tm 1} {L : Finset String}
   have ⟨_, hA⟩ := (hb x hx).ok.ty;
   have ⟨_, hB⟩ := IsTy.max_univ' (fun x hx => (hb x hx).regular);
   HasTy.abs' hA.lhs_ty (fun x hx => (hB x hx).lhs_ty) hb
+
+theorem Ctx.HasTy.lsv {Γ : Ctx} {A B a b : Tm 0} {x : String}
+  (hb : Ctx.HasTy (Γ.cons x A) B b) (ha : Ctx.HasTy Γ A a)
+  : Γ.HasTy (B.lsv x a) (b.lsv x a)
+  := (hb.refl.lsv₁ ha.refl).lhs_ty
+
+theorem Ctx.HasTy.lst_exact {Γ : Ctx} {A a : Tm 0} {B b : Tm 1} {x : String}
+  (hx : x ∉ B.fvs ∪ b.fvs)
+  (hb : Ctx.HasTy (Γ.cons x A) (B.open x) (b.open x))
+  (ha : Ctx.HasTy Γ A a) : Γ.HasTy (B.lst a) (b.lst a)
+  := (hb.refl.lst₁ (by convert hx using 0; simp) ha.refl).lhs_ty
+
+theorem Ctx.HasTy.lst {Γ : Ctx} {A a : Tm 0} {B b : Tm 1} {L : Finset String}
+  (hb : ∀ x ∉ L, Ctx.HasTy (Γ.cons x A) (B.open x) (b.open x))
+  (ha : Ctx.HasTy Γ A a) : Γ.HasTy (B.lst a) (b.lst a) := by
+  have ⟨x, hx⟩ := (L ∪ (B.fvs) ∪ b.fvs).exists_notMem;
+  simp at hx
+  exact HasTy.lst_exact (by simp [hx]) (hb x (by simp [hx])) ha

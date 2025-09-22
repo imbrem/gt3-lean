@@ -289,6 +289,9 @@ def Ctx.KIsWfUnder (Γ : Ctx) (A B : OTm) : Prop
 theorem Ctx.KIsWfUnder.param {Γ A B} (h : KIsWfUnder Γ A B) : KIsTy Γ A
   := have ⟨x, hx⟩ := Γ.dv.exists_notMem; (h x hx).ok.ty
 
+theorem Ctx.KIsWfUnder.param_lc {Γ A B} (h : KIsWfUnder Γ A B) : A.bvi = 0
+  := h.param.lc
+
 def Ctx.KIsTyUnder (Γ : Ctx) (A B : OTm) : Prop
   := ∀ x ∉ Γ.dv, KIsTy (Γ.cons x (A.clamp 0)) (B.open 0 x)
 
@@ -363,3 +366,15 @@ theorem Ctx.KHasTy.sigma {Γ A B ℓ}
 --TODO: natrec
 
 --TODO: closure runes
+
+theorem Ctx.KHasTy.lst {Γ A B a b}
+  (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a)
+  : KHasTy Γ (B.lst 0 a) (b.lst 0 a)
+  := by
+  simp only [KHasTy, OTm.clamp_lst (h := ha.is_wf.lc)]
+  exact HasTy.lst (fun x hx => by convert (hb x hx).get <;> simp [OTm.clamp_succ_open]) ha
+
+theorem Ctx.KHasTy.st {Γ A B a b}
+  (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a)
+  : KHasTy Γ (B.st 0 a) (b.st 0 a)
+  := by convert ha.lst hb using 1 <;> rw [OTm.st_eq_lst (hv := ha.is_wf.lc)]
