@@ -332,6 +332,37 @@ theorem OTm.open_bvi (t : OTm) (k : ℕ) (x : String) (h : t.bvi ≤ k) : t.open
     simp [bvi] at h
     simp [*]
 
+theorem OTm.clamp_lst (k : ℕ) (t : OTm) (v : OTm) (h : v.bvi = 0)
+  : (t.lst k v).clamp k = (t.clamp (k + 1)).lst (v.clamp 0) := by induction t generalizing k with
+  | bv i =>
+    simp only [lst, clamp]
+    split
+    · simp [clamp, *]
+      rw [dite_cond_eq_true]
+      case isTrue h =>
+        simp [Tm.lst]
+        generalize hj : (Fin.mk i (Nat.lt_succ_of_lt h) : Fin (k + 1)) = j
+        cases j using Fin.lastCases
+        · cases hj; omega
+        · cases hj; simp
+      simp; omega
+    · split
+      case isTrue h =>
+        cases h
+        simp [Tm.lst]
+        generalize hj : (Fin.mk i _) = j
+        cases j using Fin.lastCases with
+        | last =>
+          simp
+          apply Tm.erase_injective
+          simp
+          rw [OTm.erase_clamp_bvi_le, OTm.erase_clamp_bvi_le] <;> omega
+        | cast j => cases j; simp at hj; omega
+      · rw [dite_cond_eq_false]
+        · simp [clamp]; omega
+        simp; omega
+  | _ => simp [clamp, *]
+
 @[simp]
 def OTm.wkn (k : ℕ) : OTm → OTm
   | .fv x => .fv x

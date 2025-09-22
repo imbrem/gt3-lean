@@ -259,7 +259,14 @@ theorem Ctx.KHasTy.abs {Γ A B b}
   (hB : KHasTyUnder Γ A B b) : KHasTy Γ (.pi A B) (.abs A b)
   := HasTy.abs (fun x hx => by convert (hB x hx).get <;> simp [OTm.clamp_succ_open])
 
---TODO: app
+theorem Ctx.KHasTy.app {Γ A B f a}
+  (hA : KHasTy Γ (.pi A B) f) (hB : KHasTy Γ A a) : KHasTy Γ (B.lst 0 a) (.app f a)
+  := by
+  rw [KHasTy]
+  convert HasTy.app_e hA hB
+  simp
+  rw [OTm.clamp_lst]
+  exact hB.is_wf.lc
 
 theorem Ctx.KHasTy.sigma {Γ A B ℓ}
   (hA : KHasTy Γ (.univ ℓ) A) (hB : KHasTyUnder Γ A (.univ ℓ) B)
