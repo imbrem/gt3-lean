@@ -61,6 +61,10 @@ def Ctx.KWEq (Γ : Ctx) (a b : OTm) : Prop := WfEq Γ (a.clamp 0) (b.clamp 0)
 theorem Ctx.KWEq.get {Γ a b} (h : KWEq Γ a b)
   : WfEq Γ (a.clamp 0) (b.clamp 0) := h
 
+theorem Ctx.KWEq.lhs {Γ a b} (h : KWEq Γ a b) : KIsWf Γ a := h.get.lhs
+
+theorem Ctx.KWEq.rhs {Γ a b} (h : KWEq Γ a b) : KIsWf Γ b := h.get.rhs
+
 inductive Ctx.KEq (Γ : Ctx) : OTm → OTm → Prop
   | fv (x) : KEq Γ (.fv x) (.fv x)
   | bv (i) : KEq Γ (.bv i) (.bv i)
@@ -109,6 +113,13 @@ theorem Ctx.KEq.clamp_iff {Γ} {a b : OTm} : KEq Γ a b ↔ ∀ k, RwEq Γ (a.cl
   fun h => h.clamp,
   fun h => by convert (h (a.bvi ⊔ b.bvi)).erase <;> rw [OTm.erase_clamp_bvi_le] <;> simp⟩
 
+@[simp, refl]
+theorem Ctx.KEq.refl {Γ} {a : OTm} : KEq Γ a a := by
+  induction a with
+  | bv => apply KEq.bv
+  | _ => constructor <;> apply_assumption
+
+@[symm]
 theorem Ctx.KEq.symm {Γ} {a b : OTm} (h : KEq Γ a b) : KEq Γ b a := by
   rw [clamp_iff] at *
   exact (fun k => (h k).symm)
@@ -160,6 +171,22 @@ theorem Ctx.KEq.is_wf {Γ} {a b : OTm} (h : KEq Γ a b) (hA : KIsWf Γ a)
 theorem Ctx.KEq.wf_iff {Γ} {a b : OTm} (h : KEq Γ a b)
   : KIsWf Γ a ↔ KIsWf Γ b := ⟨h.is_wf, h.symm.is_wf⟩
 
+theorem Ctx.KEq.lst {Γ} {a a' b b' : OTm} {k} (hb : KEq Γ b b') (ha : KEq Γ a a')
+  : KEq Γ (b.lst k a) (b'.lst k a') := by induction hb generalizing k a with
+  | wf_clamp h =>
+    rw [OTm.lst_bvi, OTm.lst_bvi]
+    · exact .wf_clamp h
+    · rw [h.rhs.lc]; omega
+    · rw [h.lhs.lc]; omega
+  | trans _ _ Ia Ib => apply trans (Ia ha) (Ib .refl)
+  | bv =>
+    simp; split
+    · rfl
+    split
+    · exact ha
+    · rfl
+  | _ => constructor <;> apply_assumption <;> assumption
+
 def Ctx.HasTyUnder (Γ : Ctx) (A : Tm 0) (B b : Tm 1) : Prop
   := ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (B.open x) (b.open x)
 
@@ -185,6 +212,13 @@ theorem Ctx.KHasTy.under {Γ A B b} (hB : KIsTy Γ A) (h : KHasTy Γ B b)
   convert h <;> rw [OTm.open_bvi] <;> rw [KIsWf.lc]
   · apply KIsTy.wf; apply KHasTy.regular; assumption
   · apply KHasTy.is_wf; assumption
+
+theorem Ctx.KHasTy.close {Γ x A B b} (h : KHasTy (Γ.cons x (A.clamp 0)) B b)
+  : KHasTyUnder Γ A (B.close 0 x) (b.close 0 x)
+  := by
+  intro y hy
+  simp [KHasTy] at *
+  convert h.rename_top y hy using 1 <;> rw [OTm.clamp_lsv] <;> simp [OTm.clamp, OTm.bvi]
 
 theorem Ctx.KIsWf.to_has_ty {Γ A a} (ha : KIsWf Γ (.has_ty A a)) : KHasTy Γ A a := ha.get.to_has_ty
 
@@ -275,7 +309,10 @@ theorem Ctx.KHasTy.sigma {Γ A B ℓ}
     hA (fun x hx => by convert (hB x hx).get; simp [OTm.clamp_succ_open])
     (le_refl ℓ) (le_refl ℓ) hℓ
 
---TODO: pair
+-- theorem Ctx.KHasTy.pair {Γ A B a b}
+--   (hB : KIsTyUnder Γ A B) (ha : KHasTy Γ A a) (hb : KHasTy Γ (B.lst 0 a) b)
+--   : KHasTy Γ (.sigma A B) (.pair a b)
+--   := sorry
 
 --TODO: fst
 

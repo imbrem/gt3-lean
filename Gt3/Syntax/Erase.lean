@@ -389,6 +389,96 @@ def OTm.wkn (k : ℕ) : OTm → OTm
   | .has_ty A a => .has_ty (A.wkn k) (a.wkn k)
   | .invalid => .invalid
 
+@[simp]
+def OTm.close (k : ℕ) (x : String) : OTm → OTm
+  | .fv y => if x = y then .bv k else .fv y
+  | .bv i => if i < k then .bv i else .bv (i + 1)
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.close k x) (b.close k x)
+  | .pi A B => .pi (A.close k x) (B.close (k + 1) x)
+  | .sigma A B => .sigma (A.close k x) (B.close (k + 1) x)
+  | .abs A b => .abs (A.close k x) (b.close (k + 1) x)
+  | .app f a => .app (f.close k x) (a.close k x)
+  | .pair a b => .pair (a.close k x) (b.close k x)
+  | .fst p => .fst (p.close k x)
+  | .snd p => .snd (p.close k x)
+  | .dite φ l r => .dite (φ.close k x) (l.close (k + 1) x) (r.close (k + 1) x)
+  | .trunc A => .trunc (A.close k x)
+  | .choose A φ => .choose (A.close k x) (φ.close (k + 1) x)
+  | .nats => .nats
+  | .zero => .zero
+  | .succ n => .succ (n.close k x)
+  | .natrec C s z n
+    => .natrec (C.close (k + 1) x) (s.close (k + 1) x)
+               (z.close k x) (n.close k x)
+  | .has_ty A a => .has_ty (A.close k x) (a.close k x)
+  | .invalid => .invalid
+
+@[simp]
+def OTm.lsv (t : OTm) (x : String) (v : OTm) : OTm := match t with
+  | .fv y => if x = y then v else .fv y
+  | .bv i => .bv i
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.lsv x v) (b.lsv x v)
+  | .pi A B => .pi (A.lsv x v) (B.lsv x v)
+  | .sigma A B => .sigma (A.lsv x v) (B.lsv x v)
+  | .abs A b => .abs (A.lsv x v) (b.lsv x v)
+  | .app f a => .app (f.lsv x v) (a.lsv x v)
+  | .pair a b => .pair (a.lsv x v) (b.lsv x v)
+  | .fst p => .fst (p.lsv x v)
+  | .snd p => .snd (p.lsv x v)
+  | .dite φ l r => .dite (φ.lsv x v) (l.lsv x v) (r.lsv x v)
+  | .trunc A => .trunc (A.lsv x v)
+  | .choose A φ => .choose (A.lsv x v) (φ.lsv x v)
+  | .nats => .nats
+  | .zero => .zero
+  | .succ n => .succ (n.lsv x v)
+  | .natrec C s z n => .natrec (C.lsv x v) (s.lsv x v) (z.lsv x v) (n.lsv x v)
+  | .has_ty A a => .has_ty (A.lsv x v) (a.lsv x v)
+  | .invalid => .invalid
+
+theorem OTm.clamp_lsv (t : OTm) (x : String) (v : OTm) (k) (hv : v.bvi = 0)
+  : (t.lsv x v).clamp k = (t.clamp k).lsv x (v.clamp 0) := by
+  induction t generalizing k with
+  | fv y => simp [lsv, clamp]; split <;> simp [Tm.lsv, clamp, *]
+            ; apply Tm.erase_injective ; simp
+            ; rw [OTm.erase_clamp_bvi_le, OTm.erase_clamp_bvi_le] <;> omega
+  | bv i => simp [lsv, clamp]; split <;> simp [Tm.lsv, *]
+  | _ => simp [lsv, clamp, Tm.lsv, *]
+
+theorem Tm.erase_lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0)
+  : (t.lsv x v).erase = t.erase.lsv x v.erase
+  := by induction t with
+  | fv y => simp [Tm.lsv, Tm.erase]; split <;> simp [Tm.erase]
+  | _ => simp [erase, Tm.lsv, OTm.lsv, *]
+
+@[simp]
+theorem OTm.close_open (k : ℕ) (t : OTm) (x y : String)
+  : (t.close k x).open k y = t.lsv x (.fv y) := by
+  induction t generalizing k with
+  | fv => simp; split <;> simp [*]
+  | bv i => simp; split <;> simp [*]; rw [ite_cond_eq_false, ite_cond_eq_false] <;> simp <;> omega
+  | _ => simp [close, «open», *]
+
+@[simp]
+theorem OTm.open_close (k : ℕ) (t : OTm) (x : String) (hx : x ∉ t.fvs)
+  : (t.open k x).close k x = t := by
+  induction t generalizing k with
+  | fv y => convert hx; simp [fvs]
+  | bv i =>
+    simp [«open»]; split
+    · simp [*]
+    · split <;> simp [*]; rw [ite_cond_eq_false] <;> simp <;> omega
+  | _ =>
+    simp [close, «open», *] <;> (try constructorm* _ ∧ _)
+    <;> apply_assumption <;> (try simp [fvs] at hx) <;> simp [*]
+
 def OTm.Subst : Type := ℕ → OTm
 
 def OTm.Subst.mk (f : ℕ → OTm) : Subst := f
