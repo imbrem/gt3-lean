@@ -13,7 +13,7 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : HasTy Γ (.univ ℓ) (.pi A B)
-  | abs {Γ} {A : Tm 0} {B b : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs' {Γ} {A : Tm 0} {B b : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : HasTy Γ (.univ m) A)
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))

@@ -1,6 +1,5 @@
 import Gt3.JEq.Basic
 import Gt3.HasTy.Factor
-import Gt3.Syntax.Erase
 import Gt3.Syntax.LstBar
 
 theorem Ctx.HasTy.valid {Γ A a} (h : HasTy Γ A a) : Tm.Valid a := by
@@ -194,7 +193,7 @@ inductive Ctx.RwEq (Γ : Ctx) : ∀ {k}, Tm k → Tm k → Prop
     RwEq Γ z z' → RwEq Γ n n' → RwEq Γ (.natrec C s z n) (.natrec C' s' z' n')
   | has_ty {A A' a a'} : RwEq Γ A A' → RwEq Γ a a' → RwEq Γ (.has_ty A a) (.has_ty A' a')
   | invalid : RwEq Γ .invalid .invalid
-  | wf_clamp {a b} : WfEq Γ (a.erase.clamp 0) (b.erase.clamp 0) → RwEq Γ a b
+  | wf_clamp {a b} : WfEq Γ (a.clamp 0) (b.clamp 0) → RwEq Γ a b
   | trans {a b c} : RwEq Γ a b → RwEq Γ b c → RwEq Γ a c
 
 theorem Ctx.RwEq.wf {Γ} {a b : Tm 0} (h : WfEq Γ a b) : RwEq Γ a b
@@ -246,8 +245,8 @@ theorem Ctx.RwEq.lst_bar {Γ Δ} (h : PSub Γ Δ) {k} {a b : Tm k} {a' b'}
   := by induction h generalizing Γ a' b' with
   | wf_clamp hab =>
     apply LRwEq.wf (WfEq.psub h _)
-    cases h'.lhs.clamped_valid hab.lhs_valid
-    cases h'.rhs.clamped_valid hab.rhs_valid
+    cases h'.lhs.clamp_valid hab.lhs_valid
+    cases h'.rhs.clamp_valid hab.rhs_valid
     exact hab
   | fv => simp [h'.fv]; rfl
   | bv => simp [h'.bv]; rfl

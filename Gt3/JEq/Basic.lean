@@ -20,7 +20,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
-  | abs {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs' {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ℕ} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
@@ -414,7 +414,7 @@ macro_rules
     | apply Ctx.JEq.null
     | apply Ctx.JEq.eqn
     | apply Ctx.JEq.pi
-    | apply Ctx.JEq.abs
+    | apply Ctx.JEq.abs'
     | apply Ctx.JEq.app_f
     | apply Ctx.JEq.sigma
     | apply Ctx.JEq.pair'

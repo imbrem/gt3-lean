@@ -1,4 +1,4 @@
-import Gt3.Syntax.Erase
+import Gt3.Syntax.Clamp
 
 inductive Tm.Valid : ∀ {k}, Tm k → Prop
   | fv (x) : Valid (.fv x)
@@ -111,20 +111,30 @@ theorem Tm.forall_cf_open_valid_iff {k} (a : Tm (k + 1)) (L : Finset String)
   : (∀x ∉ L, (a.open x).Valid) ↔ a.Valid
   := ⟨fun h => have ⟨x, hx⟩ := L.exists_notMem; (h x hx).of_open, fun h x _ => h.open x⟩
 
-theorem Tm.Valid.unclamp {k} {a : Tm k} (h : Valid (a.erase.clamp k)) : Valid a := by
+theorem Tm.Valid.erase_unclamp {k} {a : Tm k} (h : Valid (a.erase.clamp k)) : Valid a := by
   induction a <;> simp at * <;> simp [*]
 
-theorem Tm.Valid.bvi {k r} {a : Tm k} (h : Valid (a.erase.clamp r)) : a.bvi ≤ r := by
+theorem Tm.Valid.unclamp {k} {a : Tm k} (h : Valid (a.clamp k)) : Valid a := by
+  apply Tm.Valid.erase_unclamp; simp only [Tm.erase_clamp, h]
+
+
+theorem Tm.Valid.otm_bvi {r} {a : OTm} (h : Valid (a.clamp r)) : a.bvi ≤ r := by
   induction a generalizing r with
   | bv i =>
-    simp only [erase, OTm.clamp] at h
+    simp only [OTm.clamp] at h
     split at h
-    · simp [Tm.bvi]; omega
+    · simp [OTm.bvi]; omega
     · cases h
   | _ =>
-    simp [Tm.bvi] at * <;> cases h <;>
+    simp [OTm.bvi] at * <;> cases h <;>
     (try constructorm* _ ∧ _) <;>
     apply_assumption <;> assumption
+
+theorem Tm.Valid.erase_bvi {k r} {a : Tm k} (h : Valid (a.erase.clamp r)) : a.bvi ≤ r
+  := by convert h.otm_bvi; simp
+
+theorem Tm.Valid.bvi {k r} {a : Tm k} (h : Valid (a.clamp r)) : a.bvi ≤ r := by
+  apply Tm.Valid.erase_bvi; simp only [Tm.erase_clamp, h]
 
 inductive Tm.Lstn {l} (a : Tm l) : ∀ {r}, Tm r → Prop
   | refl : Lstn a a
@@ -159,8 +169,15 @@ theorem Tm.Lstn.clamped_valid {l r}
   {a : Tm l} {a' : Tm r} (h : Lstn a a') (ha : Valid (a.erase.clamp r))
   : a.erase.clamp r = a' := by
   apply Tm.erase_injective
-  rw [OTm.erase_clamp_bvi_le, h.erase_bvi] <;> convert ha.bvi
+  rw [OTm.erase_clamp_bvi_le, h.erase_bvi] <;> convert ha.erase_bvi
   simp
+
+theorem Tm.Lstn.clamp_valid {l r}
+  {a : Tm l} {a' : Tm r} (h : Lstn a a') (ha : Valid (a.clamp r))
+  : a.clamp r = a' := by
+  revert ha
+  simp only [<-Tm.erase_clamp]
+  apply h.clamped_valid
 
 theorem Tm.Lstn.fv {l r x a} (h : Lstn (l := l) (r := r) (.fv x) a) : a = .fv x := by
   induction h <;> simp [*]

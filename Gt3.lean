@@ -13,3 +13,4 @@ import Gt3.HasTy.Regular
 import Gt3.HasTy.Inversion
 import Gt3.HasTy.Logic
 import Gt3.RwEq.Basic
+import Gt3.RwEq.Erase

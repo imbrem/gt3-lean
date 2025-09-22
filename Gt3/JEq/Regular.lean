@@ -147,3 +147,11 @@ theorem Ctx.JEq.ite_k {Γ A φ φ' l l' r r'}
   have ⟨_, hA⟩ := hl.regular;
   .ite' (L := Γ.dv) hφ hA (fun _ hx => hl.wk0 hx hφ.lhs_is_ty)
                           (fun _ hx => hr.wk0 hx hφ.not.lhs_is_ty)
+
+theorem Ctx.JEq.abs {Γ A A'} {B b b' : Tm 1} {ℓ} {L : Finset String}
+  (hA : JEq Γ (.univ ℓ) A A')
+  (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
+  : JEq Γ (.pi A B) (.abs A b) (.abs A' b')
+  :=
+  have ⟨_, h⟩ := IsTy.max_univ' (fun x hx => (hb x hx).regular);
+  .abs' hA h hb

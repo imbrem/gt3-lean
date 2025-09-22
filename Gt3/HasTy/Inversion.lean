@@ -70,8 +70,8 @@ theorem Ctx.HasTy.of_has_ty {Γ U A a} (h : HasTy Γ U (.has_ty A a)) : HasTy Γ
 theorem Ctx.HasTy.m_has_ty_iff {Γ A a} : HasTy Γ .unit (.has_ty A a) ↔ HasTy Γ A a
   := ⟨of_has_ty, m_has_ty⟩
 
-theorem Ctx.HasTy.of_wf {Γ A a} (h : IsWf Γ (.has_ty A a)) : HasTy Γ A a
+theorem Ctx.IsWf.to_has_ty {Γ A a} (h : IsWf Γ (.has_ty A a)) : HasTy Γ A a
   := have ⟨_, h⟩ := h.has_ty; h.of_has_ty
 
 theorem Ctx.HasTy.wf_iff {Γ A a} : IsWf Γ (.has_ty A a) ↔ HasTy Γ A a
-  := ⟨of_wf, fun h => (m_has_ty h).is_wf⟩
+  := ⟨IsWf.to_has_ty, fun h => (m_has_ty h).is_wf⟩

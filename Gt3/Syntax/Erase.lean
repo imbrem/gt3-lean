@@ -203,6 +203,7 @@ theorem OTm.erase_clamp_bvi_le (k : ℕ) (t : OTm) (h : t.bvi ≤ k) : (t.clamp 
     simp [bvi] at h
     simp [clamp, Tm.erase, *]
 
+@[simp]
 def OTm.open (k : ℕ) (x : String) : OTm → OTm
   | .fv x => .fv x
   | .bv i => if i < k then .bv i else if i = k then .fv x else .bv (i - 1)
@@ -315,7 +316,17 @@ theorem OTm.lst_bvi (t : OTm) (k : ℕ) (v : OTm) (h : t.bvi ≤ k) : t.lst k v 
   induction t generalizing k with
   | bv i =>
     simp [bvi] at h
-    simp [lst]
+    simp
+    intro h; split <;> omega
+  | _ =>
+    simp [bvi] at h
+    simp [*]
+
+theorem OTm.open_bvi (t : OTm) (k : ℕ) (x : String) (h : t.bvi ≤ k) : t.open k x = t := by
+  induction t generalizing k with
+  | bv i =>
+    simp [bvi] at h
+    simp [«open»]
     intro h; split <;> omega
   | _ =>
     simp [bvi] at h

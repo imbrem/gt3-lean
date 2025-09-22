@@ -133,3 +133,12 @@ theorem Ctx.IsTy.has_ty {Γ A} (h : IsTy Γ A) : ∃ℓ, HasTy Γ (.univ ℓ) A 
 
 theorem Ctx.HasTy.m_has_ty {Γ A a} (h : HasTy Γ A a) : HasTy Γ .unit (.has_ty A a)
   := have ⟨_, hA⟩ := h.regular.has_ty; .m_has_ty' hA h
+
+theorem Ctx.HasTy.abs {Γ A} {B b : Tm 1} {L : Finset String}
+  (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
+  : HasTy Γ (.pi A B) (.abs A b)
+  :=
+  have ⟨x, hx⟩ := L.exists_notMem;
+  have ⟨_, hA⟩ := (hb x hx).ok.ty;
+  have ⟨_, hB⟩ := IsTy.max_univ' (fun x hx => (hb x hx).regular);
+  HasTy.abs' hA.lhs_ty (fun x hx => (hB x hx).lhs_ty) hb
