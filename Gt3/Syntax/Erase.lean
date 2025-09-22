@@ -363,6 +363,9 @@ theorem OTm.clamp_lst (k : ℕ) (t : OTm) (v : OTm) (h : v.bvi = 0)
         simp; omega
   | _ => simp [clamp, *]
 
+theorem OTm.lst_of_fv (k : ℕ) (x : String) (t : OTm)
+  : t.lst k (.fv x) = t.open k x := by induction t generalizing k <;> simp [*]
+
 @[simp]
 def OTm.wkn (k : ℕ) : OTm → OTm
   | .fv x => .fv x
@@ -388,6 +391,9 @@ def OTm.wkn (k : ℕ) : OTm → OTm
   | .natrec C s z n => .natrec (C.wkn (k + 1)) (s.wkn (k + 1)) (z.wkn k) (n.wkn k)
   | .has_ty A a => .has_ty (A.wkn k) (a.wkn k)
   | .invalid => .invalid
+
+theorem OTm.wkn_of_bvi_le (k : ℕ) (t : OTm) (h : t.bvi ≤ k) : t.wkn k = t := by
+  induction t generalizing k <;> grind [wkn, bvi]
 
 @[simp]
 def OTm.close (k : ℕ) (x : String) : OTm → OTm
@@ -478,6 +484,55 @@ theorem OTm.open_close (k : ℕ) (t : OTm) (x : String) (hx : x ∉ t.fvs)
   | _ =>
     simp [close, «open», *] <;> (try constructorm* _ ∧ _)
     <;> apply_assumption <;> (try simp [fvs] at hx) <;> simp [*]
+
+@[simp]
+theorem OTm.close_close_self (m n : ℕ) (t : OTm) (x : String)
+  : (t.close m x).close n x = (t.close m x).wkn n := by
+  induction t generalizing m n <;> simp [*] <;> split <;> simp [*]
+
+@[simp]
+theorem OTm.open_wkn (k : ℕ) (t : OTm) (x : String)
+  : (t.wkn k).open k x = t := by
+  induction t generalizing k with
+  | bv i => simp; split <;> simp [*]; split <;> simp [*] <;> omega
+  | _ => simp [*]
+
+@[simp]
+def OTm.st (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
+  | .fv x => .fv x
+  | .bv i => if i < k then .bv i else if i = k then v else .bv (i - 1)
+  | .univ ℓ => .univ ℓ
+  | .empty => .empty
+  | .unit => .unit
+  | .null => .null
+  | .eqn a b => .eqn (a.st k v) (b.st k v)
+  | .pi A B => .pi (A.st k v) (B.st (k + 1) (v.wkn 0))
+  | .sigma A B => .sigma (A.st k v) (B.st (k + 1) (v.wkn 0))
+  | .abs A b => .abs (A.st k v) (b.st (k + 1) (v.wkn 0))
+  | .app f a => .app (f.st k v) (a.st k v)
+  | .pair a b => .pair (a.st k v) (b.st k v)
+  | .fst p => .fst (p.st k v)
+  | .snd p => .snd (p.st k v)
+  | .dite φ l r => .dite (φ.st k v) (l.st (k + 1) (v.wkn 0)) (r.st (k + 1) (v.wkn 0))
+  | .trunc A => .trunc (A.st k v)
+  | .choose A φ => .choose (A.st k v) (φ.st (k + 1) (v.wkn 0))
+  | .nats => .nats
+  | .zero => .zero
+  | .succ n => .succ (n.st k v)
+  | .natrec C s z n
+    => .natrec (C.st (k + 1) (v.wkn 0)) (s.st (k + 1) (v.wkn 0)) (z.st k v) (n.st k v)
+  | .has_ty A a => .has_ty (A.st k v) (a.st k v)
+  | .invalid => .invalid
+
+theorem OTm.st_bvi (t : OTm) (k : ℕ) (v : OTm) (h : t.bvi ≤ k) : t.st k v = t := by
+  induction t generalizing k v with
+  | bv i =>
+    simp [bvi] at h
+    simp
+    intro h; split <;> omega
+  | _ =>
+    simp [bvi] at h
+    simp [*]
 
 def OTm.Subst : Type := ℕ → OTm
 

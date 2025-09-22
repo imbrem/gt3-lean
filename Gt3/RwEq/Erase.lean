@@ -119,6 +119,8 @@ theorem Ctx.KEq.refl {Γ} {a : OTm} : KEq Γ a a := by
   | bv => apply KEq.bv
   | _ => constructor <;> apply_assumption
 
+theorem Ctx.KEq.of_eq {Γ} {a b : OTm} (h : a = b) : KEq Γ a b := by cases h; rfl
+
 @[symm]
 theorem Ctx.KEq.symm {Γ} {a b : OTm} (h : KEq Γ a b) : KEq Γ b a := by
   rw [clamp_iff] at *
@@ -186,6 +188,38 @@ theorem Ctx.KEq.lst {Γ} {a a' b b' : OTm} {k} (hb : KEq Γ b b') (ha : KEq Γ a
     · exact ha
     · rfl
   | _ => constructor <;> apply_assumption <;> assumption
+
+theorem Ctx.KEq.open {Γ} {a b : OTm} (h : KEq Γ a b) (k x)
+  : KEq Γ (a.open k x) (b.open k x)
+  := by convert h.lst (.refl (a := .fv x)) using 1 <;> rw [OTm.lst_of_fv]
+
+theorem Ctx.KEq.wkn {Γ} {a b : OTm} (h : KEq Γ a b) (k)
+  : KEq Γ (a.wkn k) (b.wkn k)
+  := by induction h generalizing k with
+  | wf_clamp h =>
+    rw [OTm.wkn_of_bvi_le, OTm.wkn_of_bvi_le]
+    · exact .wf_clamp h
+    · simp [h.rhs.lc]
+    · simp [h.lhs.lc]
+  | bv => rfl
+  | trans => apply trans <;> apply_assumption
+  | _ => constructor <;> apply_assumption
+
+theorem Ctx.KEq.st {Γ} {a a' b b' : OTm} {k} (hb : KEq Γ b b') (ha : KEq Γ a a')
+  : KEq Γ (b.st k a) (b'.st k a') := by induction hb generalizing k a a' with
+  | wf_clamp h =>
+    rw [OTm.st_bvi, OTm.st_bvi]
+    · exact .wf_clamp h
+    · rw [h.rhs.lc]; omega
+    · rw [h.lhs.lc]; omega
+  | trans _ _ Ia Ib => apply trans (Ia ha) (Ib .refl)
+  | bv =>
+    simp; split
+    · rfl
+    split
+    · exact ha
+    · rfl
+  | _ =>  constructor <;> apply_assumption <;> (try apply wkn) <;> assumption
 
 def Ctx.HasTyUnder (Γ : Ctx) (A : Tm 0) (B b : Tm 1) : Prop
   := ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (B.open x) (b.open x)
