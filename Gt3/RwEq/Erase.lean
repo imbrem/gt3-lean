@@ -678,3 +678,9 @@ theorem Ctx.KIsInhab.eqn_ext_wf {Γ a b} (hav : KIsInhab Γ (.eqn a b)) : KWEq �
 
 theorem Ctx.KIsInhab.eqn_ext {Γ a b} (hav : KIsInhab Γ (.eqn a b)) : KEq Γ a b
   := .wf_clamp (hav.eqn_ext_wf)
+
+theorem Ctx.KWEq.eqn_rfl_wf {Γ a b} (h : KWEq Γ a b) : KWEq Γ (.eqn a b) .unit
+  := have ⟨_, h⟩ := h; ⟨_, h.eqn_rfl⟩
+
+theorem Ctx.KWEq.eqn_rfl {Γ a b} (h : KWEq Γ a b) : KEq Γ (.eqn a b) .unit
+  := .wf_clamp (h.eqn_rfl_wf)
