@@ -1,9 +1,65 @@
 import Gt3.Universe.Level
 import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
 
+def UExpr.isZero : UExpr → Bool
+  | .zero => true
+  | .imax _ b => b.isZero
+  | .max a b => a.isZero && b.isZero
+  | _ => false
+
+@[simp]
+theorem UExpr.zero_eqv_zero' : (0 : UExpr) ≈ UExpr.zero := by intro v; rfl
+
+@[simp]
+theorem UExpr.zero'_eqv_zero : UExpr.zero ≈ (0 : UExpr) := by intro v; rfl
+
+@[simp]
+theorem UExpr.succ_not_eqv_zero (a : UExpr) : ¬ (a.succ ≈ 0) := by intro h; cases h (fun u => 0)
+
+@[simp]
+theorem UExpr.uv_not_eqv_zero (u : String) : ¬ (UExpr.uv u ≈ 0) := by intro h; cases h (fun u => 1)
+
+theorem UExpr.isZero_iff {u : UExpr} : u.isZero ↔ u ≈ 0 := by
+  induction u with
+  | imax a b Ia Ib =>
+    simp [isZero]
+    convert Ib using 1
+    apply forall_congr'
+    intro v
+    simp [Nat.imax]
+    omega
+  | max a b Ia Ib =>
+    simp [isZero, *]
+    constructor
+    · intro h v; simp [h.1 v, h.2 v]
+    · intro h; constructor <;> intro v <;> have hv := h v <;> simp at hv <;> simp [*]
+  | _ => simp [isZero]
+
+instance UExpr.decidableIsZero : DecidablePred (fun u : UExpr => u ≈ 0)
+  := fun u => decidable_of_iff (u.isZero) UExpr.isZero_iff
+
+@[simp]
+theorem UExpr.imax_eqv_zero_iff {a b : UExpr} : (UExpr.imax a b ≈ 0) ↔ (b ≈ 0) := by
+  simp [<-UExpr.isZero_iff, isZero]
+
+@[simp]
+theorem UExpr.max_eqv_zero_iff {a b : UExpr} : (UExpr.max a b ≈ 0) ↔ (a ≈ 0 ∧ b ≈ 0) := by
+  simp [<-UExpr.isZero_iff, isZero]
+
+@[simp]
+theorem UExpr.eval_imax_zero {a b : UExpr} (hb : b ≈ 0) (v : UValuation) :
+  (UExpr.imax a b).eval v = 0 := by simp [Nat.imax, hb v]
+
+theorem UExpr.isZero_equiv {u : UExpr} (h : u.isZero) : u ≈ 0 := by
+  induction u with
+  | imax a b Ia Ib => intro v; simp [Ib h v, Nat.imax]
+  | max a b Ia Ib => simp [isZero] at h; intro v; simp [Ia h.1 v, Ib h.2 v]
+  | _ => simp [isZero] at h <;> intro v <;> rfl
+
 @[simp]
 def UExpr.uvs : UExpr -> Finset String
   | .uv u => {u}
+  | .imax a b => if b ≈ 0 then ∅ else a.uvs ∪ b.uvs
   | .max a b => a.uvs ∪ b.uvs
   | .zero => ∅
   | .succ a => a.uvs
@@ -14,98 +70,30 @@ theorem UExpr.uvs_add (ℓ : UExpr) (n : ℕ) : (ℓ + n).uvs = ℓ.uvs := by
 
 def UExpr.comp (u : String) : UExpr -> UExpr
   | .uv v => if u = v then 0 else .uv v
+  | .imax a b => .imax (comp u a) (comp u b)
   | .max a b => .max (comp u a) (comp u b)
   | .zero => .zero
   | .succ a => .succ (comp u a)
 
-theorem UExpr.comp_not_mem_uvs (u : String) (ℓ : UExpr) (h : u ∉ ℓ.uvs) : ℓ.comp u = ℓ := by
-  induction ℓ with | _ => simp at h; simp [comp, *]
-
-theorem UExpr.uvs_comp (u : String) (ℓ : UExpr) :
-  (ℓ.comp u).uvs = ℓ.uvs.erase u := by
-  induction ℓ with
-  | uv v => simp only [comp]; split <;> simp [*]
-  | _ => simp [comp, Finset.erase_union_distrib, *]
-
 def UExpr.contrib (u : String) : UExpr -> UExpr
   | .uv v => if u = v then .uv u else 0
+  | .imax a b => .imax (contrib u a) (contrib u b)
   | .max a b => .max (contrib u a) (contrib u b)
   | .zero => .zero
   | .succ a => .succ (contrib u a)
 
-theorem UExpr.contrib_max_comp (u : String) (ℓ : UExpr) :
-  (ℓ.contrib u).max (ℓ.comp u) ≈ ℓ := fun v => by
-  induction ℓ with
-  | uv v => simp only [comp, contrib]; split <;> simp [*]
-  | _ => simp [comp, contrib] at * <;> omega
-
-theorem UExpr.contrib_uvs (u : String) (ℓ : UExpr) :
-  (ℓ.contrib u).uvs = {u} ∩ ℓ.uvs := by
-  induction ℓ with
-  | uv v => simp only [contrib]; split <;> simp [*]
-  | _ => simp [contrib, Finset.inter_union_distrib_left, *]
-
 @[simp]
 def UExpr.evalOnly (u : String) (n : ℕ) : UExpr -> ℕ
   | .uv v => if u = v then n else 0
+  | .imax a b => (evalOnly u n a).imax (evalOnly u n b)
   | .max a b => (evalOnly u n a) ⊔ (evalOnly u n b)
   | .zero => 0
   | .succ a => (evalOnly u n a) + 1
-
-@[simp]
-def UExpr.multiplier (u : String) : UExpr -> ℕ
-  | .uv v => if u = v then 1 else 0
-  | .max a b => (multiplier u a) ⊔ (multiplier u b)
-  | .zero => 0
-  | .succ a => multiplier u a
-
-@[simp]
-def UExpr.offset (u : String) : UExpr -> ℕ
-  | .uv _ => 0
-  | .max a b => (multiplier u a * offset u a) ⊔ (multiplier u b * offset u b)
-  | .zero => 0
-  | .succ a => (multiplier u a * (offset u a + 1))
-
-theorem UExpr.multiplier_zero_one (u : String) (a : UExpr)
-  : (u ∉ a.uvs ∧ a.multiplier u = 0 ∧ a.offset u = 0) ∨ (u ∈ a.uvs ∧ a.multiplier u = 1) := by
-  induction a with
-  | uv v => simp only [multiplier]; split <;> simp [*]
-  | _ => simp [multiplier] <;> grind
-
-theorem UExpr.multiplier_one (u : String) (a : UExpr) (ha : u ∈ a.uvs) : a.multiplier u = 1 := by
-  cases a.multiplier_zero_one u <;> simp [*] at *
-
-theorem UExpr.multiplier_offset_zero (u : String) (a : UExpr) (ha : u ∉ a.uvs)
-  : a.multiplier u = 0 ∧ a.offset u = 0 := by
-  cases a.multiplier_zero_one u <;> simp [*] at *
-
-@[simp]
-theorem UExpr.multiplier_mul_multiplier (u : String) (a : UExpr) :
-  (a.multiplier u) * (a.multiplier u) = a.multiplier u := by
-  cases a.multiplier_zero_one u <;> simp [*]
-
-@[simp]
-theorem UExpr.multiplier_mul_offset (u : String) (a : UExpr) :
-  (a.multiplier u) * (a.offset u) = a.offset u := by
-  induction a with
-  | uv v => simp only [multiplier, offset]; split <;> simp [*]
-  | max a b ha hb => cases a.multiplier_zero_one u <;> cases b.multiplier_zero_one u <;> simp [*]
-  | succ ℓ hℓ => simp [Nat.mul_add, *]
-  | zero => simp
 
 instance UValuation.instZero : Zero UValuation := ⟨fun _ => 0⟩
 
 @[simp]
 theorem UValuation.get_zero (u : String) : (0 : UValuation).get u = 0 := rfl
-
-theorem UExpr.evalOnly_factor (u : String) (n : ℕ) (ℓ : UExpr) :
-  ℓ.evalOnly u n = ((ℓ.multiplier u) * n + ℓ.offset u) ⊔ (ℓ.eval 0) := by
-  induction ℓ with
-  | max a b ha hb =>
-    rw [evalOnly, ha, hb, eval, max_max_max_comm]
-    cases a.multiplier_zero_one u <;> cases b.multiplier_zero_one u <;> simp [*]
-  | succ ℓ hℓ => cases ℓ.multiplier_zero_one u <;> simp [*]; omega
-  | _ => simp
 
 def UValuation.set (v : UValuation) (u : String) (n : ℕ) : UValuation :=
   fun n' => if u = n' then n else v n'
@@ -113,16 +101,6 @@ def UValuation.set (v : UValuation) (u : String) (n : ℕ) : UValuation :=
 @[simp]
 theorem UValuation.get_set_self (v : UValuation) (u : String) (n : ℕ) :
   (v.set u n).get u = n := by simp [UValuation.set, UValuation.get]
-
-theorem UExpr.eval_factor (v : UValuation) (ℓ : UExpr) (u : String) :
-  ℓ.eval v = ((ℓ.multiplier u) * (v.get u) + ℓ.offset u) ⊔ (ℓ.eval (v.set u 0)) := by
-  induction ℓ with
-  | uv => simp [eval]; split <;> simp [UValuation.get, UValuation.set, *]
-  | max a b ha hb =>
-    rw [eval, ha, hb, eval, max_max_max_comm]
-    cases a.multiplier_zero_one u <;> cases b.multiplier_zero_one u <;> simp [*]
-  | succ ℓ hℓ => cases ℓ.multiplier_zero_one u <;> simp [*]; omega
-  | _ => simp
 
 instance UValuation.instOne : One UValuation := ⟨fun _ => 1⟩
 
@@ -143,9 +121,6 @@ theorem UExpr.eval_comp_zero (u : String) (a : UExpr) :
   | uv v => simp only [comp]; split <;> simp [*]
   | _ => simp [comp, eval, *]
 
-theorem UExpr.evalOnly_not_mem (u : String) (n : ℕ) (a : UExpr) (h : u ∉ a.uvs) :
-  a.evalOnly u n = a.eval 0 := by induction a with | _ => simp at h; simp [evalOnly, *]
-
 def UValuation.EqOn (us : Finset String) (v₁ v₂ : UValuation) : Prop
   := ∀ u ∈ us, v₁.get u = v₂.get u
 
@@ -157,6 +132,13 @@ theorem UExpr.eval_eqOn_subset
   : a.eval v₁ = a.eval v₂ := by
   induction a with
   | uv u => simp at ha; simp [h u ha]
+  | imax _ _ Ia Ib =>
+    simp at ha
+    split at ha
+    case isTrue h => rw [UExpr.eval_imax_zero, UExpr.eval_imax_zero] <;> assumption
+    case isFalse h =>
+      simp [Finset.union_subset_iff] at ha
+      simp [Ia ha.1, Ib ha.2]
   | max _ _ Ia Ib =>
     simp [Finset.union_subset_iff] at ha
     simp [Ia ha.1, Ib ha.2]
@@ -169,14 +151,62 @@ theorem UExpr.eval_eqOn (a : UExpr) {v₁ v₂ : UValuation} (h : v₁.EqOn a.uv
 theorem UExpr.evalOnly_le {a b : UExpr} (h : a ≤ b) (u : String) (n : ℕ) :
   a.evalOnly u n ≤ b.evalOnly u n := by rw [<-eval_only, <-eval_only]; apply h
 
+@[simp]
+def UExpr.evalOnly1 (u : String) (n : ℕ) : UExpr -> ℕ
+  | .uv v => if u = v then n else 1
+  | .imax a b => (evalOnly1 u n a).imax (evalOnly1 u n b)
+  | .max a b => (evalOnly1 u n a) ⊔ (evalOnly1 u n b)
+  | .zero => 0
+  | .succ a => (evalOnly1 u n a) + 1
+
+theorem UExpr.evalOnlyOne_zero_eq_zero {u : String} {ℓ : UExpr} {n}
+  (hℓ : ℓ.evalOnly1 u (n + 1) = 0) : ℓ ≈ 0
+  := by induction ℓ <;> simp [Nat.imax] at * <;> grind
+
+theorem UExpr.nonempty_dvs_not_zero {u : String} {ℓ : UExpr}
+  (hu : u ∈ ℓ.uvs) : ¬ (ℓ ≈ 0)
+  := by induction ℓ <;> simp at * <;> (try split at hu) <;> grind
+
+theorem UExpr.evalOnlyOne_nonempty_dvs {u : String} {ℓ : UExpr} {n}
+  (hu : u ∈ ℓ.uvs) : ℓ.evalOnly1 u (n + 1) ≠ 0
+  := fun h => nonempty_dvs_not_zero hu (evalOnlyOne_zero_eq_zero h)
+
+theorem UExpr.evalOnly1_increasing {u : String} {ℓ : UExpr}
+(hu : u ∈ ℓ.uvs) (n) : n ≤ ℓ.evalOnly1 u n
+  := by induction ℓ with
+  | imax a b Ia Ib =>
+    simp at hu
+    split at hu <;> simp at hu
+    simp [Nat.imax]
+    cases n with
+    | zero => simp
+    | succ n =>
+      rw [ite_cond_eq_false]
+      · simp; grind
+      simp only [eq_iff_iff, iff_false]; intro h; have hb := evalOnlyOne_zero_eq_zero h
+      contradiction
+  | _ => simp; (try split) <;> simp at hu <;> grind
+
+theorem UExpr.eval_set1 (u : String) (n : ℕ) (a : UExpr) :
+  a.eval (UValuation.set 1 u n) = a.evalOnly1 u n := by induction a with | uv => rfl | _ => simp [*]
+
+theorem UExpr.evalOnly1_mono_level {lo hi : UExpr}
+  (h : lo ≤ hi) (u n) : lo.evalOnly1 u n ≤ hi.evalOnly1 u n
+  := by rw [<-eval_set1, <-eval_set1]; apply h
+
+theorem UExpr.evalOnly1_const_not_mem {u : String} (ℓ : UExpr)
+  (hu : u ∉ ℓ.uvs) (n m) : ℓ.evalOnly1 u n = ℓ.evalOnly1 u m
+  := by
+    rw [<-eval_set1, <-eval_set1]; apply eval_eqOn; intro v h
+    simp [UValuation.set, UValuation.get]
+    split <;> simp [*] at *
+
 theorem UExpr.uvs_subset_of_le {a b : UExpr} (h : a ≤ b) : a.uvs ⊆ b.uvs := by
   intro u ha
   by_contra hb
-  have habf := fun n => le_trans  (le_of_eq (a.evalOnly_factor u n).symm)
-                                  (le_trans (evalOnly_le h u n)
-                                  (le_of_eq (b.evalOnly_factor u n)))
-  simp [a.multiplier_one u ha, b.multiplier_offset_zero u hb] at habf
-  have habfn := habf (eval 0 b + 1)
+  have habm := evalOnly1_increasing ha (b.evalOnly1 u 1 + 1)
+  have habr := evalOnly1_mono_level h u (b.evalOnly1 u 1 + 1)
+  simp [evalOnly1_const_not_mem _ hb _ 1] at habr
   omega
 
 theorem UExpr.uvs_equiv {a b : UExpr} (h : a ≈ b) : a.uvs = b.uvs :=
@@ -220,6 +250,7 @@ theorem ULevel.Subst.ext {s₁ s₂ : ULevel.Subst} (h : ∀ u, s₁.get u = s�
 @[simp]
 def UExpr.subst (s : ULevel.Subst) : UExpr → ULevel
   | UExpr.uv n => s.get n
+  | UExpr.imax a b => (subst s a).imax (subst s b)
   | UExpr.max a b => (subst s a) ⊔ (subst s b)
   | UExpr.zero => 0
   | UExpr.succ a => (subst s a).succ
@@ -247,6 +278,13 @@ theorem ULevel.subst_mono {s : ULevel.Subst} {a b : ULevel} (h : a ≤ b) : subs
 
 @[simp]
 theorem ULevel.subst_zero (s : ULevel.Subst) : subst s 0 = 0 := rfl
+
+theorem UExpr.subst_eqv_zero {s : ULevel.Subst} {a : UExpr} (h : a ≈ 0) : subst s a = 0 := by
+  rw [<-ULevel.subst_zero]; apply UExpr.subst_eq; exact h
+
+theorem UExpr.subst_imax_eqv_zero {s : ULevel.Subst}
+  {a b : UExpr} (h : b ≈ 0) : subst s (a.imax b) = 0 := by
+  apply UExpr.subst_eqv_zero; simp [h]
 
 @[simp]
 theorem ULevel.subst_uv (s : ULevel.Subst) (u : String) : subst s (ULevel.uv u) = s.get u := rfl
@@ -285,6 +323,13 @@ theorem UExpr.subst_eqOn_subset
   | max _ _ Ia Ib =>
     simp [Finset.union_subset_iff] at ha
     simp [Ia ha.1, Ib ha.2]
+  | imax _ _ Ia Ib =>
+    simp at ha
+    split at ha
+    case isTrue h => rw [UExpr.subst_imax_eqv_zero h, UExpr.subst_imax_eqv_zero h]
+    case isFalse h =>
+      simp [Finset.union_subset_iff] at ha
+      simp [Ia ha.1, Ib ha.2]
   | succ _ I => simp [I ha]
   | zero => rfl
 

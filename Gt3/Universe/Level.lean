@@ -4,6 +4,7 @@ import Mathlib.Data.Nat.Lattice
 inductive UExpr : Type where
   | uv : String → UExpr
   | max : UExpr → UExpr → UExpr
+  | imax : UExpr → UExpr → UExpr
   | zero : UExpr
   | succ : UExpr → UExpr
 
@@ -17,6 +18,7 @@ theorem UValuation.ext {v₁ v₂ : UValuation} (h : ∀ u, v₁.get u = v₂.ge
 def UExpr.eval (v : UValuation) : UExpr → ℕ
   | UExpr.uv n => v.get n
   | UExpr.max a b => (eval v a) ⊔ (eval v b)
+  | UExpr.imax a b => Nat.imax (eval v a) (eval v b)
   | UExpr.zero => 0
   | UExpr.succ a => (eval v a) + 1
 
@@ -142,6 +144,11 @@ instance ULevel.instSemilatticeSup : SemilatticeSup ULevel where
   le_sup_right a b := by cases a, b using Quotient.inductionOn₂; apply UExpr.le_max_right
   sup_le a b c := by cases a, b, c using Quotient.inductionOn₃; apply UExpr.max_le
 
+def ULevel.imax (a b : ULevel) : ULevel :=
+  Quotient.liftOn₂ a b
+    (fun a b => ⟦UExpr.imax a b⟧)
+    (fun _ _ _ _ h₁ h₂ => Quotient.sound (fun v => by rw [UExpr.eval, UExpr.eval, h₁ v, h₂ v]))
+
 @[simp]
 theorem ULevel.one_le_add_one (ℓ : ULevel) : 1 ≤ ℓ + 1 := by
   induction ℓ using Quotient.inductionOn; exact UExpr.one_le_add_one _
@@ -160,6 +167,9 @@ theorem UExpr.q_uv (u : String) : (UExpr.uv u).q = ULevel.uv u := rfl
 
 @[simp]
 theorem UExpr.q_max (a b : UExpr) : (UExpr.max a b).q = a.q ⊔ b.q := rfl
+
+@[simp]
+theorem UExpr.q_imax (a b : UExpr) : (UExpr.imax a b).q = a.q.imax b.q := rfl
 
 @[simp]
 theorem UExpr.q_zero : (0 : UExpr).q = 0 := rfl
@@ -183,6 +193,11 @@ theorem ULevel.eval_uv (v : UValuation) (u : String) : (ULevel.uv u).eval v = v.
 @[simp]
 theorem ULevel.eval_sup (v : UValuation) (a b : ULevel) :
   (a ⊔ b).eval v = a.eval v ⊔ b.eval v := by induction a, b using Quotient.inductionOn₂; rfl
+
+@[simp]
+theorem ULevel.eval_imax (v : UValuation) (a b : ULevel) :
+  (a.imax b).eval v = Nat.imax (a.eval v) (b.eval v) := by
+  induction a, b using Quotient.inductionOn₂; rfl
 
 @[simp]
 theorem ULevel.eval_zero (v : UValuation) : (0 : ULevel).eval v = 0 := rfl
