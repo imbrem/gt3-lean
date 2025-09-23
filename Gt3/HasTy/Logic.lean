@@ -7,6 +7,11 @@ theorem Ctx.PropEq.symm {Γ φ ψ} (h : PropEq Γ φ ψ) : PropEq Γ ψ φ := JE
 theorem Ctx.PropEq.trans {Γ φ ψ θ}
   (hφψ : PropEq Γ φ ψ) (hψθ : PropEq Γ ψ θ) : PropEq Γ φ θ := JEq.trans hφψ hψθ
 
+theorem Ctx.PropEq.not_empty {Γ} (h : Ok Γ) : PropEq Γ (.not .empty) .unit
+  := .eqn_rfl (A := .univ 0) (.empty h)
+
+theorem Ctx.PropEq.ty_eq {Γ φ ψ} (h : PropEq Γ φ ψ) : TyEq Γ φ ψ := JEq.ty_eq h
+
 def Ctx.IsProp (Γ φ) := HasTy Γ (.univ 0) φ
 
 theorem Ctx.IsProp.refl {Γ φ} (h : IsProp Γ φ) : PropEq Γ φ φ := HasTy.refl h

@@ -1,5 +1,6 @@
 import Gt3.RwEq.Basic
 import Gt3.HasTy.Inversion
+import Gt3.HasTy.Logic
 
 def Ctx.KJEq (Γ : Ctx) (A a b : OTm) : Prop := JEq Γ (A.clamp 0) (a.clamp 0) (b.clamp 0)
 
@@ -518,3 +519,81 @@ theorem Ctx.KIsWf.beta_snd_pair {Γ a b}
 theorem Ctx.KIsWf.beta_snd {Γ a b}
   (hp : KIsWf Γ (.snd (.pair a b))) : KEq Γ (.snd (.pair a b)) b
   := beta_snd_pair (IsWf.of_snd hp)
+
+theorem Ctx.KIsWf.beta_dite_true_wf {Γ l r}
+  (h : KIsWf Γ (.dite .unit l r)) : KWEq Γ (.dite .unit l r) (l.st 0 .null)
+  := by
+  have ⟨A, _, hA, hl, hr⟩ := IsWf.exists_dite h;
+  have ⟨_, hA'⟩ := hA;
+  exists A
+  have hln := (JEq.lst_cf₁_k (fun x hx => (hl x hx).refl) (.null hA.ok))
+  apply JEq.beta_dite_tt' (A := A) hA'
+      (fun x hx => (hl x hx).refl)
+      (.dite' (.unit hA.ok) hA' (fun x hx => (hl x hx).refl) (fun x hx => (hr x hx).refl))
+      hln (by convert hln; rw [OTm.st_eq_lst, OTm.clamp_lst] <;> simp [OTm.bvi, OTm.clamp])
+
+theorem Ctx.KIsWf.beta_dite_true {Γ l r}
+  (hφ : KIsWf Γ (.dite .unit l r)) : KEq Γ (.dite .unit l r) (l.st 0 .null)
+  := .wf_clamp (hφ.beta_dite_true_wf)
+
+theorem Ctx.KIsWf.beta_dite_false_wf {Γ l r}
+  (h : KIsWf Γ (.dite .empty l r)) : KWEq Γ (.dite .empty l r) (r.st 0 .null)
+  := by
+  have ⟨A, _, hA, hl, hr⟩ := IsWf.exists_dite h;
+  have ⟨_, hA'⟩ := hA;
+  exists A
+  have hrn : JEq Γ A ((r.clamp 1).lst .null) ((r.clamp 1).lst .null)
+    := (JEq.lst_cf₁_k (fun x hx => (hr x hx).refl)
+        (.cast (PropEq.ty_eq (.not_empty hA.ok)).symm (.null hA.ok)))
+  apply JEq.beta_dite_ff' (A := A) hA'
+      (fun x hx => (hr x hx).refl)
+      (.dite' (.empty hA.ok) hA' (fun x hx => (hl x hx).refl) (fun x hx => (hr x hx).refl))
+      hrn (by convert hrn; rw [OTm.st_eq_lst, OTm.clamp_lst] <;> simp [OTm.bvi, OTm.clamp])
+
+theorem Ctx.KIsWf.beta_dite_false {Γ l r}
+  (hφ : KIsWf Γ (.dite .empty l r)) : KEq Γ (.dite .empty l r) (r.st 0 .null)
+  := .wf_clamp (hφ.beta_dite_false_wf)
+
+theorem Ctx.KIsWf.beta_natrec_zero_wf {Γ C s z}
+  (h : KIsWf Γ (.natrec C s z .zero))
+   : KWEq Γ (.natrec C s z .zero) z := by
+  have ⟨hC, hs, hz, h0⟩ := h.inv_natrec;
+  exists (C.clamp 1).lst .zero
+  have ⟨_, hC'⟩ := IsTy.max_univ' hC;
+  have hC₀ := (JEq.lst_cf₁_k hC' (.zero hz.ok))
+  exact JEq.beta_natrec_zero' hC' (fun x hx => (hs x hx).refl) hz.refl hC₀
+    (.natrec' hC'  (fun x hx => (hs x hx).refl) hz.refl (.zero hz.ok) hC₀) hz.refl
+
+theorem Ctx.KHasTy.beta_natrec_zero {Γ C s z}
+  (h : KIsWf Γ (.natrec C s z .zero))
+   : KEq Γ (.natrec C s z .zero) z := .wf_clamp (h.beta_natrec_zero_wf)
+
+theorem Ctx.KIsWf.beta_natrec_succ_wf {Γ C s z n}
+  (h : KIsWf Γ (.natrec C s z (.succ n)))
+   : KWEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n)) := by
+  have ⟨hC, hs, hz, hsn⟩ := h.inv_natrec;
+  have hn := hsn.inv_succ;
+  exists (C.clamp 1).lst (n.succ.clamp 0)
+  have ⟨_, hC'⟩ := IsTy.max_univ' hC;
+  have hCsn := (JEq.lst_cf₁_k hC' hsn.refl)
+  have hsnx := (JEq.lst_cf₁ (fun x hx => (hs x hx).refl) hn.refl)
+  convert JEq.beta_natrec_succ' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl
+    hCsn
+    (.app
+      (by convert hsnx; simp [Tm.succArrow, Tm.arr]; rfl)
+      (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl (JEq.lst_cf₁_k hC' hn.refl))
+      (by simp [Tm.lst_succIn]; exact IsTy.lst_cf' hC hsn.refl)
+    )
+    (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hsn.refl (JEq.lst_cf₁_k hC' hsn.refl))
+    (.app
+      (by convert hsnx; simp [Tm.succArrow, Tm.arr]; rfl)
+      (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl (JEq.lst_cf₁_k hC' hn.refl))
+      (by simp [Tm.lst_succIn]; exact IsTy.lst_cf' hC hsn.refl)
+    )
+  simp [OTm.clamp]
+  rw [OTm.st_eq_lst, OTm.clamp_lst] <;> convert hn.valid.otm_bvi using 0 <;> simp
+
+theorem Ctx.KHasTy.beta_natrec_succ {Γ C s z n}
+  (h : KIsWf Γ (.natrec C s z (.succ n)))
+   : KEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n))
+   := .wf_clamp (h.beta_natrec_succ_wf)

@@ -194,6 +194,66 @@ theorem Ctx.IsWf.exists_pair {Γ a b} (h : IsWf Γ (.pair a b))
   : ∃A, ∃ B : Tm 1, IsTyUnder Γ A B ∧ HasTy Γ A a ∧ HasTy Γ (B.lst a) b
   := have ⟨_, h⟩ := h.has_ty; h.exists_pair
 
+theorem Ctx.HasTy.exists_dite_general {Γ U φ l r P} (h : HasTy Γ U P) (hP : P = .dite φ l r)
+  : ∃A, HasTy Γ (.univ 0) φ ∧ IsTy Γ A
+      ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ) A (l.open x))
+      ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ.not) A (r.open x)) := by
+  induction h with
+  | dite' hφ hA hl hr =>
+    cases hP;
+    exact ⟨_, hφ, hA.is_ty, HasTy.top_quant_exact_k hl, HasTy.top_quant_exact_k hr⟩
+  | _ => cases hP <;> apply_assumption <;> rfl
+
+theorem Ctx.HasTy.exists_dite {Γ U φ l r} (h : HasTy Γ U (.dite φ l r))
+  : ∃A, HasTy Γ (.univ 0) φ ∧ IsTy Γ A
+      ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ) A (l.open x))
+      ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ.not) A (r.open x))
+  := exists_dite_general h rfl
+
+theorem Ctx.IsWf.exists_dite {Γ φ l r} (h : IsWf Γ (.dite φ l r))
+  : ∃A, HasTy Γ (.univ 0) φ ∧ IsTy Γ A
+      ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ) A (l.open x))
+      ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ.not) A (r.open x))
+  := have ⟨_, h⟩ := h.has_ty; h.exists_dite
+
+theorem Ctx.HasTy.inv_succ_general {Γ U n P} (h : HasTy Γ U P) (hP : P = .succ n)
+  : HasTy Γ .nats n := by
+  induction h with
+  | succ hn => cases hP; exact hn
+  | _ => cases hP <;> apply_assumption <;> rfl
+
+theorem Ctx.HasTy.inv_succ {Γ U n} (h : HasTy Γ U (.succ n)) : HasTy Γ .nats n
+  := inv_succ_general h rfl
+
+theorem Ctx.IsWf.inv_succ {Γ n} (h : IsWf Γ (.succ n)) : HasTy Γ .nats n
+  := have ⟨_, h⟩ := h.has_ty; h.inv_succ
+
+theorem Ctx.HasTy.inv_natrec_general {Γ U C s z n P} (h : HasTy Γ U P) (hP : P = .natrec C s z n)
+  : IsTyUnder Γ .nats C
+    ∧ HasTyUnder Γ .nats C.succArrow s
+    ∧ HasTy Γ (C.lst .zero) z
+    ∧ HasTy Γ .nats n := by
+  induction h with
+  | natrec hC hs hz hn =>
+    cases hP;
+    exact ⟨(fun x hx => (HasTy.top_quant_exact_k hC x hx).is_ty),
+           (fun x hx => HasTy.top_quant_exact hs x hx), hz, hn⟩
+  | _ => cases hP <;> apply_assumption <;> rfl
+
+theorem Ctx.HasTy.inv_natrec {Γ U C s z n} (h : HasTy Γ U (.natrec C s z n))
+  : IsTyUnder Γ .nats C
+    ∧ HasTyUnder Γ .nats C.succArrow s
+    ∧ HasTy Γ (C.lst .zero) z
+    ∧ HasTy Γ .nats n
+  := inv_natrec_general h rfl
+
+theorem Ctx.IsWf.inv_natrec {Γ C s z n} (h : IsWf Γ (.natrec C s z n))
+  : IsTyUnder Γ .nats C
+    ∧ HasTyUnder Γ .nats C.succArrow s
+    ∧ HasTy Γ (C.lst .zero) z
+    ∧ HasTy Γ .nats n
+  := have ⟨_, h⟩ := h.has_ty; h.inv_natrec
+
 theorem Ctx.JEq.fst {Γ} {A : Tm 0} {B : Tm 1} {p p' : Tm 0}
     (hp : JEq Γ (.sigma A B) p p')
     : JEq Γ A (p.fst) (p'.fst) :=
