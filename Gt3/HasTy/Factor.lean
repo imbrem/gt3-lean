@@ -141,10 +141,17 @@ theorem Ctx.IsWf.inner_ty {Γ a} (h : IsWf Γ a) : ∃W, InnerTy Γ W a
 theorem Ctx.IsWf.iff_inner_ty {Γ a} : IsWf Γ a ↔ ∃W, InnerTy Γ W a
   := ⟨inner_ty, fun ⟨_, h⟩ => h.is_wf⟩
 
-theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
-  (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
-  : JEq Γ Ba (f.app a) (f'.app a') := by
+theorem Ctx.JEq.app_e {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' : Tm 0}
+  (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a')
+  : JEq Γ (B.lst a) (f.app a) (f'.app a') := by
   have ⟨_, hpi⟩ := hf.regular;
   have ⟨_, hpi⟩ := hpi.lhs_ty.inner_ty;
   cases hpi with
-  | pi hA hB => exact .app_f (fun x hx => (hB x hx).refl) hA.refl hf ha hBa
+  | pi hA hB =>
+    exact .app_f
+      (fun x hx => (hB x hx).refl) hA.refl hf ha
+      (IsTy.lst_cf' (fun x hx => (hB x hx).is_ty) ha.lhs_ty')
+
+theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
+  (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
+  : JEq Γ Ba (f.app a) (f'.app a') := (hf.app_e ha).cast hBa

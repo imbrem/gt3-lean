@@ -43,7 +43,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (ha : JEq Γ A a a')
     (hb : JEq Γ (B.lst a) b b')
     : JEq Γ (.sigma A B) (.pair a b) (.pair a' b')
-  | fst' {Γ}  {A : Tm 0} {B : Tm 1} {p p' : Tm 0} {m n : ℕ} {L : Finset String}
+  | fst' {Γ} {A : Tm 0} {B : Tm 1} {p p' : Tm 0} {m n : ℕ} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hp : JEq Γ (.sigma A B) p p')

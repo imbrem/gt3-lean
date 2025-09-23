@@ -221,9 +221,6 @@ theorem Ctx.KEq.st {Γ} {a a' b b' : OTm} {k} (hb : KEq Γ b b') (ha : KEq Γ a 
     · rfl
   | _ =>  constructor <;> apply_assumption <;> (try apply wkn) <;> assumption
 
-def Ctx.HasTyUnder (Γ : Ctx) (A : Tm 0) (B b : Tm 1) : Prop
-  := ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (B.open x) (b.open x)
-
 def Ctx.KHasTyUnder (Γ : Ctx) (A B b : OTm) : Prop
   := ∀ x ∉ Γ.dv, KHasTy (Γ.cons x (A.clamp 0)) (B.open 0 x) (b.open 0 x)
 
@@ -276,12 +273,6 @@ theorem Ctx.KHasTy.m_has_ty_wf {Γ A a} (ha : KHasTy Γ A a) : KIsWf Γ (.has_ty
 
 theorem Ctx.KHasTy.wf_iff {Γ A a} : KIsWf Γ (.has_ty A a) ↔ KHasTy Γ A a
   := ⟨KIsWf.to_has_ty, fun h => (m_has_ty_wf h)⟩
-
-def Ctx.IsWfUnder (Γ : Ctx) (A : Tm 0) (B : Tm 1) : Prop
-  := ∀ x ∉ Γ.dv, IsWf (Γ.cons x A) (B.open x)
-
-def Ctx.IsTyUnder (Γ : Ctx) (A : Tm 0) (B : Tm 1) : Prop
-  := ∀ x ∉ Γ.dv, IsTy (Γ.cons x A) (B.open x)
 
 def Ctx.KIsWfUnder (Γ : Ctx) (A B : OTm) : Prop
   := ∀ x ∉ Γ.dv, KIsWf (Γ.cons x (A.clamp 0)) (B.open 0 x)
@@ -457,3 +448,73 @@ theorem Ctx.KHasTy.st {Γ A B a b}
   (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a)
   : KHasTy Γ (B.st 0 a) (b.st 0 a)
   := by convert ha.lst hb using 1 <;> rw [OTm.st_eq_lst (hv := ha.is_wf.lc)]
+
+theorem Ctx.KHasTy.beta_app_under_wf {Γ A B b a}
+  (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a) : KWEq Γ (.app (.abs A b) a) (b.st 0 a)
+  := ⟨(B.clamp 1).lst (a.clamp 0), JEq.beta_app' (KHasTy.abs hb).refl ha.refl
+                (.app_e (KHasTy.abs hb).refl ha.refl)
+                (by
+                  convert (ha.st hb).refl; rw [OTm.st_eq_lst, OTm.clamp_lst] <;> exact ha.is_wf.lc)
+                (by
+                  convert (ha.st hb).refl
+                  <;> rw [OTm.st_eq_lst, OTm.clamp_lst] <;> exact ha.is_wf.lc)⟩
+
+theorem Ctx.KHasTy.beta_app_under {Γ A B b a}
+  (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a) : KEq Γ (.app (.abs A b) a) (b.st 0 a)
+  := .wf_clamp (ha.beta_app_under_wf hb)
+
+theorem Ctx.KHasTy.abs_body_has_ty {Γ A U b}
+  (hb : KHasTy Γ U (.abs A b)) : ∃B, KHasTyUnder Γ A B b
+  := by
+  have ⟨_, hb⟩ := hb.inner_ty;
+  cases hb with
+  | abs hA hB hb =>
+    rename_i B m n L
+    exists B.erase
+    intro x hx
+    simp only [KHasTy]
+    convert HasTy.top_quant_exact hb x hx
+    · simp [<-Tm.erase_open]
+    · simp only [OTm.clamp_succ_open]
+
+theorem Ctx.KIsWf.has_ty {Γ a} (ha : KIsWf Γ a) : ∃A, KHasTy Γ A a
+  := have ⟨A, ha⟩ := IsWf.has_ty ha; ⟨A.erase, by convert ha; simp [KHasTy]⟩
+
+theorem Ctx.KIsWf.abs_body_has_ty {Γ A b}
+  (hb : KIsWf Γ (.abs A b)) : ∃B, KHasTyUnder Γ A B b
+  := have ⟨_, hb⟩ := hb.has_ty; hb.abs_body_has_ty
+
+theorem Ctx.KHasTy.beta_app {Γ A b a}
+  (hb : KIsWf Γ (.abs A b)) (ha : KHasTy Γ A a) : KEq Γ (.app (.abs A b) a) (b.st 0 a)
+  := have ⟨_, hb⟩ := hb.abs_body_has_ty; beta_app_under hb ha
+
+theorem Ctx.KHasTy.abs_body_wf {Γ A U b}
+  (hb : KHasTy Γ U (.abs A b)) : KIsWfUnder Γ A b
+  := have ⟨_, hb⟩ := hb.abs_body_has_ty; fun x hx => (hb x hx).is_wf
+
+theorem Ctx.KIsWf.beta_fst_pair_wf {Γ a b}
+  (hp : KIsWf Γ (.pair a b)) : KWEq Γ (.fst (.pair a b)) a :=
+  have ⟨A, _, hB, ha, hb⟩ := hp.exists_pair;
+  ⟨A, JEq.beta_fst_both hB ha hb⟩
+
+theorem Ctx.KIsWf.beta_fst_pair {Γ a b}
+  (hp : KIsWf Γ (.pair a b)) : KEq Γ (.fst (.pair a b)) a
+  := .wf_clamp hp.beta_fst_pair_wf
+
+theorem Ctx.KIsWf.beta_fst {Γ a b}
+  (hp : KIsWf Γ (.fst (.pair a b))) : KEq Γ (.fst (.pair a b)) a
+  := beta_fst_pair (IsWf.of_fst hp)
+
+theorem Ctx.KIsWf.beta_snd_pair_wf {Γ a b}
+  (hp : KIsWf Γ (.pair a b)) : KWEq Γ (.snd (.pair a b)) b
+  :=
+  have ⟨_, _, hB, ha, hb⟩ := hp.exists_pair;
+  ⟨_, JEq.beta_snd_both hB ha hb⟩
+
+theorem Ctx.KIsWf.beta_snd_pair {Γ a b}
+  (hp : KIsWf Γ (.pair a b)) : KEq Γ (.snd (.pair a b)) b
+  := .wf_clamp hp.beta_snd_pair_wf
+
+theorem Ctx.KIsWf.beta_snd {Γ a b}
+  (hp : KIsWf Γ (.snd (.pair a b))) : KEq Γ (.snd (.pair a b)) b
+  := beta_snd_pair (IsWf.of_snd hp)
