@@ -233,14 +233,39 @@ theorem UValuation.get_subst (s : ULevel.Subst) (v : UValuation) (n : String) :
 theorem UExpr.eval_subst (s : ULevel.Subst) (v : UValuation) (a : UExpr) :
   (subst s a).eval v = a.eval (v.subst s) := by induction a <;> simp [eval, *]
 
-theorem UExpr.subst_le {s : ULevel.Subst} {a b : UExpr} (h : a ≤ b) : subst s a ≤ subst s b
+theorem UExpr.subst_mono {s : ULevel.Subst} {a b : UExpr} (h : a ≤ b) : subst s a ≤ subst s b
   := ULevel.le_of_eval_le (fun v => by rw [eval_subst, eval_subst]; exact h (v.subst s))
 
 theorem UExpr.subst_eq {s : ULevel.Subst} {a b : UExpr} (h : a ≈ b) : subst s a = subst s b :=
-  le_antisymm (subst_le (UExpr.le_of_equiv h)) (subst_le (UExpr.le_of_equiv (Setoid.symm h)))
+  le_antisymm (subst_mono (UExpr.le_of_equiv h)) (subst_mono (UExpr.le_of_equiv (Setoid.symm h)))
 
 def ULevel.subst (s : ULevel.Subst) (ℓ : ULevel) : ULevel :=
   Quotient.liftOn ℓ (UExpr.subst s) (fun _ _ h => UExpr.subst_eq h)
+
+theorem ULevel.subst_mono {s : ULevel.Subst} {a b : ULevel} (h : a ≤ b) : subst s a ≤ subst s b
+  := by induction a, b using Quotient.inductionOn₂; apply UExpr.subst_mono h
+
+@[simp]
+theorem ULevel.subst_zero (s : ULevel.Subst) : subst s 0 = 0 := rfl
+
+@[simp]
+theorem ULevel.subst_uv (s : ULevel.Subst) (u : String) : subst s (ULevel.uv u) = s.get u := rfl
+
+@[simp]
+theorem ULevel.subst_succ (s : ULevel.Subst) (ℓ : ULevel) : subst s (ℓ.succ) = (subst s ℓ).succ
+  := by induction ℓ using Quotient.inductionOn; rfl
+
+@[simp]
+theorem ULevel.subst_sup (s : ULevel.Subst) (a b : ULevel) :
+  subst s (a ⊔ b) = (subst s a) ⊔ (subst s b) := by
+  induction a, b using Quotient.inductionOn₂; rfl
+
+@[simp]
+theorem ULevel.subst_add (s : ULevel.Subst) (ℓ : ULevel) (n : ℕ) :
+  subst s (ℓ + n) = (subst s ℓ) + n := by
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [add_succ, subst_succ, ih]; rfl
 
 instance ULevel.Subst.instZero : Zero ULevel.Subst where zero := mk (fun _ => 0)
 
