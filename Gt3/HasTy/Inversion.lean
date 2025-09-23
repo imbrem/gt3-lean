@@ -51,6 +51,9 @@ theorem Ctx.HasTy.exists_sigma_res {Γ U A B} (h : HasTy Γ U (.sigma A B))
 theorem Ctx.IsWf.exists_sigma_arg {Γ A B} (h : IsWf Γ (.sigma A B))
   : ∃ℓ, HasTy Γ (.univ ℓ) A := have ⟨_, h⟩ := h.has_ty; h.exists_sigma_arg
 
+theorem Ctx.IsWf.sigma_arg {Γ A B} (h : IsWf Γ (.sigma A B)) : IsTy Γ A
+  := have ⟨_, h⟩ := h.exists_sigma_arg; h.is_ty
+
 theorem Ctx.IsWf.exists_sigma_res {Γ A B} (h : IsWf Γ (.sigma A B))
   : ∃ℓ, ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (.univ ℓ) (B.open x)
   := have ⟨_, h⟩ := h.has_ty; h.exists_sigma_res
@@ -216,6 +219,20 @@ theorem Ctx.IsWf.exists_dite {Γ φ l r} (h : IsWf Γ (.dite φ l r))
       ∧ (∀ x ∉ Γ.dv, HasTy (Γ.cons x φ.not) A (r.open x))
   := have ⟨_, h⟩ := h.has_ty; h.exists_dite
 
+theorem Ctx.HasTy.inv_trunc_general {Γ U A P} (h : HasTy Γ U P) (hP : P = .trunc A)
+  : IsTy Γ A := by induction h with
+  | trunc hA => cases hP; exact ⟨_, hA.refl⟩
+  | _ => cases hP <;> apply_assumption <;> rfl
+
+theorem Ctx.HasTy.inv_trunc {Γ U A} (h : HasTy Γ U (.trunc A)) : IsTy Γ A
+  := inv_trunc_general h rfl
+
+theorem Ctx.IsWf.inv_trunc {Γ A} (h : IsWf Γ (.trunc A)) : IsTy Γ A
+  := have ⟨_, h⟩ := h.has_ty; h.inv_trunc
+
+theorem Ctx.IsWf.exists_arg {Γ A φ} (h : IsWf Γ (.exists A φ))
+  : IsTy Γ A := h.inv_trunc.wf.sigma_arg
+
 theorem Ctx.HasTy.inv_succ_general {Γ U n P} (h : HasTy Γ U P) (hP : P = .succ n)
   : HasTy Γ .nats n := by
   induction h with
@@ -260,6 +277,15 @@ theorem Ctx.JEq.fst {Γ} {A : Tm 0} {B : Tm 1} {p p' : Tm 0}
     have ⟨_, hA⟩ := hp.regular.wf.exists_sigma_arg;
     have ⟨_, hB⟩ := hp.regular.wf.exists_sigma_res;
     .fst' (fun x hx => (hB x hx).refl) hA.refl hp
+
+theorem Ctx.JEq.choose_top {Γ A} (hAI : IsInhab Γ A) : JEq Γ A (.choose A .unit) (.choose A .unit)
+  :=
+  have ⟨_, hA⟩ := hAI.lhs.wf.inv_trunc;
+  .choose (L := Γ.dv) hA hAI
+    (fun x hx => by convert (JEq.unit (.cons hA.ok hx hA.lhs_is_ty)) <;> simp)
+
+theorem Ctx.IsInhab.sigma_arg {Γ A φ} (h : IsInhab Γ (.sigma A φ))
+  : IsInhab Γ A := JEq.inhab (.fst (.choose_top h))
 
 theorem Ctx.JEq.snd {Γ} {A : Tm 0} {B : Tm 1} {p p' : Tm 0}
     (hp : JEq Γ (.sigma A B) p p')

@@ -597,3 +597,34 @@ theorem Ctx.KHasTy.beta_natrec_succ {Γ C s z n}
   (h : KIsWf Γ (.natrec C s z (.succ n)))
    : KEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n))
    := .wf_clamp (h.beta_natrec_succ_wf)
+
+theorem Ctx.KHasTy.choose_spec_wf {Γ A φ}
+  (hA : KIsInhab Γ A) (hφ : KIsPropUnder Γ A φ)
+  (hAφI : KIsInhab Γ (.sigma A φ))
+  : KWEq Γ (φ.st 0 (.choose A φ)) .unit
+  :=
+  have ⟨_, hA'⟩ := hA.is_ty;
+  have ⟨_, hAI⟩ := (IsInhab.sigma_arg hAφI.get);
+  have hAI := (hAI.symm.transfer' (.unit (ℓ := 0) hA'.ok)).symm
+  have hchoose :
+    JEq Γ (A.clamp 0) (.choose (A.clamp 0) (φ.clamp 1)) (.choose (A.clamp 0) (φ.clamp 1))
+    := .choose hA' hAI.ty_eq
+      (fun x hx => by convert (hφ x hx).refl <;> simp [<-OTm.clamp_succ_open])
+  have hcbvi : (A.choose φ).bvi = 0 := by simp [OTm.bvi, hA.is_ty.wf.lc, KIsWfUnder.bvi hφ.is_wf]
+  have hφchoose : JEq Γ (.univ 0)
+    ((φ.clamp 1).lst (.choose (A.clamp 0) (φ.clamp 1)))
+    ((φ.clamp 1).lst (.choose (A.clamp 0) (φ.clamp 1)))
+    := JEq.lst_cf₁_k
+    (fun x hx => by convert (hφ x hx).refl <;> simp [<-OTm.clamp_succ_open]) hchoose;
+  ⟨.univ 0, JEq.choose_spec' hA' hAI
+    (fun x hx => by convert (hφ x hx).refl <;> simp [<-OTm.clamp_succ_open] <;> rfl)
+    (by convert hAφI.get using 0; simp [IsInhab, JEq.prop_eq_unit_iff_ty_eq, Tm.exists, OTm.clamp])
+    (by convert hφchoose; simp [OTm.st_eq_lst, OTm.clamp_lst, hcbvi, OTm.clamp])
+    (by convert hφchoose <;> simp [OTm.st_eq_lst, OTm.clamp_lst, hcbvi, OTm.clamp])
+    (.unit hA'.ok)⟩
+
+theorem Ctx.KHasTy.choose_spec {Γ A φ}
+  (hA : KIsInhab Γ A) (hφ : KIsPropUnder Γ A φ)
+  (hAφI : KIsInhab Γ (.sigma A φ))
+  : KEq Γ (φ.st 0 (.choose A φ)) .unit
+  := .wf_clamp (choose_spec_wf hA hφ hAφI)

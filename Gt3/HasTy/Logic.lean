@@ -12,6 +12,9 @@ theorem Ctx.PropEq.not_empty {Γ} (h : Ok Γ) : PropEq Γ (.not .empty) .unit
 
 theorem Ctx.PropEq.ty_eq {Γ φ ψ} (h : PropEq Γ φ ψ) : TyEq Γ φ ψ := JEq.ty_eq h
 
+theorem Ctx.JEq.prop_eq_unit_iff_ty_eq {Γ φ} : JEq Γ (.univ 0) φ .unit ↔ TyEq Γ φ .unit :=
+  ⟨JEq.ty_eq, fun ⟨_, h⟩ => (h.symm.transfer' (.unit h.ok)).symm⟩
+
 def Ctx.IsProp (Γ φ) := HasTy Γ (.univ 0) φ
 
 theorem Ctx.IsProp.refl {Γ φ} (h : IsProp Γ φ) : PropEq Γ φ φ := HasTy.refl h

@@ -656,6 +656,8 @@ def OTm.subst (σ : Subst) : OTm → OTm
 
 def OTm.arr (A B : OTm) : OTm := .pi A (B.wkn 0)
 
+def OTm.exists (A φ : OTm) : OTm := .trunc (.sigma A φ)
+
 theorem OTm.open_wkn_succ_le {lo hi} (h : lo ≤ hi) (t : OTm) (x : String)
   : (t.wkn lo).open (hi + 1) x = (t.open hi x).wkn lo
   := by induction t generalizing lo hi with
