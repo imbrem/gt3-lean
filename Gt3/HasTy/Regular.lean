@@ -145,7 +145,7 @@ theorem Ctx.HasTy.abs {Γ A} {B b : Tm 1} {L : Finset String}
   have ⟨_, hB⟩ := IsTy.max_univ' (fun x hx => (hb x hx).regular);
   HasTy.abs' hA.lhs_ty (fun x hx => (hB x hx).lhs_ty) hb
 
-theorem Ctx.HasTy.pair {Γ} {A a b : Tm 0} {B : Tm 1} {n : ℕ} {L : Finset String}
+theorem Ctx.HasTy.pair {Γ} {A a b : Tm 0} {B : Tm 1} {n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
     : HasTy Γ (.sigma A B) (.pair a b) :=

@@ -11,59 +11,59 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     : JEq Γ .unit .null .null → JEq Γ (.univ (ℓ + 1)) (.univ ℓ) (.univ ℓ)
   | empty' {Γ} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .empty .empty
   | unit' {Γ} {ℓ} : JEq Γ .unit .null .null → JEq Γ (.univ ℓ) .unit .unit
-  | eqn {Γ} {A a a' b b' : Tm 0} {ℓ : ℕ}
+  | eqn {Γ} {A a a' b b' : Tm 0} {ℓ : ULevel}
     (ha : JEq Γ A a a')
     (hb : JEq Γ A b b')
     : JEq Γ (.univ ℓ) (.eqn a b) (.eqn a' b')
-  | pi {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | pi {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
-  | abs' {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs' {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hb : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (b.open x) (b'.open x))
     : JEq Γ (A.pi B) (A.abs b) (A'.abs b')
-  | app' {Γ} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | app' {Γ} {A : Tm 0} {B : Tm 1} {f f' a a' Ba : Tm 0} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hf : JEq Γ (A.pi B) f f')
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
     : JEq Γ Ba (f.app a) (f'.app a')
-  | sigma {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | sigma {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : JEq Γ (.univ ℓ) (.sigma A B) (.sigma A' B')
-  | pair' {Γ} {A A' a a' b b' : Tm 0} {B B' : Tm 1} {m n : ℕ} {L : Finset String}
+  | pair' {Γ} {A A' a a' b b' : Tm 0} {B B' : Tm 1} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
     (hA : JEq Γ (.univ m) A A')
     (ha : JEq Γ A a a')
     (hb : JEq Γ (B.lst a) b b')
     : JEq Γ (.sigma A B) (.pair a b) (.pair a' b')
-  | fst' {Γ} {A : Tm 0} {B : Tm 1} {p p' : Tm 0} {m n : ℕ} {L : Finset String}
+  | fst' {Γ} {A : Tm 0} {B : Tm 1} {p p' : Tm 0} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hp : JEq Γ (.sigma A B) p p')
     : JEq Γ A (.fst p) (.fst p')
-  | snd' {Γ}  {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | snd' {Γ}  {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
     (hA : JEq Γ (.univ m) A A)
     (hp : JEq Γ (.sigma A B) p p')
     (hBa : JEq Γ (.univ n) (B.lst (.fst p)) Ba)
     : JEq Γ Ba (.snd p) (.snd p')
-  | dite' {Γ} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ℕ} {L : Finset String}
+  | dite' {Γ} {φ φ' A : Tm 0} {l l' r r' : Tm 1} {ℓ : ULevel} {L : Finset String}
     (hφ : JEq Γ (.univ 0) φ φ')
     (hA : JEq Γ (.univ ℓ) A A)
     (hl : ∀ x ∉ L, JEq (Γ.cons x φ) A (l.open x) (l'.open x))
     (hr : ∀ x ∉ L, JEq (Γ.cons x φ.not) A (r.open x) (r'.open x))
     : JEq Γ A (.dite φ l r) (.dite φ' l' r')
-  | trunc {Γ} {A A' : Tm 0} {ℓ : ℕ}
+  | trunc {Γ} {A A' : Tm 0} {ℓ : ULevel}
     (hA : JEq Γ (.univ ℓ) A A')
     : JEq Γ (.univ 0) (.trunc A) (.trunc A')
-  | choose' {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ℕ} {L : Finset String}
+  | choose' {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ ℓ) A A')
     (hAI : JEq Γ (.univ 0) (.trunc A) .unit)
     (hφ : ∀x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))
@@ -118,14 +118,14 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (lhs_wf : JEq Γ Ba (.snd (.pair a b)) (.snd (.pair a b)))
     (rhs_wf : JEq Γ Ba b b)
     : JEq Γ Ba (.snd (.pair a b)) b
-  | beta_dite_tt' {Γ} {A : Tm 0} {l r : Tm 1} {lu} {ℓ : ℕ} {L : Finset String}
+  | beta_dite_tt' {Γ} {A : Tm 0} {l r : Tm 1} {lu} {ℓ : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ ℓ) A A)
     (hl : ∀ x ∉ L, JEq (Γ.cons x .unit) A (l.open x) (l.open x))
     (lhs_wf : JEq Γ A (.dite Tm.unit l r) (.dite Tm.unit l r))
     (rhs_wf : JEq Γ A (l.lst .null) (l.lst .null))
     (hlu : JEq Γ A (l.lst .null) lu)
     : JEq Γ A (.dite Tm.unit l r) lu
-  | beta_dite_ff' {Γ} {A : Tm 0} {l r : Tm 1} {ru} {ℓ : ℕ} {L : Finset String}
+  | beta_dite_ff' {Γ} {A : Tm 0} {l r : Tm 1} {ru} {ℓ : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ ℓ) A A)
     (hl : ∀ x ∉ L, JEq (Γ.cons x Tm.empty.not) A (r.open x) (r.open x))
     (lhs_wf : JEq Γ A (.dite Tm.empty l r) (.dite Tm.empty l r))
@@ -188,10 +188,10 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hbc : JEq Γ A b c)
     : JEq Γ A a c
   -- Casting
-  | cast_level_le {Γ} {A A' : Tm 0} {lo hi : ℕ} (h : lo ≤ hi)
+  | cast_level_le {Γ} {A A' : Tm 0} {lo hi : ULevel} (h : lo ≤ hi)
     (hA : JEq Γ (.univ lo) A A')
     : JEq Γ (.univ hi) A A'
-  | cast' {Γ} {A A' a a' : Tm 0} {ℓ : ℕ}
+  | cast' {Γ} {A A' a a' : Tm 0} {ℓ : ULevel}
     (hA : JEq Γ (.univ ℓ) A A')
     (ha : JEq Γ A a a')
     : JEq Γ A' a a'
@@ -219,7 +219,7 @@ theorem Ctx.JEq.cast {Γ A B} (h : TyEq Γ A B) {a b} (hab : JEq Γ A a b)
 theorem Ctx.TyEq.symm {Γ A B} (h : TyEq Γ A B) : TyEq Γ B A :=
   have ⟨ℓ, h⟩ := h; ⟨ℓ, h.symm⟩
 
-theorem Ctx.JEq.cast_level {ℓ : ℕ} {Γ A B}
+theorem Ctx.JEq.cast_level {ℓ : ULevel} {Γ A B}
   (hAB : JEq Γ (.univ ℓ) A B) : JEq Γ (.univ (ℓ + 1)) A B := hAB.cast_level_le (by simp)
 
 theorem Ctx.TyEq.trans {Γ A B C} (hAB : TyEq Γ A B) (hBC : TyEq Γ B C) : TyEq Γ A C :=
@@ -357,7 +357,8 @@ theorem Ctx.IsTy.top_cf {Γ A} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x)) : IsTy Γ A
   := have ⟨x, hx⟩ := L.exists_notMem; (hB x hx).ok.ty
 
-theorem Ctx.JEq.app_f {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+theorem Ctx.JEq.app_f
+  {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {m n : ULevel} {L : Finset String}
   (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
   (hA : JEq Γ (.univ m) A A)
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
@@ -367,7 +368,7 @@ theorem Ctx.JEq.app_f {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0} {m n : �
         (fun x hx => (hB x hx).cast_level_le (by simp)) hA hf ha
         (hBa.cast_level_le (by simp))
 
-theorem Ctx.JEq.snd_f {Γ} {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L : Finset String}
+theorem Ctx.JEq.snd_f {Γ} {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ULevel} {L : Finset String}
   (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
   (hA : JEq Γ (.univ m) A A)
   (hp : JEq Γ (A.sigma B) p p') (hBa : TyEq Γ (B.lst p.fst) Ba)
@@ -377,7 +378,7 @@ theorem Ctx.JEq.snd_f {Γ} {A : Tm 0} {B : Tm 1} {p p' Ba : Tm 0} {m n : ℕ} {L
         (fun x hx => (hB x hx).cast_level_le (by simp)) hA hp
         (hBa.cast_level_le (by simp))
 
-theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ℕ} {L : Finset String}
+theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ULevel} {L : Finset String}
   (hA : JEq Γ (.univ ℓ) A A')
   (hAI : IsInhab Γ A)
   (hφ : ∀ x ∉ L, JEq (Γ.cons x A) (.univ 0) (φ.open x) (φ'.open x))

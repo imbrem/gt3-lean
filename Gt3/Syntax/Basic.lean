@@ -1,13 +1,14 @@
 -- To add a new term former; follow the instructions in `TERM_FORMER_CHECKLIST.md`
-
 import Mathlib.Data.Nat.Lattice
 import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Algebra.Group.Action.Defs
 
+import Gt3.Universe.Level
+
 inductive Tm : ℕ → Type
   | fv {k : ℕ} (x : String) : Tm k
   | bv {k : ℕ} (i : Fin k) : Tm k
-  | univ {k : ℕ} (ℓ : ℕ) : Tm k
+  | univ {k : ℕ} (ℓ : ULevel) : Tm k
   | empty {k : ℕ} : Tm k
   | unit {k : ℕ} : Tm k
   | null {k : ℕ} : Tm k
@@ -128,7 +129,7 @@ theorem Tm.open_bv {k : ℕ} (i : Fin (k + 1)) (x : String)
   := by simp [«open»]
 
 @[simp]
-theorem Tm.open_univ {k : ℕ} (ℓ : ℕ) (x : String)
+theorem Tm.open_univ {k : ℕ} (ℓ : ULevel) (x : String)
   : (Tm.univ (k := (k + 1)) ℓ).open x = .univ ℓ
   := by simp [«open»]
 
@@ -261,7 +262,7 @@ theorem Tm.lst_bv {k : ℕ} (i : Fin (k + 1)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
-theorem Tm.lst_univ {k : ℕ} (ℓ : ℕ) (v : Tm 0)
+theorem Tm.lst_univ {k : ℕ} (ℓ : ULevel) (v : Tm 0)
   : (Tm.univ (k := (k + 1)) ℓ).lst v = .univ ℓ
   := by simp [lst]
 
@@ -362,7 +363,7 @@ theorem Tm.lst_invalid {k : ℕ} (v : Tm 0) : (Tm.invalid (k := (k + 1))).lst v 
 def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (fv : ∀ {k} (x : String), motive k (.fv x))
   (bv : ∀ {k} (i : Fin (k + 1)), motive k (.bv i))
-  (univ : ∀ {k} (ℓ : ℕ), motive k (.univ ℓ))
+  (univ : ∀ {k} (ℓ : ULevel), motive k (.univ ℓ))
   (empty : ∀ {k}, motive k .empty)
   (unit : ∀ {k}, motive k .unit)
   (null : ∀ {k}, motive k .null)
@@ -1089,7 +1090,7 @@ theorem Tm.le_depth_lsv {k : ℕ} (t : Tm k) (x : String) (v : Tm 0)
 def Tm.lcIndCof (L : Finset String)
   {motive : Tm 0 → Sort*}
   (fv : ∀ (x : String), motive (.fv x))
-  (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
+  (univ : ∀ (ℓ : ULevel), motive (.univ ℓ))
   (empty : motive .empty)
   (unit : motive .unit)
   (null : motive .null)
@@ -1210,7 +1211,7 @@ decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
 def Tm.lcIndFvs
   {motive : Tm 0 → Sort*}
   (fv : ∀ (x : String), motive (.fv x))
-  (univ : ∀ (ℓ : ℕ), motive (.univ ℓ))
+  (univ : ∀ (ℓ : ULevel), motive (.univ ℓ))
   (empty : motive .empty)
   (unit : motive .unit)
   (null : motive .null)

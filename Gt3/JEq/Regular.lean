@@ -52,7 +52,7 @@ theorem Ctx.TyEq.pi {Γ A A' B B'} {L : Finset String}
   have ⟨m, hA⟩ := hA;
   have ⟨n, hB⟩ := TyEq.max_univ' hB;
   exists m ⊔ n ⊔ 1
-  apply JEq.pi hA hB <;> simp
+  exact JEq.pi hA hB (le_sup_of_le_left le_sup_left) (le_sup_of_le_left le_sup_right) le_sup_right
 
 theorem Ctx.TyEq.sigma {Γ A A' B B'} {L : Finset String}
   (hA : TyEq Γ A A') (hB : ∀ x ∉ L, TyEq (Γ.cons x A) (B.open x) (B'.open x))
@@ -61,7 +61,8 @@ theorem Ctx.TyEq.sigma {Γ A A' B B'} {L : Finset String}
   have ⟨m, hA⟩ := hA;
   have ⟨n, hB⟩ := TyEq.max_univ' hB;
   exists m ⊔ n ⊔ 1
-  apply JEq.sigma hA hB <;> simp
+  exact JEq.sigma hA hB
+    (le_sup_of_le_left le_sup_left) (le_sup_of_le_left le_sup_right) le_sup_right
 
 theorem Ctx.IsTy.max_univ_dv' {Γ : Ctx} {A} {B : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))

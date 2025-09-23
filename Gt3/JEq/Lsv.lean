@@ -50,7 +50,7 @@ theorem Ctx.TyEq.lst₁ {Γ : Ctx} {A a : Tm 0} {B B' : Tm 1} {x : String} (hx :
   (ha : Ctx.JEq Γ A a a) : Γ.TyEq (B.lst a) (B'.lst a)
   := have ⟨ℓ, hb⟩ := hb; ⟨ℓ, hb.lst₁_k (by simp [hx]) ha⟩
 
-theorem Ctx.JEq.lst_cf_univ {Γ : Ctx} {n : ℕ} {A a a'} {B B' : Tm 1} {L : Finset String}
+theorem Ctx.JEq.lst_cf_univ {Γ : Ctx} {n : ULevel} {A a a'} {B B' : Tm 1} {L : Finset String}
   (hB : ∀ x ∉ L, Ctx.JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
   (ha : Ctx.JEq Γ A a a') : JEq Γ (.univ n) (B.lst a) (B'.lst a') :=
   have ⟨m, hA⟩ := ha.regular;

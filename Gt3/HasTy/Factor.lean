@@ -6,51 +6,51 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | empty {Γ} {ℓ} (hΓ : Ok Γ) : InnerTy Γ (.univ ℓ) .empty
   | unit {Γ} {ℓ} (hΓ : Ok Γ) : InnerTy Γ (.univ ℓ) .unit
   | null {Γ} (hΓ : Ok Γ) : InnerTy Γ .unit .null
-  | eqn {Γ} {A a b : Tm 0} {ℓ : ℕ}
+  | eqn {Γ} {A a b : Tm 0} {ℓ : ULevel}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : InnerTy Γ (.univ ℓ) (.eqn a b)
-  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : InnerTy Γ (.univ ℓ) (.pi A B)
-  | abs {Γ} {A : Tm 0} {B b : Tm 1} {m n : ℕ} {L : Finset String}
+  | abs {Γ} {A : Tm 0} {B b : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hb : ∀ x ∉ L, HasTy (Γ.cons x A) (B.open x) (b.open x))
     : InnerTy Γ (A.pi B) (A.abs b)
-  | app' {Γ} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | app' {Γ} {A : Tm 0} {B : Tm 1} {f a Ba : Tm 0} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : InnerTy Γ Ba (f.app a)
-  | sigma {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ℕ} {L : Finset String}
+  | sigma {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
     : InnerTy Γ (.univ ℓ) (.sigma A B)
-  | pair' {Γ} {A a b : Tm 0} {B : Tm 1} {m n : ℕ} {L : Finset String}
+  | pair' {Γ} {A a b : Tm 0} {B : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (ha : HasTy Γ A a) (hb : HasTy Γ (B.lst a) b)
     : InnerTy Γ (.sigma A B) (.pair a b)
-  | fst' {Γ}  {A : Tm 0} {B : Tm 1} {p : Tm 0} {m n : ℕ} {L : Finset String}
+  | fst' {Γ}  {A : Tm 0} {B : Tm 1} {p : Tm 0} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hA : HasTy Γ (.univ m) A)
     (hp : HasTy Γ (.sigma A B) p)
     : InnerTy Γ A (.fst p)
-  | snd' {Γ}  {A : Tm 0} {B : Tm 1} {p Ba : Tm 0} {m n : ℕ} {L : Finset String}
+  | snd' {Γ}  {A : Tm 0} {B : Tm 1} {p Ba : Tm 0} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
     (hA : HasTy Γ (.univ m) A)
     (hp : HasTy Γ (.sigma A B) p)
     (hBa : TyEq Γ (B.lst (.fst p)) Ba)
     : InnerTy Γ Ba (.snd p)
-  | dite' {Γ} {φ A : Tm 0} {l r : Tm 1} {ℓ : ℕ} {L : Finset String}
+  | dite' {Γ} {φ A : Tm 0} {l r : Tm 1} {ℓ : ULevel} {L : Finset String}
     (hφ : HasTy Γ (.univ 0) φ)
     (hA : HasTy Γ (.univ ℓ) A)
     (hl : ∀ x ∉ L, HasTy (Γ.cons x φ) A (l.open x))
     (hr : ∀ x ∉ L, HasTy (Γ.cons x φ.not) A (r.open x))
     : InnerTy Γ A (.dite φ l r)
-  | trunc {Γ} {A : Tm 0} {ℓ : ℕ}
+  | trunc {Γ} {A : Tm 0} {ℓ : ULevel}
     (hA : HasTy Γ (.univ ℓ) A)
     : InnerTy Γ (.univ 0) (.trunc A)
-  | choose' {Γ} {A : Tm 0} {φ : Tm 1} {ℓ : ℕ} {L : Finset String}
+  | choose' {Γ} {A : Tm 0} {φ : Tm 1} {ℓ : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ ℓ) A)
     (hAI : IsInhab Γ A)
     (hφ : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ 0) (φ.open x))

@@ -3,7 +3,7 @@ import Gt3.Syntax.Subst
 inductive OTm : Type
   | fv (x : String) : OTm
   | bv (i : ℕ) : OTm
-  | univ (ℓ : ℕ) : OTm
+  | univ (ℓ : ULevel) : OTm
   | empty : OTm
   | unit : OTm
   | null : OTm
