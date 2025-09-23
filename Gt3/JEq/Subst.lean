@@ -169,7 +169,7 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   | nil_ok => exact .null hσ.src_ok
   | cons_ok => apply_assumption; cases hσ; assumption
   | eqn_rfl => apply eqn_rfl <;> ls1_tactic_helper hσ K hK
-  | unit_ext => apply unit_ext <;> ls1_tactic_helper hσ K hK
+  | prop_inhab_unit' => apply prop_inhab_unit' <;> ls1_tactic_helper hσ K hK
   | _ =>
     (try simp only [Tm.smul_app, Tm.smul_natrec, Tm.ls_lst, Tm.smul_succ, Tm.smul_choose])
     constructor <;> ls1_tactic_helper hσ K hK

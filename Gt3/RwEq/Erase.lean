@@ -694,10 +694,26 @@ theorem Ctx.KHasTy.cast_level_le {lo hi Γ A}
   (h : lo ≤ hi) (hA : KHasTy Γ (.univ lo) A) : KHasTy Γ (.univ hi) A
   := hA.get.cast_level_le h
 
-theorem Ctx.KIsProp.unit_ext_wf {Γ φ}
-  (hφ : KIsProp Γ φ) (hφI : KIsInhab Γ φ) : KWEq Γ φ .unit
-  := have ⟨_, hφI⟩ := hφI; ⟨.univ 0, .unit_ext hφ.refl hφI.refl⟩
+theorem Ctx.KHasTy.unit_ext_wf {Γ a}
+  (ha : KHasTy Γ .unit a) : KWEq Γ a .null
+  := ⟨.unit, .unit_ext ha.refl⟩
 
-theorem Ctx.KIsProp.unit_ext {Γ φ}
+theorem Ctx.KHasTy.unit_ext {Γ a}
+  (ha : KHasTy Γ .unit a) : KEq Γ a .null
+  := .wf_clamp (ha.unit_ext_wf)
+
+theorem Ctx.KIsProp.prop_inhab_unit_wf {Γ φ}
+  (hφ : KIsProp Γ φ) (hφI : KIsInhab Γ φ) : KWEq Γ φ .unit
+  := have ⟨_, hφI⟩ := hφI; ⟨.univ 0, .prop_inhab_unit' hφ.refl hφI.refl⟩
+
+theorem Ctx.KIsProp.prop_inhab_unit {Γ φ}
   (hφ : KIsProp Γ φ) (hφI : KIsInhab Γ φ) : KEq Γ φ .unit
-  := .wf_clamp (hφ.unit_ext_wf hφI)
+  := .wf_clamp (hφ.prop_inhab_unit_wf hφI)
+
+theorem Ctx.KHasTy.prop_inhab_ext_wf {Γ φ a}
+  (hφ : KIsProp Γ φ) (ha : KHasTy Γ φ a) : KWEq Γ a .null
+  := ⟨.unit, .unit_ext (ha.cast' (.prop_inhab_unit' hφ.refl ha.refl)).refl⟩
+
+theorem Ctx.KHasTy.prop_inhab_ext {Γ φ a}
+  (hφ : KIsProp Γ φ) (ha : KHasTy Γ φ a) : KEq Γ a .null
+  := .wf_clamp (ha.prop_inhab_ext_wf hφ)

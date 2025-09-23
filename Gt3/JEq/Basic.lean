@@ -161,6 +161,8 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (rhs_wf : JEq Γ (.univ 0) .unit .unit)
     : JEq Γ (.univ 0) φc .unit
   -- Reflexivity and extensionality
+  | unit_ext {Γ} {a} : JEq Γ .unit a a → JEq Γ .unit a .null
+  | prop_inhab_unit' {Γ} {A a} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ (.univ 0) A .unit
   | pi_ext' {Γ} {A : Tm 0} {B : Tm 1} {f g : Tm 0} {m n} {L : Finset String}
     (hA : JEq Γ (.univ m) A A)
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
@@ -179,7 +181,6 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}
     : JEq Γ A a a → JEq Γ A b b → JEq Γ (.univ 0) (.eqn a b) .unit → JEq Γ A a b
-  | unit_ext {Γ} {A a} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ (.univ 0) A .unit
   -- Symmetry and transitivity
   | symm {Γ} {A a b : Tm 0} : JEq Γ A a b → JEq Γ A b a
   | trans {Γ} {A a b c : Tm 0}

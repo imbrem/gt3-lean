@@ -301,7 +301,7 @@ theorem Ctx.JEq.choose_top {Γ A} (hAI : IsInhab Γ A) : JEq Γ A (.choose A .un
 
 theorem Ctx.HasTy.eqn_ext {Γ a b p} (h : HasTy Γ (.eqn a b) p) : WfEq Γ a b :=
   have ⟨A, ha, hb⟩ := h.regular.wf.exists_eqn;
-  ⟨A, .eqn_ext ha.refl hb.refl (.unit_ext (.eqn ha.refl hb.refl) h.refl)⟩
+  ⟨A, .eqn_ext ha.refl hb.refl (.prop_inhab_unit' (.eqn ha.refl hb.refl) h.refl)⟩
 
 theorem Ctx.IsInhab.eqn_ext {Γ a b} (h : IsInhab Γ (.eqn a b)) : WfEq Γ a b :=
   HasTy.eqn_ext (JEq.lhs_ty (Ctx.JEq.choose_top h))
