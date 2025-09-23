@@ -131,14 +131,14 @@ theorem Ctx.KEq.psub {Γ Δ} (h : Γ.PSub Δ) {a b : OTm} (hab : KEq Δ a b) : K
   rw [clamp_iff] at *
   exact (fun k => (hab k).psub h)
 
-theorem Ctx.KEq.not_ok {Γ} (hΓ : ¬Ok Γ) {k} {a b : Tm k} (hab : RwEq Γ a b) : a = b
+theorem Ctx.KEq.not_ok {Γ} (hΓ : ¬Ok Γ) {a b : OTm} (hab : KEq Γ a b) : a = b
   := by induction hab with
   | wf_clamp h => exact (hΓ h.ok).elim
   | _ => simp only [*]
 
 theorem Ctx.KEq.wk0
-  {Γ} {k} {a b : Tm k} (hab : RwEq Γ a b) {x X} (hx : x ∉ Γ.dv) (hX : X ∈ RwTy Γ)
-  : RwEq (Γ.cons x X) a b
+  {Γ} {a b : OTm} (hab : KEq Γ a b) {x X} (hx : x ∉ Γ.dv) (hX : X ∈ RwTy Γ)
+  : KEq (Γ.cons x X) a b
   := open Classical in
   if hΓ : Ok Γ then
     hab.psub (hΓ.psub.skip hx (hX hΓ))
@@ -628,3 +628,37 @@ theorem Ctx.KHasTy.choose_spec {Γ A φ}
   (hAφI : KIsInhab Γ (.sigma A φ))
   : KEq Γ (φ.st 0 (.choose A φ)) .unit
   := .wf_clamp (choose_spec_wf hA hφ hAφI)
+
+theorem Ctx.KHasTy.pi_ext_wf {Γ} {A B f g x}
+  (hf : KHasTy Γ (.pi A B) f)
+  (hg : KHasTy Γ (.pi A B) g)
+  (hfg : KEq (Γ.cons x (A.clamp 0)) (f.app (.fv x)) (g.app (.fv x)))
+  : KWEq Γ f g := ⟨.pi (A.clamp 0) (B.clamp 1), open Classical in by
+    if hΓ : Ok (Γ.cons x (A.clamp 0)) then
+      have ⟨_, hA⟩ := hΓ.ty
+      have ⟨_, hB⟩ := hf.regular_pi_res_ty
+      apply JEq.pi_ext' hA (fun x hx => (hB x hx).refl) hf.refl hg.refl
+      have hf₀ := (hf.refl.wk0 hΓ.var hΓ.ty)
+      have hfx := hf₀.app_e (.top_var hΓ)
+      have ⟨_, hfg⟩ := hfg.weq hfx.lhs_is_wf
+      have hfg := hfg.transfer' hfx
+      have hxAB := Finset.not_mem_subset hf.regular.scoped hΓ.var
+      simp [OTm.fvs] at hxAB
+      have hxf := Finset.not_mem_subset hf.tm_scoped hΓ.var
+      simp at hxf
+      have hxg := Finset.not_mem_subset hg.tm_scoped hΓ.var
+      simp at hxg
+      intro y hy
+      convert hfg.rename_top y hy using 1
+      <;> simp [Tm.lsv_open, Tm.lst_of_fv, OTm.clamp, Tm.lsv, Tm.lsv_not_mem, *]
+    else
+      cases hfg.not_ok hΓ
+      exact hf.refl
+  ⟩
+
+theorem Ctx.KHasTy.pi_ext {Γ} {A B f g x}
+    (hf : KHasTy Γ (.pi A B) f)
+    (hg : KHasTy Γ (.pi A B) g)
+    (hfg : KEq (Γ.cons x (A.clamp 0)) (f.app (.fv x)) (g.app (.fv x)))
+  : KEq Γ f g
+  := .wf_clamp (hf.pi_ext_wf hg hfg)
