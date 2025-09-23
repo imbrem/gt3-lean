@@ -49,6 +49,7 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
   | trans => apply trans <;> apply_assumption <;> assumption
   | transfer' => apply transfer' <;> apply_assumption <;> assumption
   | eqn_rfl => apply eqn_rfl <;> psub_tactic_helper h Γ
+  | unit_ext => apply unit_ext <;> psub_tactic_helper h Γ
   | _ => constructor <;> psub_tactic_helper h Γ
 
 theorem Ctx.TyEq.psub {Γ Δ} (h : PSub Γ Δ) {A B : Tm 0} (hAB : TyEq Δ A B)

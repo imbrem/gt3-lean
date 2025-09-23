@@ -672,3 +672,8 @@ theorem Ctx.KHasTy.sigma_ext_wf {Γ} {A B p q}
   have hpq1 := hfst.jeq hp.fst
   have hpq2 := hsnd.jeq hp.snd
   ⟨.sigma (A.clamp 0) (B.clamp 1), .sigma_ext hp.refl hq.refl hpq1 hpq2⟩
+
+-- theorem Ctx.KIsInhab.eqn_ext_wf {Γ a b}
+--   (hav : KIsInhab Γ (.eqn a b)) : KWEq Γ a b :=
+--   have ⟨p, h⟩ := hav;
+--   sorry

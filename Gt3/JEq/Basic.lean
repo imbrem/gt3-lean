@@ -179,6 +179,7 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | eqn_rfl {Γ} {A a b: Tm 0} : JEq Γ A a b → JEq Γ (.univ 0) (.eqn a b) .unit
   | eqn_ext {Γ} {A a b : Tm 0}
     : JEq Γ A a a → JEq Γ A b b → JEq Γ (.univ 0) (.eqn a b) .unit → JEq Γ A a b
+  | unit_ext {Γ} {A a} : JEq Γ (.univ 0) A A → JEq Γ A a a → JEq Γ (.univ 0) A .unit
   -- Symmetry and transitivity
   | symm {Γ} {A a b : Tm 0} : JEq Γ A a b → JEq Γ A b a
   | trans {Γ} {A a b c : Tm 0}

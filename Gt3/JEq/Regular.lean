@@ -137,7 +137,8 @@ theorem Ctx.JEq.regular {Γ A a b} (h : JEq Γ A a b) : IsTy Γ A := by inductio
             <;> intros
             <;> (first | assumption | apply JEq.lhs_is_ty | apply Ctx.IsTy.ok)
             <;> apply_assumption
-            <;> assumption)
+            <;> assumption
+          )
 
 theorem Ctx.JEq.inhab {Γ A a b} (h : JEq Γ A a b) : IsInhab Γ A :=
   have ⟨_, hA⟩ := h.regular;

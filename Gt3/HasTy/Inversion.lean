@@ -9,6 +9,17 @@ def Ctx.IsWfUnder (Γ : Ctx) (A : Tm 0) (B : Tm 1) : Prop
 def Ctx.IsTyUnder (Γ : Ctx) (A : Tm 0) (B : Tm 1) : Prop
   := ∀ x ∉ Γ.dv, IsTy (Γ.cons x A) (B.open x)
 
+theorem Ctx.HasTy.exists_eqn_general {Γ U a b P} (h : HasTy Γ U P) (hP : P = .eqn a b)
+  : ∃A, HasTy Γ A a ∧ HasTy Γ A b := by induction h with
+  | eqn ha hb => cases hP; exact ⟨_, ha, hb⟩
+  | _ => cases hP <;> apply_assumption <;> rfl
+
+theorem Ctx.HasTy.exists_eqn {Γ U a b} (h : HasTy Γ U (.eqn a b))
+  : ∃A, HasTy Γ A a ∧ HasTy Γ A b := exists_eqn_general h rfl
+
+theorem Ctx.IsWf.exists_eqn {Γ a b} (h : IsWf Γ (.eqn a b))
+  : ∃A, HasTy Γ A a ∧ HasTy Γ A b := have ⟨_, h⟩ := h.has_ty; h.exists_eqn
+
 theorem Ctx.HasTy.exists_pi_arg_general {Γ U A B P} (h : HasTy Γ U P) (hP : P = .pi A B)
   : ∃ℓ, HasTy Γ (.univ ℓ) A := by induction h with
   | pi hA => cases hP; exact ⟨_, hA⟩
@@ -130,6 +141,10 @@ theorem Ctx.IsWf.trunc {Γ A} (h : IsTy Γ A) : IsWf Γ (.trunc A)
 
 theorem Ctx.IsWf.trunc_wf_iff {Γ A} : IsWf Γ (.trunc A) ↔ IsTy Γ A
   := ⟨trunc_is_ty, trunc⟩
+
+theorem Ctx.IsInhab.is_ty {Γ A} (h : IsInhab Γ A) : IsTy Γ A := h.lhs.wf.trunc_is_ty
+
+theorem Ctx.IsInhab.wf {Γ A} (h : IsInhab Γ A) : IsWf Γ A := h.is_ty.wf
 
 theorem Ctx.HasTy.exists_app_general {Γ U f a P} (h : HasTy Γ U P) (hP : P = .app f a)
   : ∃A B, HasTy Γ (.pi A B) f ∧ HasTy Γ A a := by induction h with
@@ -283,6 +298,13 @@ theorem Ctx.JEq.choose_top {Γ A} (hAI : IsInhab Γ A) : JEq Γ A (.choose A .un
   have ⟨_, hA⟩ := hAI.lhs.wf.inv_trunc;
   .choose (L := Γ.dv) hA hAI
     (fun x hx => by convert (JEq.unit (.cons hA.ok hx hA.lhs_is_ty)) <;> simp)
+
+theorem Ctx.HasTy.eqn_ext {Γ a b p} (h : HasTy Γ (.eqn a b) p) : WfEq Γ a b :=
+  have ⟨A, ha, hb⟩ := h.regular.wf.exists_eqn;
+  ⟨A, .eqn_ext ha.refl hb.refl (.unit_ext (.eqn ha.refl hb.refl) h.refl)⟩
+
+theorem Ctx.IsInhab.eqn_ext {Γ a b} (h : IsInhab Γ (.eqn a b)) : WfEq Γ a b :=
+  HasTy.eqn_ext (JEq.lhs_ty (Ctx.JEq.choose_top h))
 
 theorem Ctx.IsInhab.sigma_arg {Γ A φ} (h : IsInhab Γ (.sigma A φ))
   : IsInhab Γ A := JEq.inhab (.fst (.choose_top h))
