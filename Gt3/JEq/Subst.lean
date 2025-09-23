@@ -161,7 +161,7 @@ theorem Ctx.JEq.ls1_clamped {K : Finset String} {Γ σ Δ} (hσ : SEq Γ σ σ �
   (h : JEq Δ A a b) (hK : σ.Clamped K)
   : JEq Γ (σ • A) (σ • a) (σ • b) := by induction h generalizing Γ with
   | fv' _ hx _ => exact (hx.sjeq hσ).left
-  | cast_level => apply cast_level; apply_assumption; assumption
+  | cast_level_le => apply cast_level_le <;> apply_assumption; assumption
   | cast' => apply cast' <;> apply_assumption <;> assumption
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption

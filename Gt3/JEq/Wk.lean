@@ -43,7 +43,7 @@ theorem Ctx.JEq.psub {Γ Δ} (h : PSub Γ Δ) {A a b : Tm 0} (hab : JEq Δ A a b
   : JEq Γ A a b := by
   induction hab generalizing Γ with
   | nil_ok | cons_ok => exact .null h.left_ok
-  | cast_level => apply cast_level; apply_assumption; assumption
+  | cast_level_le => apply cast_level_le <;> apply_assumption; assumption
   | cast' => apply cast' <;> apply_assumption <;> assumption
   | symm => apply symm; apply_assumption; assumption
   | trans => apply trans <;> apply_assumption <;> assumption

@@ -188,9 +188,9 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (hbc : JEq Γ A b c)
     : JEq Γ A a c
   -- Casting
-  | cast_level {Γ} {A A' : Tm 0} {ℓ : ℕ}
-    (hA : JEq Γ (.univ ℓ) A A')
-    : JEq Γ (.univ (ℓ + 1)) A A'
+  | cast_level_le {Γ} {A A' : Tm 0} {lo hi : ℕ} (h : lo ≤ hi)
+    (hA : JEq Γ (.univ lo) A A')
+    : JEq Γ (.univ hi) A A'
   | cast' {Γ} {A A' a a' : Tm 0} {ℓ : ℕ}
     (hA : JEq Γ (.univ ℓ) A A')
     (ha : JEq Γ A a a')
@@ -219,11 +219,8 @@ theorem Ctx.JEq.cast {Γ A B} (h : TyEq Γ A B) {a b} (hab : JEq Γ A a b)
 theorem Ctx.TyEq.symm {Γ A B} (h : TyEq Γ A B) : TyEq Γ B A :=
   have ⟨ℓ, h⟩ := h; ⟨ℓ, h.symm⟩
 
-theorem Ctx.JEq.cast_level_le {ℓ ℓ' : ℕ} (hℓ : ℓ ≤ ℓ') {Γ A B}
-  (hAB : JEq Γ (.univ ℓ) A B) : JEq Γ (.univ ℓ') A B := by
-  induction hℓ with
-  | refl => assumption
-  | step => apply cast_level; assumption
+theorem Ctx.JEq.cast_level {ℓ : ℕ} {Γ A B}
+  (hAB : JEq Γ (.univ ℓ) A B) : JEq Γ (.univ (ℓ + 1)) A B := hAB.cast_level_le (by simp)
 
 theorem Ctx.TyEq.trans {Γ A B C} (hAB : TyEq Γ A B) (hBC : TyEq Γ B C) : TyEq Γ A C :=
   have ⟨n, hAB⟩ := hAB; have ⟨m, hBC⟩ := hBC;

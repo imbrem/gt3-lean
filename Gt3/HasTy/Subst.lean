@@ -93,7 +93,6 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
   (h : HasTy Δ A a) (hK : σ.Clamped K)
   : HasTy Γ (σ • A) (σ • a) := by induction h generalizing Γ with
   | fv _ hx => exact hx.s1 hσ
-  | cast_level => apply cast_level; apply_assumption; assumption
   | cast => apply cast <;> (first | apply_assumption | apply TyEq.ls1) <;> assumption
   | transfer hA hB IA => exact (IA hσ).transfer (hB.ls1 hσ)
   | _ =>

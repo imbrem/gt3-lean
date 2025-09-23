@@ -101,9 +101,9 @@ theorem Ctx.InnerTy.null_iff {Γ A ℓ} : InnerTy Γ A (.univ ℓ) ↔ Ok Γ ∧
   := by inner_ty_iff_tactic
 
 inductive Ctx.OuterTy : Ctx → Tm 0 → Tm 0 → Prop
-| cast_level {Γ} {ℓ A}
-  (hA : OuterTy Γ (.univ ℓ) A)
-  : OuterTy Γ (.univ (ℓ + 1)) A
+| cast_level_le {Γ} {lo hi A} (h : lo ≤ hi)
+  (hA : OuterTy Γ (.univ lo) A)
+  : OuterTy Γ (.univ hi) A
 | cast {Γ} {A A' a : Tm 0}
   (hA : TyEq Γ A A') (ha : OuterTy Γ A a)
   : OuterTy Γ A' a
@@ -122,7 +122,7 @@ theorem Ctx.OuterTy.has_ty {Γ A a} (h : OuterTy Γ A a) : HasTy Γ A a := by in
 theorem Ctx.OuterTy.is_wf {Γ A a} (h : OuterTy Γ A a) : IsWf Γ a := h.has_ty.is_wf
 
 theorem Ctx.HasTy.factor {Γ A a} (h : HasTy Γ A a) : OuterTy Γ A a := by induction h with
-  | cast_level => apply OuterTy.cast_level ; assumption
+  | cast_level_le => apply OuterTy.cast_level_le <;> assumption
   | cast => apply OuterTy.cast <;> assumption
   | transfer => apply OuterTy.transfer <;> assumption
   | _ => apply OuterTy.base; constructor <;> assumption
