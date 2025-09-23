@@ -88,11 +88,11 @@ theorem OTm.uvs_clamp (t : OTm) (k) : (t.clamp k).uvs = t.uvs
   | _ => simp [clamp, *]
 
 @[simp]
-theorem Tm.us_erase {k} (σ : ULevel.Subst) (t : Tm k) : (t.us σ).erase = t.erase.us σ
+theorem Tm.us_erase {k} (σ : ULevel.Subst) (t : Tm k) : t.erase.us σ = (t.us σ).erase
   := by induction t <;> simp [erase, *]
 
 @[simp]
-theorem OTm.us_clamp (σ : ULevel.Subst) (t : OTm) (k) : (t.us σ).clamp k = (t.clamp k).us σ
+theorem OTm.us_clamp (σ : ULevel.Subst) (t : OTm) (k) : (t.clamp k).us σ = (t.us σ).clamp k
   := by induction t generalizing k with
   | bv => simp [clamp]; split <;> rfl
   | _ => simp [clamp, *]
@@ -131,7 +131,7 @@ theorem Tm.us_eqOn_subset {k} {us : Finset String} {σ σ' : ULevel.Subst}
   (hσ : σ.EqOn us σ') (t : Tm k) (h : t.uvs ⊆ us) :
   t.us σ = t.us σ' := by
   apply Tm.erase_injective
-  rw [Tm.us_erase, Tm.us_erase]
+  rw [<-Tm.us_erase, <-Tm.us_erase]
   exact OTm.us_eqOn_subset hσ _ (Tm.uvs_erase t ▸ h)
 
 theorem Tm.us_eqOn {k} {σ σ' : ULevel.Subst} (t : Tm k) (hσ : σ.EqOn t.uvs σ') :
@@ -141,7 +141,7 @@ theorem Tm.us_eqOn {k} {σ σ' : ULevel.Subst} (t : Tm k) (hσ : σ.EqOn t.uvs �
 theorem OTm.us_one (t : OTm) : t.us 1 = t := by induction t <;> simp [*]
 
 @[simp]
-theorem Tm.us_one {k} (t : Tm k) : t.us 1 = t := by apply Tm.erase_injective; simp
+theorem Tm.us_one {k} (t : Tm k) : t.us 1 = t := by apply Tm.erase_injective; simp [<-Tm.us_erase]
 
 theorem OTm.us_one_subset {us : Finset String} {σ : ULevel.Subst}
   (hσ : σ.EqOn us 1) (t : OTm) (h : t.uvs ⊆ us) :
@@ -167,7 +167,7 @@ theorem OTm.us_lst (σ t k a) :
 theorem Tm.us_lst {k} (σ : ULevel.Subst) (t : Tm (k + 1)) (a : Tm 0) :
   (t.lst a).us σ = (t.us σ).lst (a.us σ) := by
   apply Tm.erase_injective
-  simp [Tm.erase_lst]
+  simp [Tm.erase_lst, <-Tm.us_erase]
 
 @[simp]
 theorem OTm.us_open (σ t k x) :
@@ -177,7 +177,7 @@ theorem OTm.us_open (σ t k x) :
 theorem Tm.us_open {k} (σ : ULevel.Subst) (t : Tm (k + 1)) (x : String) :
   (t.open x).us σ = (t.us σ).open x := by
   apply Tm.erase_injective
-  simp [Tm.erase_open]
+  simp [Tm.erase_open, <-Tm.us_erase]
 
 @[simp]
 theorem Tm.us_wkn {k} (σ : ULevel.Subst) (t : Tm k) (n) :

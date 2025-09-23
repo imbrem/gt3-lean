@@ -1,7 +1,7 @@
 import Gt3.JEq.Basic
 import Gt3.Universe.Syntax
 
-def Ctx.JEq.us {Γ A a b} (h : Ctx.JEq Γ A a b) (σ : ULevel.Subst)
+theorem Ctx.JEq.us (σ : ULevel.Subst) {Γ A a b} (h : Ctx.JEq Γ A a b)
   : Ctx.JEq (Γ.us σ) (A.us σ) (a.us σ) (b.us σ) := by
   induction h with
   | fv' _ hΓ =>
@@ -36,4 +36,20 @@ def Ctx.JEq.us {Γ A a b} (h : Ctx.JEq Γ A a b) (σ : ULevel.Subst)
     · assumption
   | _ => simp at *; constructor <;> assumption
 
--- TODO: IsWf, IsTy, and friends
+theorem Ctx.TyEq.us (σ : ULevel.Subst) {Γ A B} (h : Ctx.TyEq Γ A B)
+  : Ctx.TyEq (Γ.us σ) (A.us σ) (B.us σ) := have ⟨ℓ, h⟩ := h; ⟨ℓ.subst σ, h.us σ⟩
+
+theorem Ctx.WfEq.us (σ : ULevel.Subst) {Γ a b} (h : Ctx.WfEq Γ a b)
+  : Ctx.WfEq (Γ.us σ) (a.us σ) (b.us σ) := have ⟨A, h⟩ := h; ⟨A.us σ, h.us σ⟩
+
+theorem Ctx.IsWf.us (σ : ULevel.Subst) {Γ a} (h : Ctx.IsWf Γ a)
+  : Ctx.IsWf (Γ.us σ) (a.us σ) := WfEq.us σ h
+
+theorem Ctx.IsTy.us (σ : ULevel.Subst) {Γ A} (h : Ctx.IsTy Γ A)
+  : Ctx.IsTy (Γ.us σ) (A.us σ) := TyEq.us σ h
+
+theorem Ctx.IsUniv.us (σ : ULevel.Subst) {Γ A} (h : Ctx.IsUniv Γ A)
+  : Ctx.IsUniv (Γ.us σ) (A.us σ) := have ⟨ℓ, h⟩ := h; ⟨ℓ.subst σ, h.us σ⟩
+
+theorem Ctx.IsInhab.us (σ : ULevel.Subst) {Γ A} (h : Ctx.IsInhab Γ A)
+  : Ctx.IsInhab (Γ.us σ) (A.us σ) := TyEq.us σ h

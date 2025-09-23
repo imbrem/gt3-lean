@@ -16,6 +16,7 @@ import Gt3.HasTy.Subst
 import Gt3.HasTy.Regular
 import Gt3.HasTy.Inversion
 import Gt3.HasTy.Logic
+import Gt3.HasTy.Universe
 import Gt3.RwEq.Basic
 import Gt3.RwEq.Erase
 import Gt3.RwEq.Universe
