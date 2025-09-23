@@ -9,8 +9,9 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | eqn {Γ} {A a b : Tm 0} {ℓ : ULevel}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : InnerTy Γ (.univ ℓ) (.eqn a b)
-  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ : ULevel} {L : Finset String}
-    (hA : HasTy Γ (.univ ℓ) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x))
+  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (hℓ : m.imax n ≤ ℓ)
     : InnerTy Γ (.univ ℓ) (.pi A B)
   | abs {Γ} {A : Tm 0} {B b : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))

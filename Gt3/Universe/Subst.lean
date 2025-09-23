@@ -299,6 +299,11 @@ theorem ULevel.subst_sup (s : ULevel.Subst) (a b : ULevel) :
   induction a, b using Quotient.inductionOn₂; rfl
 
 @[simp]
+theorem ULevel.subst_imax (s : ULevel.Subst) (a b : ULevel) :
+  subst s (a.imax b) = (subst s a).imax (subst s b) := by
+  induction a, b using Quotient.inductionOn₂; rfl
+
+@[simp]
 theorem ULevel.subst_add (s : ULevel.Subst) (ℓ : ULevel) (n : ℕ) :
   subst s (ℓ + n) = (subst s ℓ) + n := by
   induction n with

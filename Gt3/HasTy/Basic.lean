@@ -9,8 +9,9 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | eqn {Γ} {A a b : Tm 0} {ℓ : ULevel}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : HasTy Γ (.univ ℓ) (.eqn a b)
-  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ : ULevel} {L : Finset String}
-    (hA : HasTy Γ (.univ ℓ) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x))
+  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+    (hℓ : m.imax n ≤ ℓ)
     : HasTy Γ (.univ ℓ) (.pi A B)
   | abs' {Γ} {A : Tm 0} {B b : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A)
@@ -84,7 +85,7 @@ theorem Ctx.HasTy.pi' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset 
   (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
   (hm : m ≤ ℓ) (hn : n ≤ ℓ)
   : HasTy Γ (.univ ℓ) (.pi A B)
-  := .pi (hA.cast_level_le hm) (fun x hx => (hB x hx).cast_level_le hn)
+  := .pi (hA.cast_level_le hm) (fun x hx => (hB x hx).cast_level_le hn) (by simp)
 
 theorem Ctx.HasTy.sigma' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
   (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))

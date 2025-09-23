@@ -15,10 +15,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (ha : JEq Γ A a a')
     (hb : JEq Γ A b b')
     : JEq Γ (.univ ℓ) (.eqn a b) (.eqn a' b')
-  | pi {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ : ULevel} {L : Finset String}
-    (hA : JEq Γ (.univ ℓ) A A')
-    (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ ℓ) (B.open x) (B'.open x))
-    : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
+  | pi {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+      (hA : JEq Γ (.univ m) A A')
+      (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
+      (hℓ : m.imax n ≤ ℓ)
+      : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
   | abs' {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B.open x))
@@ -202,7 +203,7 @@ theorem Ctx.JEq.pi' {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Fin
   (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
   (hm : m ≤ ℓ) (hn : n ≤ ℓ)
   : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
-  := .pi (hA.cast_level_le hm) (fun x hx => (hB x hx).cast_level_le hn)
+  := .pi (hA.cast_level_le hm) (fun x hx => (hB x hx).cast_level_le hn) (by simp)
 
 theorem Ctx.JEq.sigma' {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
   (hA : JEq Γ (.univ m) A A')

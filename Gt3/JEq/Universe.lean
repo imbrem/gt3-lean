@@ -24,6 +24,12 @@ theorem Ctx.JEq.us (σ : ULevel.Subst) {Γ A a b} (h : Ctx.JEq Γ A a b)
   | transfer' => apply transfer' <;> assumption
   | eqn_rfl => apply eqn_rfl <;> assumption
   | prop_inhab_unit' => apply prop_inhab_unit' <;> assumption
+  | pi =>
+    simp at *
+    constructor
+    · assumption
+    · assumption
+    · rw [<-ULevel.subst_imax]; apply ULevel.subst_mono; assumption
   | choose_spec' _ _ _ _ _ _ _ IA IAI Iφ IAφI Iφc Ilhs Irhs =>
     simp at *
     constructor

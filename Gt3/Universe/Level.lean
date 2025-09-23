@@ -150,6 +150,11 @@ def ULevel.imax (a b : ULevel) : ULevel :=
     (fun _ _ _ _ h₁ h₂ => Quotient.sound (fun v => by rw [UExpr.eval, UExpr.eval, h₁ v, h₂ v]))
 
 @[simp]
+theorem ULevel.imax_self (ℓ : ULevel) : ℓ.imax ℓ = ℓ := by
+  cases ℓ using Quotient.inductionOn; apply Quotient.sound
+  intro v; simp [Nat.imax]; intro h; rw [h]
+
+@[simp]
 theorem ULevel.one_le_add_one (ℓ : ULevel) : 1 ≤ ℓ + 1 := by
   induction ℓ using Quotient.inductionOn; exact UExpr.one_le_add_one _
 
