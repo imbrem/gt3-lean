@@ -1,3 +1,6 @@
+import Gt3.Universe.Level
+import Gt3.Universe.Subst
+import Gt3.Universe.Syntax
 import Gt3.Syntax.Basic
 import Gt3.Syntax.Erase
 import Gt3.Syntax.Subst
