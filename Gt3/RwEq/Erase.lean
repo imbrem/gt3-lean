@@ -398,6 +398,11 @@ theorem Ctx.KHasTy.inhab {Γ A a} (h : KHasTy Γ A a) : KIsInhab Γ A := ⟨a, h
 theorem Ctx.KIsInhab.get {Γ A} (h : KIsInhab Γ A) : IsInhab Γ (A.clamp 0) :=
   have ⟨_, ha⟩ := h; ha.get.inhab
 
+theorem Ctx.KIsInhab.trunc_unit {Γ A} (h : KIsInhab Γ A) : KEq Γ (.trunc A) .unit :=
+  have ⟨_, ha⟩ := h;
+  have ⟨_, hA⟩ := ha.regular;
+  .wf_clamp ⟨.univ 0, .trunc_inhab' ha.refl (.trunc hA) (.unit ha.ok)⟩
+
 theorem Ctx.KIsInhab.is_ty {Γ A} (h : KIsInhab Γ A) : KIsTy Γ A := have ⟨_, ha⟩ := h; ha.regular
 
 theorem Ctx.KIsInhab.wf {Γ A} (h : KIsInhab Γ A) : KIsWf Γ A := h.is_ty.wf
@@ -684,3 +689,15 @@ theorem Ctx.KWEq.eqn_rfl_wf {Γ a b} (h : KWEq Γ a b) : KWEq Γ (.eqn a b) .uni
 
 theorem Ctx.KWEq.eqn_rfl {Γ a b} (h : KWEq Γ a b) : KEq Γ (.eqn a b) .unit
   := .wf_clamp (h.eqn_rfl_wf)
+
+theorem Ctx.KHasTy.cast_level_le {lo hi Γ A}
+  (h : lo ≤ hi) (hA : KHasTy Γ (.univ lo) A) : KHasTy Γ (.univ hi) A
+  := hA.get.cast_level_le h
+
+theorem Ctx.KIsProp.unit_ext_wf {Γ φ}
+  (hφ : KIsProp Γ φ) (hφI : KIsInhab Γ φ) : KWEq Γ φ .unit
+  := have ⟨_, hφI⟩ := hφI; ⟨.univ 0, .unit_ext hφ.refl hφI.refl⟩
+
+theorem Ctx.KIsProp.unit_ext {Γ φ}
+  (hφ : KIsProp Γ φ) (hφI : KIsInhab Γ φ) : KEq Γ φ .unit
+  := .wf_clamp (hφ.unit_ext_wf hφI)

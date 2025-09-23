@@ -85,6 +85,12 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
 theorem Ctx.HasTy.cast' {Γ ℓ A A' a} (hA : JEq Γ (.univ ℓ) A A') (ha : HasTy Γ A a)
   : HasTy Γ A' a := .cast hA.ty_eq ha
 
+theorem Ctx.HasTy.cast_level_le {Γ A lo hi} (h : lo ≤ hi) (hA : HasTy Γ (.univ lo) A)
+  : HasTy Γ (.univ hi) A := by
+  induction h with
+  | refl => exact hA
+  | step hlt ih => exact .cast_level ih
+
 theorem Ctx.HasTy.ok {Γ A a} (h : HasTy Γ A a) : Ok Γ := by induction h <;> assumption
 
 theorem Ctx.HasTy.not {Γ φ} (hφ : HasTy Γ (.univ 0) φ) : HasTy Γ (.univ 0) φ.not
