@@ -111,17 +111,17 @@ theorem Ctx.IsWf.wk0 {Γ a} (ha : IsWf Γ a) {x A} (hx : x ∉ Γ.dv) (hA : Γ.I
 theorem Ctx.Ok.lookup {Γ x A} (h : Ok Γ) (hA : Lookup Γ x A) : IsTy Γ A
   := by induction hA <;> cases h <;> apply IsTy.wk0 <;> apply_assumption; assumption
 
-theorem Ctx.JEq.arr {Γ A A' B B' n m ℓ}
+theorem Ctx.JEq.arr' {Γ A A' B B' n m ℓ}
   (hA : JEq Γ (.univ n) A A') (hB : JEq Γ (.univ m) B B')
-  (hn : n ≤ ℓ) (hm : m ≤ ℓ) (hℓ : 1 ≤ ℓ)
+  (hn : n ≤ ℓ) (hm : m ≤ ℓ)
   : JEq Γ (.univ ℓ) (.arr A B) (.arr A' B')
-  := .pi (L := Γ.dv) hA (fun x hx => (by convert hB.wk0 hx hA.lhs_is_ty <;> simp)) hn hm hℓ
+  := .pi' (L := Γ.dv) hA (fun x hx => (by convert hB.wk0 hx hA.lhs_is_ty <;> simp)) hn hm
 
 theorem Ctx.JEq.prod {Γ A A' B B' n m ℓ}
   (hA : JEq Γ (.univ n) A A') (hB : JEq Γ (.univ m) B B')
-  (hn : n ≤ ℓ) (hm : m ≤ ℓ) (hℓ : 1 ≤ ℓ)
+  (hn : n ≤ ℓ) (hm : m ≤ ℓ)
   : JEq Γ (.univ ℓ) (.prod A B) (.prod A' B')
-  := .sigma (L := Γ.dv) hA (fun x hx => (by convert hB.wk0 hx hA.lhs_is_ty <;> simp)) hn hm hℓ
+  := .sigma' (L := Γ.dv) hA (fun x hx => (by convert hB.wk0 hx hA.lhs_is_ty <;> simp)) hn hm
 
 theorem Ctx.JEq.wk1 {Γ : Ctx} {x A B a b}
   (hab : JEq (Γ.cons x A) B a b) {y C} (hy : y ∉ insert x Γ.dv) (hC : Γ.IsTy C)

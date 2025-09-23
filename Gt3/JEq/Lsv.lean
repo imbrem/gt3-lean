@@ -143,7 +143,7 @@ theorem Ctx.JEq.lst_cf {Γ : Ctx} {A a a'} {B b b' : Tm 1} {L : Finset String}
   exact hba.symm.trans (app_eq.trans (hB'.symm.cast' hba'))
 
 theorem Ctx.JEq.succArrow {Γ : Ctx} {C C' : Tm 1} {ℓ} {L : Finset String}
-  (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x)) (hℓ : 1 ≤ ℓ)
+  (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
   : ∀ x ∉ L, Ctx.JEq (Γ.cons x .nats) (.univ ℓ) ((Tm.succArrow C).open x) ((Tm.succArrow C').open x)
   := fun x hx => by
   have hCx := hC x hx
@@ -156,12 +156,12 @@ theorem Ctx.JEq.succArrow {Γ : Ctx} {C C' : Tm 1} {ℓ} {L : Finset String}
               (.nats hCx.ok.tail)
     )
     (.succ (.top_var hCx.ok))
-  convert JEq.arr hCx hCsx (le_refl ℓ) (le_refl ℓ) hℓ <;> simp [Tm.open_succArrow]
+  convert JEq.arr' hCx hCsx (le_refl ℓ) (le_refl ℓ) <;> simp [Tm.open_succArrow]
 
 theorem Ctx.TyEq.succArrow' {Γ : Ctx} {C C' : Tm 1} {ℓ} {L : Finset String}
   (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
   : ∀ x ∉ L, TyEq (Γ.cons x .nats) ((Tm.succArrow C).open x) ((Tm.succArrow C').open x)
-  := fun x hx => ⟨ℓ + 1, JEq.succArrow (fun x hx => (hC x hx).cast_level) (by simp) x hx⟩
+  := fun x hx => ⟨ℓ + 1, JEq.succArrow (fun x hx => (hC x hx).cast_level) x hx⟩
 
 theorem Ctx.TyEq.succArrow {Γ : Ctx} {C C' : Tm 1} {L : Finset String}
   (hC : ∀ x ∉ L, TyEq (Γ.cons x .nats) (C.open x) (C'.open x))

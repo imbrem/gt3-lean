@@ -15,10 +15,10 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (ha : JEq Γ A a a')
     (hb : JEq Γ A b b')
     : JEq Γ (.univ ℓ) (.eqn a b) (.eqn a' b')
-  | pi {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+  | pi' {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
-    (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
+    (hm : m ≤ ℓ) (hn : n ≤ ℓ)
     : JEq Γ (.univ ℓ) (.pi A B) (.pi A' B')
   | abs' {Γ} {A A' : Tm 0} {B b b' : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
@@ -32,10 +32,10 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (ha : JEq Γ A a a')
     (hBa : JEq Γ (.univ n) (B.lst a) Ba)
     : JEq Γ Ba (f.app a) (f'.app a')
-  | sigma {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+  | sigma' {Γ} {A A' : Tm 0} {B B' : Tm 1} {ℓ m n : ULevel} {L : Finset String}
     (hA : JEq Γ (.univ m) A A')
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
-    (hm : m ≤ ℓ) (hn : n ≤ ℓ) (hℓ : 1 ≤ ℓ)
+    (hm : m ≤ ℓ) (hn : n ≤ ℓ)
     : JEq Γ (.univ ℓ) (.sigma A B) (.sigma A' B')
   | pair' {Γ} {A A' a a' b b' : Tm 0} {B B' : Tm 1} {m n : ULevel} {L : Finset String}
     (hB : ∀ x ∉ L, JEq (Γ.cons x A) (.univ n) (B.open x) (B'.open x))
@@ -413,10 +413,10 @@ macro_rules
     | apply Ctx.JEq.unit
     | apply Ctx.JEq.null
     | apply Ctx.JEq.eqn
-    | apply Ctx.JEq.pi
+    | apply Ctx.JEq.pi'
     | apply Ctx.JEq.abs'
     | apply Ctx.JEq.app_f
-    | apply Ctx.JEq.sigma
+    | apply Ctx.JEq.sigma'
     | apply Ctx.JEq.pair'
     | apply Ctx.JEq.fst'
     | apply Ctx.JEq.snd_f

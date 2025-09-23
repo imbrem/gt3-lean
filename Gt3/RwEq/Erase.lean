@@ -334,10 +334,10 @@ theorem Ctx.KHasTy.nats {Γ} (h : Ok Γ) : KHasTy Γ (.univ 1) .nats
 
 theorem Ctx.KHasTy.pi {Γ A B ℓ}
   (hA : KHasTy Γ (.univ ℓ) A) (hB : KHasTyUnder Γ A (.univ ℓ) B)
-  (hℓ : 1 ≤ ℓ) : KHasTy Γ (.univ ℓ) (.pi A B)
-  := HasTy.pi
+  : KHasTy Γ (.univ ℓ) (.pi A B)
+  := HasTy.pi'
     hA (fun x hx => by convert (hB x hx).get; simp [OTm.clamp_succ_open])
-    (le_refl ℓ) (le_refl ℓ) hℓ
+    (le_refl ℓ) (le_refl ℓ)
 
 theorem Ctx.KHasTy.abs {Γ A B b}
   (hB : KHasTyUnder Γ A B b) : KHasTy Γ (.pi A B) (.abs A b)
@@ -354,10 +354,10 @@ theorem Ctx.KHasTy.app {Γ A B f a}
 
 theorem Ctx.KHasTy.sigma {Γ A B ℓ}
   (hA : KHasTy Γ (.univ ℓ) A) (hB : KHasTyUnder Γ A (.univ ℓ) B)
-  (hℓ : 1 ≤ ℓ) : KHasTy Γ (.univ ℓ) (.sigma A B)
-  := HasTy.sigma
+  : KHasTy Γ (.univ ℓ) (.sigma A B)
+  := HasTy.sigma'
     hA (fun x hx => by convert (hB x hx).get; simp [OTm.clamp_succ_open])
-    (le_refl ℓ) (le_refl ℓ) hℓ
+    (le_refl ℓ) (le_refl ℓ)
 
 theorem Ctx.KHasTy.pair {Γ A B a b}
   (hB : KIsTyUnder Γ A B) (ha : KHasTy Γ A a) (hb : KHasTy Γ (B.lst 0 a) b)
