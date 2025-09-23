@@ -662,3 +662,13 @@ theorem Ctx.KHasTy.pi_ext {Γ} {A B f g x}
     (hfg : KEq (Γ.cons x (A.clamp 0)) (f.app (.fv x)) (g.app (.fv x)))
   : KEq Γ f g
   := .wf_clamp (hf.pi_ext_wf hg hfg)
+
+theorem Ctx.KHasTy.sigma_ext_wf {Γ} {A B p q}
+  (hp : KHasTy Γ (.sigma A B) p)
+  (hq : KHasTy Γ (.sigma A B) q)
+  (hfst : KEq Γ (p.fst) (q.fst))
+  (hsnd : KEq Γ (p.snd) (q.snd))
+  : KWEq Γ p q :=
+  have hpq1 := hfst.jeq hp.fst
+  have hpq2 := hsnd.jeq hp.snd
+  ⟨.sigma (A.clamp 0) (B.clamp 1), .sigma_ext hp.refl hq.refl hpq1 hpq2⟩

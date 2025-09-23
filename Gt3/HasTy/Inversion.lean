@@ -316,3 +316,34 @@ theorem Ctx.JEq.beta_snd_both {Γ} {A : Tm 0} {B : Tm 1} {a b : Tm 0} {L : Finse
     have hpair := (JEq.pair' hB' hA ha.refl hb.refl)
     (JEq.beta_snd' hA hB' hpair (.snd hpair) (hb.lst_cast hB' hfst.symm).refl).cast
       (TyEq.lst_cf hB hfst)
+
+theorem Ctx.JEq.pi_ext {Γ} {A : Tm 0} {B : Tm 1} {f g : Tm 0} {L : Finset String}
+  (hf : JEq Γ (A.pi B) f f)
+  (hg : JEq Γ (A.pi B) g g)
+  (hfg : ∀ x ∉ L, JEq (Γ.cons x A) (B.open x) (f.app (.fv x)) (g.app (.fv x)))
+  : JEq Γ (A.pi B) f g
+  :=
+  have ⟨_, hA⟩ := hf.lhs_ty.regular_pi_arg_ty;
+  have ⟨_, hB⟩ := hf.lhs_ty.regular_pi_res_ty;
+  .pi_ext' hA.refl (fun x hx => (hB x hx).refl) hf hg (fun y hy => by
+    have ⟨x, hx⟩ := L.exists_notMem;
+    have hxAB := Finset.not_mem_subset hf.regular.scoped (hfg x hx).ok.var
+    simp [Tm.fvs] at hxAB
+    have hxf := Finset.not_mem_subset hf.lhs_scoped (hfg x hx).ok.var
+    have hxg := Finset.not_mem_subset hg.lhs_scoped (hfg x hx).ok.var
+    convert JEq.rename_top (hfg x hx) y hy
+    <;> simp [Tm.lsv_open, Tm.lst_of_fv, Tm.lsv, Tm.lsv_not_mem, *]
+  )
+
+theorem Ctx.JEq.sigma_ext {Γ} {A Bf : Tm 0} {B : Tm 1} {p q : Tm 0}
+    (hp : JEq Γ (.sigma A B) p p)
+    (hq : JEq Γ (.sigma A B) q q)
+    (hpq_fst : JEq Γ A (p.fst) (q.fst))
+    (hpq_snd : JEq Γ Bf (p.snd) (q.snd))
+    : JEq Γ (.sigma A B) p q
+    :=
+    have ⟨_, hA⟩ := hp.lhs_ty.regular_sigma_arg_ty;
+    have ⟨_, hB⟩ := hp.lhs_ty.regular_sigma_res_ty;
+    have hpq1 := hpq_fst.transfer' (.fst hp)
+    have hpq2 := hpq_snd.transfer' (.snd hp)
+    .sigma_ext' (L := Γ.dv) hA.refl (fun x hx => (hB x hx).refl) hp hq hpq1 hpq2
