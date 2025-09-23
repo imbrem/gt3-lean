@@ -22,12 +22,12 @@ theorem Ctx.IsWf.exists_eqn {Γ a b} (h : IsWf Γ (.eqn a b))
 
 theorem Ctx.HasTy.exists_pi_arg_general {Γ U A B P} (h : HasTy Γ U P) (hP : P = .pi A B)
   : ∃ℓ, HasTy Γ (.univ ℓ) A := by induction h with
-  | pi' hA => cases hP; exact ⟨_, hA⟩
+  | pi hA => cases hP; exact ⟨_, hA⟩
   | _ => cases hP <;> apply_assumption <;> rfl
 
 theorem Ctx.HasTy.exists_pi_res_general {Γ U A B P} (h : HasTy Γ U P) (hP : P = .pi A B)
   : ∃ℓ, ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (.univ ℓ) (B.open x) := by induction h with
-  | pi' _ hB => cases hP; exact ⟨_, top_quant_exact_k hB⟩
+  | pi _ hB => cases hP; exact ⟨_, top_quant_exact_k hB⟩
   | _ => cases hP <;> apply_assumption <;> rfl
 
 theorem Ctx.HasTy.exists_pi_arg {Γ U A B} (h : HasTy Γ U (.pi A B))
@@ -45,12 +45,12 @@ theorem Ctx.IsWf.exists_pi_res {Γ A B} (h : IsWf Γ (.pi A B))
 
 theorem Ctx.HasTy.exists_sigma_arg_general {Γ U A B P} (h : HasTy Γ U P) (hP : P = .sigma A B)
   : ∃ℓ, HasTy Γ (.univ ℓ) A := by induction h with
-  | sigma' hA => cases hP; exact ⟨_, hA⟩
+  | sigma hA => cases hP; exact ⟨_, hA⟩
   | _ => cases hP <;> apply_assumption <;> rfl
 
 theorem Ctx.HasTy.exists_sigma_res_general {Γ U A B P} (h : HasTy Γ U P) (hP : P = .sigma A B)
   : ∃ℓ, ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (.univ ℓ) (B.open x) := by induction h with
-  | sigma' _ hB => cases hP; exact ⟨_, top_quant_exact_k hB⟩
+  | sigma _ hB => cases hP; exact ⟨_, top_quant_exact_k hB⟩
   | _ => cases hP <;> apply_assumption <;> rfl
 
 theorem Ctx.HasTy.exists_sigma_arg {Γ U A B} (h : HasTy Γ U (.sigma A B))

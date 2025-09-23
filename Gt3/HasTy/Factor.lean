@@ -9,9 +9,8 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | eqn {Γ} {A a b : Tm 0} {ℓ : ULevel}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : InnerTy Γ (.univ ℓ) (.eqn a b)
-  | pi' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
-    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
-    (hm : m ≤ ℓ) (hn : n ≤ ℓ)
+  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ : ULevel} {L : Finset String}
+    (hA : HasTy Γ (.univ ℓ) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x))
     : InnerTy Γ (.univ ℓ) (.pi A B)
   | abs {Γ} {A : Tm 0} {B b : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
@@ -22,9 +21,8 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : InnerTy Γ Ba (f.app a)
-  | sigma' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
-    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
-    (hm : m ≤ ℓ) (hn : n ≤ ℓ)
+  | sigma {Γ} {A : Tm 0} {B : Tm 1} {ℓ : ULevel} {L : Finset String}
+    (hA : HasTy Γ (.univ ℓ) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x))
     : InnerTy Γ (.univ ℓ) (.sigma A B)
   | pair' {Γ} {A a b : Tm 0} {B : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
@@ -147,7 +145,7 @@ theorem Ctx.JEq.app_e {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' : Tm 0}
   have ⟨_, hpi⟩ := hf.regular;
   have ⟨_, hpi⟩ := hpi.lhs_ty.inner_ty;
   cases hpi with
-  | pi' hA hB =>
+  | pi hA hB =>
     exact .app_f
       (fun x hx => (hB x hx).refl) hA.refl hf ha
       (IsTy.lst_cf' (fun x hx => (hB x hx).is_ty) ha.lhs_ty')

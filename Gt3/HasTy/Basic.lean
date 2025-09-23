@@ -9,9 +9,8 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | eqn {Γ} {A a b : Tm 0} {ℓ : ULevel}
     (ha : HasTy Γ A a) (hb : HasTy Γ A b)
     : HasTy Γ (.univ ℓ) (.eqn a b)
-  | pi' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
-    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
-    (hm : m ≤ ℓ) (hn : n ≤ ℓ)
+  | pi {Γ} {A : Tm 0} {B : Tm 1} {ℓ : ULevel} {L : Finset String}
+    (hA : HasTy Γ (.univ ℓ) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x))
     : HasTy Γ (.univ ℓ) (.pi A B)
   | abs' {Γ} {A : Tm 0} {B b : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A)
@@ -24,9 +23,8 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
     (hf : HasTy Γ (A.pi B) f) (ha : HasTy Γ A a)
     (hBa : TyEq Γ (B.lst a) Ba)
     : HasTy Γ Ba (f.app a)
-  | sigma' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
-    (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
-    (hm : m ≤ ℓ) (hn : n ≤ ℓ)
+  | sigma {Γ} {A : Tm 0} {B : Tm 1} {ℓ : ULevel} {L : Finset String}
+    (hA : HasTy Γ (.univ ℓ) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ ℓ) (B.open x))
     : HasTy Γ (.univ ℓ) (.sigma A B)
   | pair' {Γ} {A a b : Tm 0} {B : Tm 1} {m n : ULevel} {L : Finset String}
     (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
@@ -81,6 +79,18 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | transfer {Γ} {A B a : Tm 0}
     (hA : HasTy Γ A a) (hB : JEq Γ B a a)
     : HasTy Γ B a
+
+theorem Ctx.HasTy.pi' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+  (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+  (hm : m ≤ ℓ) (hn : n ≤ ℓ)
+  : HasTy Γ (.univ ℓ) (.pi A B)
+  := .pi (hA.cast_level_le hm) (fun x hx => (hB x hx).cast_level_le hn)
+
+theorem Ctx.HasTy.sigma' {Γ} {A : Tm 0} {B : Tm 1} {ℓ m n : ULevel} {L : Finset String}
+  (hA : HasTy Γ (.univ m) A) (hB : ∀ x ∉ L, HasTy (Γ.cons x A) (.univ n) (B.open x))
+  (hm : m ≤ ℓ) (hn : n ≤ ℓ)
+  : HasTy Γ (.univ ℓ) (.sigma A B)
+  := .sigma (hA.cast_level_le hm) (fun x hx => (hB x hx).cast_level_le hn)
 
 theorem Ctx.HasTy.cast' {Γ ℓ A A' a} (hA : JEq Γ (.univ ℓ) A A') (ha : HasTy Γ A a)
   : HasTy Γ A' a := .cast hA.ty_eq ha
