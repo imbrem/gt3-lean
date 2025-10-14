@@ -68,7 +68,7 @@ inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | m_has_ty' {Γ} {A a : Tm 0} {ℓ}
     (hA : HasTy Γ (.univ ℓ) A)
     (ha : HasTy Γ A a)
-    : InnerTy Γ .unit (.has_ty A a)
+    : InnerTy Γ (.univ 0) (.has_ty A a)
 
 theorem Ctx.InnerTy.has_ty {Γ A a} (h : InnerTy Γ A a) : HasTy Γ A a
   := by cases h <;> constructor <;> assumption

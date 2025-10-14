@@ -81,7 +81,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | m_has_ty' {Γ} {A A' a a' : Tm 0} {ℓ}
     (hA : JEq Γ (.univ ℓ) A A')
     (ha : JEq Γ A a a')
-    : JEq Γ .unit (.has_ty A a) (.has_ty A' a')
+    : JEq Γ (.univ 0) (.has_ty A a) (.has_ty A' a')
+  | has_ty_unit {Γ} {A A' a a' : Tm 0} {ℓ}
+    (hA : JEq Γ (.univ ℓ) A A')
+    (ha : JEq Γ A a a')
+    : JEq Γ (.univ 0) (.has_ty A a) .unit
   -- Context well-formedness
   | nil_ok : JEq .nil .unit .null .null
   | cons_ok {Γ} {x : String} {A : Tm 0} {ℓ}

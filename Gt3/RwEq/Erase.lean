@@ -254,6 +254,7 @@ theorem Ctx.KHasTy.close {Γ x A B b} (h : KHasTy (Γ.cons x (A.clamp 0)) B b)
 
 theorem Ctx.KIsWf.to_has_ty {Γ A a} (ha : KIsWf Γ (.has_ty A a)) : KHasTy Γ A a := ha.get.to_has_ty
 
+-- TODO: switch to pi
 theorem Ctx.KIsWf.to_has_ty_under {Γ A B b} (h : KIsWf Γ (.abs A (.has_ty B b)))
   : KHasTyUnder Γ A B b
   := by

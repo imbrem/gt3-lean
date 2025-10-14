@@ -116,7 +116,7 @@ theorem Ctx.HasTy.of_has_ty_general {Γ U A a P} (h : HasTy Γ U P) (hP : P = .h
 theorem Ctx.HasTy.of_has_ty {Γ U A a} (h : HasTy Γ U (.has_ty A a)) : HasTy Γ A a
   := of_has_ty_general h rfl
 
-theorem Ctx.HasTy.m_has_ty_iff {Γ A a} : HasTy Γ .unit (.has_ty A a) ↔ HasTy Γ A a
+theorem Ctx.HasTy.m_has_ty_iff {Γ A a} : HasTy Γ (.univ 0) (.has_ty A a) ↔ HasTy Γ A a
   := ⟨of_has_ty, m_has_ty⟩
 
 theorem Ctx.IsWf.to_has_ty {Γ A a} (h : IsWf Γ (.has_ty A a)) : HasTy Γ A a

@@ -131,7 +131,7 @@ theorem Ctx.IsTy.def_has_ty {Γ A} : IsTy Γ A ↔ ∃ℓ, HasTy Γ (.univ ℓ) 
 
 theorem Ctx.IsTy.has_ty {Γ A} (h : IsTy Γ A) : ∃ℓ, HasTy Γ (.univ ℓ) A := IsTy.def_has_ty.mp h
 
-theorem Ctx.HasTy.m_has_ty {Γ A a} (h : HasTy Γ A a) : HasTy Γ .unit (.has_ty A a)
+theorem Ctx.HasTy.m_has_ty {Γ A a} (h : HasTy Γ A a) : HasTy Γ (.univ 0) (.has_ty A a)
   := have ⟨_, hA⟩ := h.regular.has_ty; .m_has_ty' hA h
 
 theorem Ctx.HasTy.inhab {Γ A a} (h : HasTy Γ A a) : IsInhab Γ A := h.refl.inhab

@@ -70,7 +70,7 @@ inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | m_has_ty' {Γ} {A a : Tm 0} {ℓ}
     (hA : HasTy Γ (.univ ℓ) A)
     (ha : HasTy Γ A a)
-    : HasTy Γ .unit (.has_ty A a)
+    : HasTy Γ (.univ 0) (.has_ty A a)
   | cast_level_le {Γ} {lo hi A} (h : lo ≤ hi)
     (hA : HasTy Γ (.univ lo) A)
     : HasTy Γ (.univ hi) A
