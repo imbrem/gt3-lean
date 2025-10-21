@@ -1,8 +1,8 @@
 .lake
-.aux
-.fdb_latexmk
-.fls
-.log
-.out
-.pdf
-.synctex.gz
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.pdf
+*.synctex.gz
