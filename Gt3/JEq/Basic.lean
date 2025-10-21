@@ -131,18 +131,11 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     (rhs_wf : JEq Γ A (r.lst .null) (r.lst .null))
     (hlu : JEq Γ A (r.lst .null) ru)
     : JEq Γ A (.dite Tm.empty l r) ru
-  | beta_natrec_zero' {Γ ℓ C s z Cz} {L : Finset String}
-    (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C.open x))
-    (hs : ∀x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s.open x))
-    (hz : JEq Γ (C.lst .zero) z z)
+  | beta_natrec_zero' {Γ C s z Cz}
     (lhs_wf : JEq Γ Cz (.natrec C s z .zero) (.natrec C s z .zero))
     (rhs_wf : JEq Γ Cz z z)
     : JEq Γ Cz (.natrec C s z .zero) z
-  | beta_natrec_succ' {Γ ℓ C s z n Csn} {L : Finset String}
-    (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C.open x))
-    (hs : ∀x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s.open x))
-    (hz : JEq Γ (C.lst .zero) z z)
-    (hn : JEq Γ .nats n n)
+  | beta_natrec_succ' {Γ C s z n Csn}
     (lhs_wf : JEq Γ Csn (.natrec C s z (.succ n)) (.natrec C s z (.succ n)))
     (rhs_wf : JEq Γ Csn ((s.lst n).app (.natrec C s z n)) ((s.lst n).app (.natrec C s z n)))
     : JEq Γ Csn (.natrec C s z (.succ n)) ((s.lst n).app (.natrec C s z n))
