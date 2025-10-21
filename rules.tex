@@ -413,14 +413,13 @@
         {\hasty{\Gamma}{\opv{b}{*}}{B}}
         {\jeq{\Gamma}{\dite{\bot}{a}{b}}{b}{A}} \\
     \prftree[r]{\rle{$\beta_0$}}
-        {\forall x \notin L . \jeq{\Gamma, x : \nats}{\opv{C}{x}}{\opv{C'}{x}}{\mc{U}_\ell}}
-        {\jeq{\Gamma}{z}{z'}{\opv{C}{0}}}
-        {\forall x \notin L . \jeq{\Gamma, x : \nats}{s}{s'}{\opv{C}{x} \to \opv{C}{\ms{s}\;x}}}
-        {}
-        {}
-        {\todo{this}} \\
+        {\hasty{\Gamma}{\natrec{C}{z}{s}\;0}{D}}
+        {\hasty{\Gamma}{z}{D}}
+        {\jeq{\Gamma}{\natrec{C}{z}{s}\;0}{z}{D}} \\
     \prftree[r]{\rle{$\beta_{\ms{s}}$}}
-        {\todo{this}} \\
+        {\hasty{\Gamma}{\natrec{C}{z}{s}\;(\ms{s}\;n)}{D}}
+        {\hasty{\Gamma}{\opv{s}{n}\;(\natrec{C}{z}{s}\;n)}{D}}
+        {\jeq{\Gamma}{\natrec{C}{z}{s}\;(\ms{s}\;n)}{(\ms{s}\;n)}{D}} \\
 \end{gather*}
 
 \subsection{Choice and Extensionality}

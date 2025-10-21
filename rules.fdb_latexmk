@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1761059550.34834 "/home/tekne/Projects/gt3-lean/rules.tex" "rules.pdf" "rules" 1761059551.679 0
-  "/home/tekne/Projects/gt3-lean/rules.tex" 1761059550.12667 14229 2d515aa40d3ac3b02cc7515de0d26fdc ""
+["pdflatex"] 1761059989.1419 "/home/tekne/Projects/gt3-lean/rules.tex" "rules.pdf" "rules" 1761059990.52017 0
+  "/home/tekne/Projects/gt3-lean/rules.tex" 1761059988.9101 14253 303f5d017c23a21e8387bd7b6924d156 ""
   "/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc" 1755987285 2921 8ca0eb0831f9bc5da080d3697cfe67bf ""
   "/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc" 1755987285 2933 9ad527ce78d7c5fa0a642dead095f172 ""
   "/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_edcawa.enc" 1755987285 2833 ab571e969b0d4b8e87f8f63627b1db02 ""
@@ -306,9 +306,9 @@
   "/usr/share/texmf-dist/web2c/texmf.cnf" 1755987285 42087 b0f9697c952c8f5a8eede4134282cb0d ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1760786938 5308699 bb4da464bb9575413846cbe594b35cd0 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1760786899 2008249 3e9a4eefc965f268d53b50ac9f004469 ""
-  "rules.aux" 1761059551.53331 1476 b02e9e3744095a26d24cb2150e95a1a0 "pdflatex"
-  "rules.out" 1761059551.53431 1180 51411f7e205cf9c5edb8cbdeb80d4739 "pdflatex"
-  "rules.tex" 1761059550.12667 14229 2d515aa40d3ac3b02cc7515de0d26fdc ""
+  "rules.aux" 1761059990.36106 1476 b02e9e3744095a26d24cb2150e95a1a0 "pdflatex"
+  "rules.out" 1761059990.36106 1180 51411f7e205cf9c5edb8cbdeb80d4739 "pdflatex"
+  "rules.tex" 1761059988.9101 14253 303f5d017c23a21e8387bd7b6924d156 ""
   (generated)
   "rules.aux"
   "rules.log"

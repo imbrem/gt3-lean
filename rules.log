@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2026/dev/Arch Linux) (preloaded format=pdflatex 2025.10.18)  21 OCT 2025 17:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2026/dev/Arch Linux) (preloaded format=pdflatex 2025.10.18)  21 OCT 2025 17:19
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1320,19 +1320,12 @@ LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
 
 
 [1.1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_25tcsq.enc}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_naooyc.enc}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_nh77jq.enc}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_edcawa.enc}{/usr/share/texmf-dist/fonts/enc/dvips/libertine/lbtn_fygcup.enc}]
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 10.0pt on input line 424.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 7.3pt on input line 424.
-LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 424.
-
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 424.
+(Font)              scaled to size 8.0pt on input line 423.
 [2.2]
 
 (/usr/share/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
@@ -1353,18 +1346,18 @@ Package rerunfilecheck Info: File `rules.out' has not changed.
 (rerunfilecheck)             Checksum: 51411F7E205CF9C5EDB8CBDEB80D4739;1180.
  ) 
 Here is how much of TeX's memory you used:
- 35613 strings out of 475171
- 630483 string characters out of 5767094
- 1091108 words of memory out of 5000000
- 57458 multiletter control sequences out of 15000+600000
- 739986 words of font info for 313 fonts, out of 8000000 for 9000
+ 35573 strings out of 475171
+ 629441 string characters out of 5767094
+ 1091018 words of memory out of 5000000
+ 57448 multiletter control sequences out of 15000+600000
+ 713553 words of font info for 295 fonts, out of 8000000 for 9000
  175 hyphenation exceptions out of 8191
  98i,23n,131p,1032b,633s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb></usr/share/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb></usr/share/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pfb></usr/share/texmf-dist/fonts/type1/public/newtx/LibertineMathRM.pfb></usr/share/texmf-dist/fonts/type1/public/libertine/LinBiolinumT.pfb></usr/share/texmf-dist/fonts/type1/public/libertine/LinBiolinumTB.pfb></usr/share/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pfb></usr/share/texmf-dist/fonts/type1/public/libertine/LinLibertineTB.pfb></usr/share/texmf-dist/fonts/type1/public/libertine/LinLibertineTZ.pfb></usr/share/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb></usr/share/texmf-dist/fonts/type1/public/newtx/txsym.pfb></usr/share/texmf-dist/fonts/type1/public/newtx/txsys.pfb>
-Output written on rules.pdf (3 pages, 438621 bytes).
+Output written on rules.pdf (3 pages, 437548 bytes).
 PDF statistics:
  153 PDF objects out of 1000 (max. 8388607)
  115 compressed objects within 2 object streams
  13 named destinations out of 1000 (max. 500000)
- 112741 words of extra memory for PDF output out of 128383 (max. 10000000)
+ 100453 words of extra memory for PDF output out of 106986 (max. 10000000)
 
