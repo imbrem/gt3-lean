@@ -96,6 +96,7 @@
 \newcommand{\dite}[3]{\ms{ite}(#1)\;#2\;#3}
 \newcommand{\natrec}[3]{\ms{rec}_\nats\{#1\}\;#2\;#3}
 \newcommand{\mhasty}[2]{[#1 \in #2]}
+\newcommand{\invalidtm}[0]{\lightning}
 
 % Universe levels
 \newcommand{\imax}[2]{\ms{imax}(#1, #2)}
@@ -203,9 +204,16 @@
 
 \section{Syntax}
 
-\TODO{copy over from Lean}
-
-\TODO{lore about capture-avoiding substitution and closure}
+\begin{grammar}
+    <a> ::= \(x\) \;|\; \(\#i\) \;|\; \(\mc{U}_\ell\) \;|\; \(\mb{0}\) \;|\; \(\mb{1}\) \;|\; \(*\)
+        \;|\; \(a = b\)
+        \;|\; \(\Pi A . B\) \;|\; \(\Sigma A . B\) 
+        \;|\; \(f\;a\) \;|\; \(\lambda A . b\)
+        \;|\; \((a, b)\) \;|\; \(\pi_1\;p\) \;|\; \(\pi_2\;p\)
+        \alt \(\dite{\varphi}{a}{b}\) \;|\; \(\|A\|\) \;|\; \(\epsilon A . \varphi\)
+        \;|\; \(\nats\) \;|\; \(0\) \;|\; \(\ms{s}\;n\) \;|\; \(\natrec{C}{s}{z}\)
+        \alt \(\mhasty{a}{A}\) \;|\; \(\invalidtm\)
+\end{grammar}
 
 \section{Sugar}
 
@@ -424,10 +432,80 @@
 
 \subsection{Choice and Extensionality}
 
-\TODO{this}
+\begin{gather*}
+    \prftree[r]{\rle{choose-spec}}
+        {\hasty{\Gamma}{A}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{\|A\|}{\top}{\mb{2}}}
+        {\forall x \notin L . 
+            \hasty{\Gamma, x : A}{\opv{\varphi}{x}}{\mb{2}}}
+        {\jeq{\Gamma}{\exists A . \varphi}{\top}{\mb{2}}}
+        {\hasty{\Gamma}{\opv{\varphi}{\epsilon A . \varphi}}{\mb{2}}}
+        {\jeq{\Gamma}{\opv{\varphi}{\epsilon A . \varphi}}{\top}{\mb{2}}}
+    \\
+    \prftree[r]{\rle{pi-ext}}
+        {
+        \prfStackPremises
+        {\hasty{\Gamma}{A}{\mc{U}_m}}
+        {\forall x \notin L .
+            \hasty{\Gamma, x : A}{\opv{B}{x}}{\mc{U}_n}}
+        }
+        {
+        \prfStackPremises
+        {\hasty{\Gamma}{f}{\Pi A . B}}
+        {\hasty{\Gamma}{g}{\Pi A . B}}
+        }
+        {\forall x \notin L .
+            \jeq{\Gamma}{f\;x}{g\;x}{\opv{B}{x}}}
+        {\jeq{\Gamma}{f}{g}{\Pi A . B}}
+    \\
+    \prftree[r]{\rle{sigma-ext}}
+        {
+        \prfStackPremises
+        {\hasty{\Gamma}{A}{\mc{U}_m}}
+        {\forall x \notin L .
+            \hasty{\Gamma, x : A}{\opv{B}{x}}{\mc{U}_n}}
+        }
+        {
+        \prfStackPremises
+        {\hasty{\Gamma}{p}{\Sigma A . B}}
+        {\hasty{\Gamma}{q}{\Sigma A . B}}
+        }
+        {\jeq{\Gamma}{\pi_1\;p}{\pi_1\;q}{A}}
+        {\jeq{\Gamma}{\pi_2\;p}{\pi_2\;q}{\opv{B}{\pi_1\;p}}}
+        {\jeq{\Gamma}{p}{q}{\Sigma A . B}}
+    \\
+    \prftree[r]{\rle{eqn-rfl}}
+        {\jeq{\Gamma}{a}{b}{A}}
+        {\jeq{\Gamma}{a = b}{\top}{\mb{2}}} \qquad
+    \prftree[r]{\rle{eqn-ext}}
+        {\hasty{\Gamma}{a}{A}}
+        {\hasty{\Gamma}{b}{A}}
+        {\jeq{\Gamma}{a = b}{\top}{\mb{2}}}
+        {\jeq{\Gamma}{a}{b}{A}}
+\end{gather*}
 
 \subsection{Equivalence and Casting}
 
-\TODO{this}
+\begin{gather*}
+    \prftree[r]{\rle{symm}}
+        {\jeq{\Gamma}{a}{b}{A}}
+        {\jeq{\Gamma}{b}{a}{A}} \qquad
+    \prftree[r]{\rle{trans}}
+        {\jeq{\Gamma}{a}{b}{A}}
+        {\jeq{\Gamma}{b}{c}{A}}
+        {\jeq{\Gamma}{a}{c}{A}} \\
+    \prftree[r]{\rle{cast$_\leq$}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\ell \leq \ell'}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_{\ell'}}} \qquad
+    \prftree[r]{\rle{cast}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{a}{a'}{A'}} \\
+    \prftree[r]{\rle{transfer}}
+        {\jeq{\Gamma}{a}{b}{A}}
+        {\hasty{\Gamma}{a}{B}}
+        {\jeq{\Gamma}{a}{b}{B}}
+\end{gather*}
 
 \end{document}
