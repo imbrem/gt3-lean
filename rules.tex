@@ -1,0 +1,436 @@
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+
+\documentclass[acmsmall,screen,review]{acmart}
+
+\usepackage{syntax}
+\renewcommand{\syntleft}{\normalfont\itshape}
+\renewcommand{\syntright}{\normalfont\itshape}
+
+\usepackage{prftree}
+
+\usepackage{listings}
+\usepackage{lstautogobble}
+\usepackage{xcolor} % \usepackage[dvipsnames]{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyvrb}
+\usepackage{enumitem}
+\usepackage{string-diagrams}
+\usepackage{cancel}
+\usepackage{thmtools}
+\usepackage{pifont}
+\usepackage{stmaryrd}
+\usepackage[export]{adjustbox}
+\usetikzlibrary{calc}
+
+\lstset{ %
+  autogobble=true,
+}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+%    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\newcounter{todos}
+\newcommand{\TODO}[1]{{
+  \stepcounter{todos}
+  \begin{center}\large{\textcolor{red}{\textbf{TODO \arabic{todos}:} #1}}\end{center}
+}}
+
+\newcommand{\todo}[1]{\stepcounter{todos} \textcolor{red}{\textbf{TODO \arabic{todos}}: #1}}
+
+% Math fonts
+\newcommand{\mc}[1]{\ensuremath{\mathcal{#1}}}
+\newcommand{\mb}[1]{\ensuremath{\mathbf{#1}}}
+\newcommand{\mbb}[1]{\ensuremath{\mathbb{#1}}}
+\newcommand{\ms}[1]{\ensuremath{\mathsf{#1}}}
+
+\newcommand{\kwms}[1]{\textcolor{violet}{\ms{#1}}}
+\newcommand{\lbms}[1]{{\ms{#1}}}
+
+% Proof fonts
+\newcommand{\rle}[1]{{\scriptsize\textsf{#1}}}
+\newcommand{\brle}[1]{{\textsf{#1}}}
+
+% Math
+\newcommand{\nats}{\mathbb{N}}
+\newcommand{\ints}{\mathbb{Z}}
+
+% Judgements
+\newcommand{\isok}[1]{#1\;\ms{ok}}
+\newcommand{\jeq}[4]{#1 \vdash #2 \equiv #3 : #4}
+\newcommand{\hasty}[3]{#1 \vdash #2 : #3}
+
+% Syntax
+\newcommand{\dite}[3]{\ms{ite}(#1)\;#2\;#3}
+\newcommand{\natrec}[3]{\ms{rec}_\nats\{#1\}\;#2\;#3}
+\newcommand{\mhasty}[2]{[#1 \in #2]}
+
+% Universe levels
+\newcommand{\imax}[2]{\ms{imax}(#1, #2)}
+
+% Variable manipulation
+\newcommand{\wkz}[1]{#1^\uparrow}
+\newcommand{\clv}[2]{#1_{#2}}
+\newcommand{\opv}[2]{#1^{#2}}
+
+% Truth tables
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\textcolor{red}{\ding{55}}}%
+% \newcommand{\cmark}{\textcolor{Green}{\ding{51}}}%
+% \newcommand{\xmark}{\textcolor{BrickRed}{\ding{55}}}%
+
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2025}
+\acmYear{2025}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%%
+%% These commands are for a JOURNAL article.
+% \acmJournal{JACM}
+% \acmVolume{37}
+% \acmNumber{4}
+% \acmArticle{111}
+% \acmMonth{8}
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+\begin{document}
+
+\title{Covalence Typing Rules}
+
+\author{Jad Ghalayini}
+\email{jeg74@cl.cam.ac.uk}
+\orcid{0000-0002-6905-1303}
+
+\author{Neel Krishnaswami}
+\email{nk480@cl.cam.ac.uk}
+\orcid{0000-0003-2838-5865}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002950.10003705.10003707</concept_id>
+       <concept_desc>Mathematics of computing~Solvers</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10003752.10003790.10011740</concept_id>
+       <concept_desc>Theory of computation~Type theory</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10003752.10003790.10002990</concept_id>
+       <concept_desc>Theory of computation~Logic and verification</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10003752.10003790.10003800</concept_id>
+       <concept_desc>Theory of computation~Higher order logic</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10003752.10003790.10003798</concept_id>
+       <concept_desc>Theory of computation~Equational logic and rewriting</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010148</concept_id>
+       <concept_desc>Computing methodologies~Symbolic and algebraic manipulation</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Mathematics of computing~Solvers}
+\ccsdesc[500]{Theory of computation~Type theory}
+\ccsdesc[500]{Theory of computation~Logic and verification}
+\ccsdesc[500]{Theory of computation~Higher order logic}
+\ccsdesc[500]{Theory of computation~Equational logic and rewriting}
+\ccsdesc[500]{Computing methodologies~Symbolic and algebraic manipulation}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{E-graphs, extensional MLTT}
+
+% \received{20 February 2007}
+% \received[revised]{12 March 2009}
+% \received[accepted]{5 June 2009}
+
+\maketitle
+
+\section{Syntax}
+
+\TODO{copy over from Lean}
+
+\TODO{lore about capture-avoiding substitution and closure}
+
+\section{Sugar}
+
+\begin{gather*}
+    \Pi x : A . B := \Pi A . \clv{B}{x} \qquad
+    \Sigma x : A . B := \Sigma A . \clv{B}{x} \qquad
+    \epsilon x : A . \varphi := \epsilon A . \clv{\varphi}{x} \\
+    \dite{x : \varphi}{a}{b} := \dite{\varphi}{\clv{a}{x}}{\clv{b}{x}}
+\end{gather*}
+
+\begin{gather*}
+    \mb{2} := \mc{U}_0 \qquad
+    \bot := \mb{0} \qquad
+    \top := \mb{1} \qquad
+    \lnot \varphi := (\varphi = \bot) \qquad
+    \varphi \land \psi := \Sigma \varphi . \wkz{\psi} \qquad
+    \varphi \lor \psi := \dite{\varphi}{\top}{\wkz{\psi}}
+    \\
+    \varphi \Rightarrow \psi := \Pi \varphi . \wkz{\psi} \qquad
+    \forall A . \varphi := \Pi A . \varphi \qquad
+    \exists A . \varphi := \|\Sigma A . \varphi\|
+    \\ 
+    A \times B := \Sigma A . \wkz{B} \qquad
+    A + B := \Sigma \varphi : \mb{2} . \dite{\varphi}{\wkz{A}}{\wkz{B}} \qquad
+    \iota_1\;a := (\bot, a) \qquad
+    \iota_2\;b := (\top, b)
+\end{gather*}
+
+\begin{gather*}
+\end{gather*}
+
+
+\section{Rules}
+
+\subsection{Sugar}
+
+\begin{gather*}
+    \prftree[r]{\rle{has-ty-def}}
+        {\jeq{\Gamma}{a}{a}{A}}
+        {\hasty{\Gamma}{a}{A}} \qquad
+    \prftree[r]{\rle{ok-def}}
+        {\hasty{\Gamma}{*}{\mb{1}}}
+        {\isok{\Gamma}}
+\end{gather*}
+
+\subsection{Well-formedness}
+
+\begin{gather*}
+    \prftree[r]{\rle{nil-ok}}
+        {}
+        {\isok{\cdot}} \qquad
+    \prftree[r]{\rle{cons-ok}}
+        {\isok{\Gamma}}
+        {x \notin \ms{dom}(\Gamma)}
+        {\jeq{\Gamma}{A}{A}{\mc{U}_\ell}}
+        {\isok{\Gamma, x : A}}
+\end{gather*}
+
+\subsection{Congruence}
+
+\begin{gather*}
+    \prftree[r]{\rle{var}}
+        {\isok{\Gamma}}
+        {\Gamma(x) = A}
+        {\jeq{\Gamma}{x}{x}{A}} \qquad
+    \prftree[r]{\rle{univ}}
+        {\isok{\Gamma}}
+        {\jeq{\Gamma}{\mc{U}_\ell}{\mc{U}_\ell}{\mc{U}_{\ell + 1}}} \qquad
+    \prftree[r]{\rle{empty}}
+        {\isok{\Gamma}}
+        {\jeq{\Gamma}{\mb{0}}{\mb{0}}{\mc{U}_\ell}} \\
+    \prftree[r]{\rle{unit}}
+        {\isok{\Gamma}}
+        {\jeq{\Gamma}{\mb{1}}{\mb{1}}{\mc{U}_\ell}} \qquad
+    \prftree[r]{\rle{eqn}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{b}{b'}{A}}
+        {\jeq{\Gamma}{a = b}{a' = b'}{\mb{2}}} \\
+    \prftree[r]{\rle{pi}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B'}{x}}{\mc{U}_n}}
+        {\imax{m}{n} \leq \ell}
+        {\jeq{\Gamma}{\Pi A . B}{\Pi A' . B'}{\mc{U}_{\ell}}} \\
+    \prftree[r]{\rle{abs}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B}{x}}{\mc{U}_n}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{b}{x}}{\opv{b'}{x}}{\opv{B}{x}}}
+        {\jeq{\Gamma}{\lambda A . b}{\lambda A' . b'}{\mc{U}_{\ell}}} \\
+    \prftree[r]{\rle{app}}
+        {\jeq{\Gamma}{A}{A}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B}{x}}{\mc{U}_n}}
+        {\jeq{\Gamma}{f}{f'}{\Pi A . B}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{f\;a}{f'\;a'}{\opv{B}{a}}} \\
+    \prftree[r]{\rle{sigma}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B'}{x}}{\mc{U}_n}}
+        {m \leq \ell}
+        {n \leq \ell}
+        {\jeq{\Gamma}{\Sigma A . B}{\Sigma A' . B'}{\mc{U}_{\ell}}} \\
+    \prftree[r]{\rle{pair}}
+        {\jeq{\Gamma}{A}{A}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B}{x}}{\mc{U}_n}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{b}{b'}{\opv{B}{a}}}
+        {\jeq{\Gamma}{(a, b)}{(a', b')}{\Sigma A . B}} \\
+    \prftree[r]{\rle{fst}}
+        {\jeq{\Gamma}{A}{A}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B}{x}}{\mc{U}_n}}
+        {\jeq{\Gamma}{p}{p'}{\Sigma A . B}}
+        {\jeq{\Gamma}{\pi_1\;p}{\pi_1\;p'}{A}} \\
+    \prftree[r]{\rle{snd}}
+        {\jeq{\Gamma}{A}{A}{\mc{U}_m}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : A}{\opv{B}{x}}{\opv{B}{x}}{\mc{U}_n}}
+        {\jeq{\Gamma}{p}{p'}{\Sigma A . B}}
+        {\jeq{\Gamma}{\pi_2\;p}{\pi_2\;p'}{\opv{B}{\pi_1\;p}}} \\
+    \prftree[r]{\rle{dite}}
+        {
+        \prfStackPremises
+        {\jeq{\Gamma}{\varphi}{\varphi'}{\mb{2}}}
+        {\jeq{\Gamma}{A}{A}{\mc{U}_\ell}}
+        }
+        {
+        \prfStackPremises
+        {\forall x \notin L .
+            \jeq{\Gamma, x : \varphi}{\opv{a}{x}}{\opv{a'}{x}}{A}}
+        {\forall x \notin L .
+            \jeq{\Gamma, x : \lnot\varphi}{\opv{b}{x}}{\opv{b'}{x}}{A}}
+        }
+        {\jeq{\Gamma}{\dite{\varphi}{a}{b}}{\dite{\varphi}{a'}{b'}}{A}} \qquad
+    \prftree[r]{\rle{trunc}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{\|A\|}{\|A'\|}{\mb{2}}} \\
+    \prftree[r]{\rle{choose}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{\|A\|}{\top}{\mb{2}}}
+        {\forall x \notin L . 
+            \jeq{\Gamma, x : A}{\opv{\varphi}{x}}{\opv{\varphi'}{x}}{\mb{2}}}
+        {\jeq{\Gamma}{\epsilon A . \varphi}{\epsilon A' . \varphi'}{A}} \\
+    \prftree[r]{\rle{nats}}
+        {\isok{\Gamma}}
+        {\jeq{\Gamma}{\nats}{\nats}{\mc{U}_\ell}} \qquad
+    \prftree[r]{\rle{zero}}
+        {\isok{\Gamma}}
+        {\jeq{\Gamma}{0}{0}{\nats}} \qquad
+    \prftree[r]{\rle{succ}}
+        {\jeq{\Gamma}{n}{n'}{\nats}}
+        {\jeq{\Gamma}{\ms{s}\;n}{\ms{s}\;n'}{\nats}} \\
+    \prftree[r]{\rle{rec$_\nats$}}
+        {\forall x \notin L . \jeq{\Gamma, x : \nats}{\opv{C}{x}}{\opv{C'}{x}}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{z}{z'}{\opv{C}{0}}}
+        {\forall x \notin L . \jeq{\Gamma, x : \nats}{s}{s'}{\opv{C}{x} \to \opv{C}{\ms{s}\;x}}}
+        {\jeq{\Gamma}{\natrec{C}{z}{s}}{\natrec{C'}{z'}{s'}}{\Pi \nats . C}} \\
+    \prftree[r]{\rle{has-ty}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{\mhasty{a}{A}}{\mhasty{a'}{A'}}{\mb{2}}}
+\end{gather*}
+
+\subsection{Conversion}
+
+\begin{gather*}
+    \prftree[r]{\rle{has-ty$_\top$}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{\mhasty{a}{A}}{\top}{\mb{2}}} \qquad
+    \prftree[r]{\rle{has-ty$_\top$}}
+        {\jeq{\Gamma}{a}{a'}{A}}
+        {\jeq{\Gamma}{A}{A'}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{\mhasty{a}{A}}{\top}{\mb{2}}} \\
+    \prftree[r]{\rle{$\beta_{\ms{app}}$}}
+        {\hasty{\Gamma}{\lambda A . b}{\Pi A . B}}
+        {\hasty{\Gamma}{a}{A}}
+        {\hasty{\Gamma}{(\lambda A . b)\;a}{C}}
+        {\hasty{\Gamma}{b^a}{C}}
+        {\jeq{\Gamma}{(\lambda A . b)\;a}{b^a}{C}} \\
+    \prftree[r]{\rle{$\beta_{\pi_1}$}}
+        {\hasty{\Gamma}{A}{\mc{U}_m}}
+        {\forall x \notin L . \hasty{\Gamma, x : A}{\opv{B}{x}}{\mc{U}_n}}
+        {\hasty{\Gamma}{(a, b)}{\Sigma A . B}}
+        {\hasty{\Gamma}{\pi_1\;(a, b)}{A}}
+        {\hasty{\Gamma}{a}{A}}
+        {\jeq{\Gamma}{\pi_1\;(a, b)}{a}{A}} \\
+    \prftree[r]{\rle{$\beta_{\pi_2}$}}
+        {\hasty{\Gamma}{A}{\mc{U}_m}}
+        {\forall x \notin L . \hasty{\Gamma, x : A}{\opv{B}{x}}{\mc{U}_n}}
+        {\hasty{\Gamma}{(a, b)}{\Sigma A . B}}
+        {\hasty{\Gamma}{\pi_2\;(a, b)}{C}}
+        {\hasty{\Gamma}{b}{C}}
+        {\jeq{\Gamma}{\pi_2\;(a, b)}{b}{C}} \\
+    \prftree[r]{\rle{$\beta_\top$}}
+        {\hasty{\Gamma}{A}{\mc{U}_\ell}}
+        {\forall x \notin L . \hasty{\Gamma, x : \top}{\opv{a}{x}}{A}}
+        {\hasty{\Gamma}{\dite{\top}{a}{b}}{A}}
+        {\hasty{\Gamma}{\opv{a}{*}}{A}}
+        {\jeq{\Gamma}{\dite{\top}{a}{b}}{a}{A}} \\
+    \prftree[r]{\rle{$\beta_\bot$}}
+        {\hasty{\Gamma}{A}{\mc{U}_\ell}}
+        {\forall x \notin L . \hasty{\Gamma, x : \lnot\bot}{\opv{b}{x}}{A}}
+        {\hasty{\Gamma}{\dite{\bot}{a}{b}}{A}}
+        {\hasty{\Gamma}{\opv{b}{*}}{B}}
+        {\jeq{\Gamma}{\dite{\bot}{a}{b}}{b}{A}} \\
+    \prftree[r]{\rle{$\beta_0$}}
+        {\forall x \notin L . \jeq{\Gamma, x : \nats}{\opv{C}{x}}{\opv{C'}{x}}{\mc{U}_\ell}}
+        {\jeq{\Gamma}{z}{z'}{\opv{C}{0}}}
+        {\forall x \notin L . \jeq{\Gamma, x : \nats}{s}{s'}{\opv{C}{x} \to \opv{C}{\ms{s}\;x}}}
+        {\todo{this}} \\
+    \prftree[r]{\rle{$\beta_{\ms{s}}$}}
+        {\todo{this}} \\
+\end{gather*}
+
+\subsection{Choice and Extensionality}
+
+\TODO{this}
+
+\subsection{Equivalence and Casting}
+
+\TODO{this}
+
+\end{document}

@@ -589,7 +589,7 @@ theorem Ctx.KIsWf.beta_natrec_zero_wf {Γ C s z}
   exists (C.clamp 1).lst .zero
   have ⟨_, hC'⟩ := IsTy.max_univ' hC;
   have hC₀ := (JEq.lst_cf₁_k hC' (.zero hz.ok))
-  exact JEq.beta_natrec_zero' hC' (fun x hx => (hs x hx).refl) hz.refl hC₀
+  exact JEq.beta_natrec_zero' hC' (fun x hx => (hs x hx).refl) hz.refl
     (.natrec' hC'  (fun x hx => (hs x hx).refl) hz.refl (.zero hz.ok) hC₀) hz.refl
 
 theorem Ctx.KHasTy.beta_natrec_zero {Γ C s z}
@@ -606,12 +606,6 @@ theorem Ctx.KIsWf.beta_natrec_succ_wf {Γ C s z n}
   have hCsn := (JEq.lst_cf₁_k hC' hsn.refl)
   have hsnx := (JEq.lst_cf₁ (fun x hx => (hs x hx).refl) hn.refl)
   convert JEq.beta_natrec_succ' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl
-    hCsn
-    (.app
-      (by convert hsnx; simp [Tm.succArrow, Tm.arr]; rfl)
-      (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl (JEq.lst_cf₁_k hC' hn.refl))
-      (by simp [Tm.lst_succIn]; exact IsTy.lst_cf' hC hsn.refl)
-    )
     (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hsn.refl (JEq.lst_cf₁_k hC' hsn.refl))
     (.app
       (by convert hsnx; simp [Tm.succArrow, Tm.arr]; rfl)
