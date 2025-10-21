@@ -391,15 +391,11 @@
         {\hasty{\Gamma}{b^a}{C}}
         {\jeq{\Gamma}{(\lambda A . b)\;a}{b^a}{C}} \\
     \prftree[r]{\rle{$\beta_{\pi_1}$}}
-        {\hasty{\Gamma}{A}{\mc{U}_m}}
-        {\forall x \notin L . \hasty{\Gamma, x : A}{\opv{B}{x}}{\mc{U}_n}}
         {\hasty{\Gamma}{(a, b)}{\Sigma A . B}}
         {\hasty{\Gamma}{\pi_1\;(a, b)}{A}}
         {\hasty{\Gamma}{a}{A}}
         {\jeq{\Gamma}{\pi_1\;(a, b)}{a}{A}} \\
     \prftree[r]{\rle{$\beta_{\pi_2}$}}
-        {\hasty{\Gamma}{A}{\mc{U}_m}}
-        {\forall x \notin L . \hasty{\Gamma, x : A}{\opv{B}{x}}{\mc{U}_n}}
         {\hasty{\Gamma}{(a, b)}{\Sigma A . B}}
         {\hasty{\Gamma}{\pi_2\;(a, b)}{C}}
         {\hasty{\Gamma}{b}{C}}
@@ -420,6 +416,8 @@
         {\forall x \notin L . \jeq{\Gamma, x : \nats}{\opv{C}{x}}{\opv{C'}{x}}{\mc{U}_\ell}}
         {\jeq{\Gamma}{z}{z'}{\opv{C}{0}}}
         {\forall x \notin L . \jeq{\Gamma, x : \nats}{s}{s'}{\opv{C}{x} \to \opv{C}{\ms{s}\;x}}}
+        {}
+        {}
         {\todo{this}} \\
     \prftree[r]{\rle{$\beta_{\ms{s}}$}}
         {\todo{this}} \\

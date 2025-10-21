@@ -325,7 +325,7 @@ theorem Ctx.JEq.beta_fst_both {Γ} {A : Tm 0} {B : Tm 1} {a b : Tm 0} {L : Finse
     have ⟨_, hA⟩ := ha.regular;
     have ⟨_, hB⟩ := IsTy.max_univ' hB;
     have hpair := (JEq.pair' hB hA ha.refl hb.refl)
-    .beta_fst' hA hB hpair (.fst hpair) ha.refl
+    .beta_fst' hpair (.fst hpair) ha.refl
 
 theorem Ctx.JEq.beta_snd_both {Γ} {A : Tm 0} {B : Tm 1} {a b : Tm 0} {L : Finset String}
     (hB : ∀ x ∉ L, IsTy (Γ.cons x A) (B.open x))
@@ -336,7 +336,7 @@ theorem Ctx.JEq.beta_snd_both {Γ} {A : Tm 0} {B : Tm 1} {a b : Tm 0} {L : Finse
     have ⟨_, hB'⟩ := IsTy.max_univ' hB;
     have hfst := JEq.beta_fst_both hB ha hb
     have hpair := (JEq.pair' hB' hA ha.refl hb.refl)
-    (JEq.beta_snd' hA hB' hpair (.snd hpair) (hb.lst_cast hB' hfst.symm).refl).cast
+    (JEq.beta_snd' hpair (.snd hpair) (hb.lst_cast hB' hfst.symm).refl).cast
       (TyEq.lst_cf hB hfst)
 
 theorem Ctx.JEq.pi_ext {Γ} {A : Tm 0} {B : Tm 1} {f g : Tm 0} {L : Finset String}
