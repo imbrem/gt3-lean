@@ -20,3 +20,4 @@ import Gt3.HasTy.Universe
 import Gt3.RwEq.Basic
 import Gt3.RwEq.Erase
 import Gt3.RwEq.Universe
+import Gt3.Telescope.Basic
