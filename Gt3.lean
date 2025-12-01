@@ -4,6 +4,7 @@ import Gt3.Universe.Syntax
 import Gt3.Syntax.Basic
 import Gt3.Syntax.Erase
 import Gt3.Syntax.Subst
+import Gt3.Syntax.Tree
 import Gt3.JEq.Basic
 import Gt3.JEq.Wk
 import Gt3.JEq.Subst

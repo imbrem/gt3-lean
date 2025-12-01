@@ -1,8 +1,8 @@
-import Gt3.Syntax.General.Tag
-import Gt3.Syntax.General.Tree
-import Gt3.Syntax.General.Core
-import Gt3.Syntax.General.Var
-import Gt3.Syntax.General.DTree
+import Gt3.Syntax.Tree.Tag
+import Gt3.Syntax.Tree.Core
+import Gt3.Syntax.Tree.Defs.Tree
+import Gt3.Syntax.Tree.Defs.Var
+import Gt3.Syntax.Tree.Defs.DTree
 
 namespace Gt3
 /-

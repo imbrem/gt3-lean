@@ -1,4 +1,4 @@
-import Gt3.Syntax.General.Tree
+import Gt3.Syntax.Tree.Defs.Tree
 
 namespace Gt3
 
