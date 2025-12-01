@@ -1,5 +1,7 @@
 import Gt3.JEq.Subst
 
+namespace Gt3
+
 theorem Ctx.JEq.to_cf {Γ : Ctx} {x} {A} {B a b : Tm 1}
   (h : JEq (Γ.cons x A) (B.open x) (a.open x) (b.open x))
   (hB : x ∉ B.fvs) (ha : x ∉ a.fvs) (hb : x ∉ b.fvs)
@@ -160,3 +162,5 @@ theorem Ctx.JEq.abs {Γ A A'} {B b b' : Tm 1} {ℓ} {L : Finset String}
   :=
   have ⟨_, h⟩ := IsTy.max_univ' (fun x hx => (hb x hx).regular);
   .abs' hA h hb
+
+end Gt3

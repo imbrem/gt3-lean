@@ -1,5 +1,7 @@
 import Gt3.HasTy.Regular
 
+namespace Gt3
+
 def Ctx.HasTyUnder (Γ : Ctx) (A : Tm 0) (B b : Tm 1) : Prop
   := ∀ x ∉ Γ.dv, HasTy (Γ.cons x A) (B.open x) (b.open x)
 
@@ -369,3 +371,5 @@ theorem Ctx.JEq.sigma_ext {Γ} {A Bf : Tm 0} {B : Tm 1} {p q : Tm 0}
     have hpq1 := hpq_fst.transfer' (.fst hp)
     have hpq2 := hpq_snd.transfer' (.snd hp)
     .sigma_ext' (L := Γ.dv) hA.refl (fun x hx => (hB x hx).refl) hp hq hpq1 hpq2
+
+end Gt3

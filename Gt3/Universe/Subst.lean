@@ -1,6 +1,8 @@
 import Gt3.Universe.Level
 import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
 
+namespace Gt3
+
 def UExpr.isZero : UExpr → Bool
   | .zero => true
   | .imax _ b => b.isZero
@@ -359,3 +361,5 @@ theorem UExpr.subst_one (a : UExpr) : a.subst 1 = a.q := by induction a <;> simp
 theorem ULevel.subst_one (ℓ : ULevel) : ℓ.subst 1 = ℓ := by
   induction ℓ using Quotient.inductionOn
   simp [subst]
+
+end Gt3

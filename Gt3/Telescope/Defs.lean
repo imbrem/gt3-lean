@@ -1,5 +1,7 @@
 import Gt3.JEq.Basic
 
+namespace Gt3
+
 inductive Tel : ℕ → Type where
   | nil {n} : Tel n
   | cons {n} (A : Tm n) (Δ: Tel (n + 1)) : Tel n
@@ -48,3 +50,5 @@ inductive CtxTel.WfEq : ∀ {n}, CtxTel n → Tm n → Tm n → Prop
 --     have ⟨x, hx⟩ := L.exists_notMem;
 --     have ⟨A, hA⟩ := I x hx
 --     exact ⟨A, .cons (L := L) (fun x hx => sorry)⟩
+
+end Gt3

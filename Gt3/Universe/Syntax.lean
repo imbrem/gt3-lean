@@ -2,6 +2,8 @@ import Gt3.Universe.Subst
 import Gt3.Syntax.Erase
 import Gt3.Ctx
 
+namespace Gt3
+
 @[simp]
 def Tm.uvs {k} : Tm k → Finset String
   | .univ ℓ => ℓ.uvs
@@ -210,3 +212,5 @@ theorem Tm.us_succIn {k} (σ : ULevel.Subst) (C : Tm (k + 1)) :
 @[simp]
 theorem Tm.us_succArrow {k} (σ : ULevel.Subst) (C : Tm (k + 1)) :
   (Tm.succArrow C).us σ = Tm.succArrow (C.us σ) := by simp [Tm.succArrow]
+
+end Gt3

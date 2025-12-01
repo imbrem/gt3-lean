@@ -1,5 +1,7 @@
 import Gt3.HasTy.Regular
 
+namespace Gt3
+
 inductive Ctx.InnerTy : Ctx → Tm 0 → Tm 0 → Prop
   | fv {Γ} {x : String} {A : Tm 0} (hΓ : Ok Γ) (hA : Lookup Γ x A) : InnerTy Γ A (.fv x)
   | univ {Γ} {ℓ} (hΓ : Ok Γ) : InnerTy Γ (.univ (ℓ + 1)) (.univ ℓ)
@@ -154,3 +156,5 @@ theorem Ctx.JEq.app_e {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' : Tm 0}
 theorem Ctx.JEq.app {Γ} {A : Tm 0} {B : Tm 1} {f a f' a' Ba : Tm 0}
   (hf : JEq Γ (A.pi B) f f') (ha : JEq Γ A a a') (hBa : TyEq Γ (B.lst a) Ba)
   : JEq Γ Ba (f.app a) (f'.app a') := (hf.app_e ha).cast hBa
+
+end Gt3

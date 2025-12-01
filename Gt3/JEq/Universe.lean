@@ -1,6 +1,8 @@
 import Gt3.JEq.Basic
 import Gt3.Universe.Syntax
 
+namespace Gt3
+
 theorem Ctx.JEq.us (σ : ULevel.Subst) {Γ A a b} (h : Ctx.JEq Γ A a b)
   : Ctx.JEq (Γ.us σ) (A.us σ) (a.us σ) (b.us σ) := by
   induction h with
@@ -59,3 +61,5 @@ theorem Ctx.IsUniv.us (σ : ULevel.Subst) {Γ A} (h : Ctx.IsUniv Γ A)
 
 theorem Ctx.IsInhab.us (σ : ULevel.Subst) {Γ A} (h : Ctx.IsInhab Γ A)
   : Ctx.IsInhab (Γ.us σ) (A.us σ) := TyEq.us σ h
+
+end Gt3

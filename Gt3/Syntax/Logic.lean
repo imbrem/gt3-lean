@@ -1,5 +1,7 @@
 import Gt3.Syntax.Subst
 
+namespace Gt3
+
 def Tm.imp {k} (φ ψ : Tm k) : Tm k := .trunc (.arr φ ψ)
 
 def Tm.and {k} (φ ψ : Tm k) : Tm k := .trunc (.prod φ ψ)
@@ -61,3 +63,5 @@ theorem Tm.smul_forall (v : VSubst) {k} (A : Tm k) (φ : Tm (k + 1))
 theorem Tm.smul_exists (v : VSubst) {k} (A : Tm k) (φ : Tm (k + 1))
   : v • (A.exists φ) = (v • A).exists (v • φ)
   := by simp [«exists»]
+
+end Gt3

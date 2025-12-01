@@ -1,6 +1,8 @@
 import Gt3.HasTy.Wk
 import Gt3.JEq.Subst
 
+namespace Gt3
+
 inductive Ctx.S1 (Γ : Ctx) (σ : Tm.VSubst) : Ctx → Prop
   | nil : Ok Γ → S1 Γ σ .nil
   | cons' {Δ x A}
@@ -236,3 +238,5 @@ theorem Ctx.HasTy.cast_top_not_symm' {Γ x φ φ' A a}
 theorem Ctx.HasTy.cast_top_symm₂ {Γ x ℓ ℓ' A B C D a}
   (hAB : JEq Γ (.univ ℓ) B A) (h : HasTy (Γ.cons x B) C a) (hCD : JEq (Γ.cons x B) (.univ ℓ') C D)
   : HasTy (Γ.cons x A) D a := .cast' (.cast_top' hAB.symm hCD) (h.cast_top' hAB.symm)
+
+end Gt3

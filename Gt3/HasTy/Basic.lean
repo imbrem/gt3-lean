@@ -1,5 +1,7 @@
 import Gt3.JEq.Basic
 
+namespace Gt3
+
 inductive Ctx.HasTy : Ctx → Tm 0 → Tm 0 → Prop
   | fv {Γ} {x : String} {A : Tm 0} (hΓ : Ok Γ) (hA : Lookup Γ x A) : HasTy Γ A (.fv x)
   | univ {Γ} {ℓ} (hΓ : Ok Γ) : HasTy Γ (.univ (ℓ + 1)) (.univ ℓ)
@@ -168,3 +170,5 @@ theorem Ctx.HasTy.tm_scoped_cf
   cases hxy
   · exact (Ne.symm hx.1 ‹_›).elim
   · assumption
+
+end Gt3

@@ -1,5 +1,7 @@
 import Gt3.HasTy.Basic
 
+namespace Gt3
+
 def Tm.ofNat {k} : ℕ → Tm k
   | 0 => .zero
   | n + 1 => .succ (.ofNat n)
@@ -16,3 +18,5 @@ theorem Ctx.JEq.nat (n : ℕ) {Γ} (hΓ : Ok Γ) : JEq Γ .nats (Tm.ofNat n) (Tm
 
 instance {k} : Add (Tm k) where
   add a b := .natrec .nats (.succ (.bv 0)) a b
+
+end Gt3

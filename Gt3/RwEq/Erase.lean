@@ -2,6 +2,8 @@ import Gt3.RwEq.Basic
 import Gt3.HasTy.Inversion
 import Gt3.HasTy.Logic
 
+namespace Gt3
+
 def Ctx.KJEq (Γ : Ctx) (A a b : OTm) : Prop := JEq Γ (A.clamp 0) (a.clamp 0) (b.clamp 0)
 
 theorem Ctx.KJEq.get {Γ A a b} (h : KJEq Γ A a b)
@@ -734,3 +736,5 @@ theorem Ctx.KHasTy.prop_inhab_ext_wf {Γ φ a}
 theorem Ctx.KHasTy.prop_inhab_ext {Γ φ a}
   (hφ : KIsProp Γ φ) (ha : KHasTy Γ φ a) : KEq Γ a .null
   := .wf_clamp (ha.prop_inhab_ext_wf hφ)
+
+end Gt3

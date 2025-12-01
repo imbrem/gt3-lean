@@ -1,5 +1,7 @@
 import Gt3.JEq.Wk
 
+namespace Gt3
+
 inductive Ctx.SEq (Γ : Ctx) (σ τ : Tm.VSubst) : Ctx → Prop
   | nil : Ok Γ → SEq Γ σ τ .nil
   | cons' {Δ x A}
@@ -291,3 +293,5 @@ theorem Ctx.JEq.cast_top {Γ x A B C a b} (hAB : TyEq Γ A B) (h : JEq (Γ.cons 
 
 theorem Ctx.JEq.cast_top' {Γ x ℓ A B C a b} (hAB : JEq Γ (.univ ℓ) A B) (h : JEq (Γ.cons x B) C a b)
   : JEq (Γ.cons x A) C a b := h.cast_top hAB.ty_eq
+
+end Gt3

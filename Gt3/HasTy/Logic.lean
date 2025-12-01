@@ -1,5 +1,7 @@
 import Gt3.HasTy.Regular
 
+namespace Gt3
+
 def Ctx.PropEq (Γ φ ψ) := JEq Γ (.univ 0) φ ψ
 
 theorem Ctx.PropEq.symm {Γ φ ψ} (h : PropEq Γ φ ψ) : PropEq Γ ψ φ := JEq.symm h
@@ -68,3 +70,5 @@ theorem Ctx.JEq.ite_k_eff {Γ A φ l r}
   (hl : JEq Γ A l l)
   (hr : JEq Γ A r r)
   : JEq Γ A (.ite φ l r) r := .trans (.ite_k hφ hl hr) (.ite_k_ff hl hr)
+
+end Gt3

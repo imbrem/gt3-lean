@@ -1,6 +1,8 @@
 import Gt3.HasTy.Subst
 import Gt3.JEq.Lsv
 
+namespace Gt3
+
 def Ctx.HasTy.regular {Γ A a} (h : HasTy Γ A a) : IsTy Γ A := h.refl.regular
 
 theorem Ctx.HasTy.lst_cf_cast {Γ : Ctx} {ℓ A a a' b} {B B' : Tm 1} {L : Finset String}
@@ -177,3 +179,5 @@ theorem Ctx.HasTy.lst {Γ : Ctx} {A a : Tm 0} {B b : Tm 1} {L : Finset String}
   have ⟨x, hx⟩ := (L ∪ (B.fvs) ∪ b.fvs).exists_notMem;
   simp at hx
   exact HasTy.lst_exact (by simp [hx]) (hb x (by simp [hx])) ha
+
+end Gt3

@@ -1,6 +1,8 @@
 import Gt3.HasTy.Basic
 import Gt3.JEq.Wk
 
+namespace Gt3
+
 theorem Ctx.HasTy.psub {Γ Δ} (h : PSub Γ Δ) {A a : Tm 0} (hab : HasTy Δ A a)
   : HasTy Γ A a := by induction hab generalizing Γ with
   | transfer hA hB IA => exact (IA h).transfer (hB.psub h)
@@ -29,3 +31,5 @@ theorem Ctx.HasTy.wk0 {Γ A a} (ha : HasTy Γ A a) {x B} (hx : x ∉ Γ.dv) (hB 
 theorem Ctx.TyEq.top_var {Γ : Ctx} {x A B} (hx : x ∉ Γ.dv) (hAB : TyEq Γ A B)
   : HasTy (Γ.cons x A) B (.fv x)
   := .cast (hAB.wk0 hx hAB.lhs) (.fv (hAB.ok.cons hx hAB.lhs) (.here _ _ _))
+
+end Gt3

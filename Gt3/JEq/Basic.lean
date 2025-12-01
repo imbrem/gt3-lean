@@ -1,6 +1,8 @@
 import Gt3.Ctx
 import Gt3.Syntax.Logic
 
+namespace Gt3
+
 inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   -- Congruence rules
   | fv' {Γ} {x : String} {A : Tm 0}
@@ -572,3 +574,5 @@ theorem Ctx.JEq.rhs_scoped_cf
   {Γ : Ctx} {A : Tm 0} {B : String → Tm 0} {a : String → Tm 0} {b : Tm 1}
   {L : Finset String} (h : ∀ x ∉ L, JEq (Γ.cons x A) (B x) (a x) (b.open x)) : b.fvs ⊆ Γ.dv
   := lhs_scoped_cf (fun x hx => (h x hx).symm)
+
+end Gt3

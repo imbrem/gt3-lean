@@ -1,5 +1,7 @@
 import Gt3.JEq.Basic
 
+namespace Gt3
+
 structure Ctx.PSub (Γ Δ : Ctx) : Prop where
   left_ok : Ok Γ
   right_ok : Ok Δ
@@ -129,3 +131,5 @@ theorem Ctx.JEq.wk1 {Γ : Ctx} {x A B a b}
   := by
   simp at hy
   exact hab.psub ((hC.ok.psub.skip hy.2 hC).cons (by simp [Ne.symm hy.1, hab.ok.var]) hab.ok.ty)
+
+end Gt3

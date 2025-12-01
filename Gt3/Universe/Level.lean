@@ -1,6 +1,8 @@
 import Mathlib.Logic.Function.Iterate
 import Mathlib.Data.Nat.Lattice
 
+namespace Gt3
+
 inductive UExpr : Type where
   | uv : String → UExpr
   | max : UExpr → UExpr → UExpr
@@ -233,3 +235,5 @@ theorem ULevel.le_of_eval_le {a b : ULevel} (h : ∀ v, a.eval v ≤ b.eval v) :
 theorem ULevel.eq_of_eval_eq {a b : ULevel} (h : ∀ v, a.eval v = b.eval v) : a = b
   := le_antisymm (ULevel.le_of_eval_le (fun v => (h v).le))
                  (ULevel.le_of_eval_le (fun v => (h v).ge))
+
+end Gt3

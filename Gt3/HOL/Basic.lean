@@ -1,6 +1,8 @@
 import Gt3.JEq.Basic
 import Gt3.Syntax.Erase
 
+namespace Gt3
+
 inductive FCtx : ℕ → Type
 | nil {k} : FCtx k
 | cons {k} (Γ : FCtx k) (x : String) (A : Tm k) : FCtx k
@@ -42,3 +44,5 @@ inductive HOL : SynCat → ℕ → Type
 | forall_ {c k} : SynCat → HOL (.stmt c) (k + 1) → HOL (.stmt c) k
 | exists_ {c k} : SynCat → HOL (.stmt c) (k + 1) → HOL (.stmt c) k
 | seq {k} : FCtx k → HOL .formula k → HOL .fact k
+
+end Gt3

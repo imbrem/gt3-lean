@@ -1,5 +1,7 @@
 import Gt3.Syntax.Subst
 
+namespace Gt3
+
 inductive OTm : Type
   | fv (x : String) : OTm
   | bv (i : ℕ) : OTm
@@ -720,3 +722,5 @@ theorem OTm.open_succIn (t : OTm) (k : ℕ) (x : String)
 theorem OTm.open_succArrow (A : OTm) (k : ℕ) (x : String)
   : (A.succArrow k).open k x = (A.open k x).arr (A.lst k (OTm.fv x).succ) := by
   simp only [succArrow, open_arr, open_succIn]
+
+end Gt3

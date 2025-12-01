@@ -1,5 +1,7 @@
 import Gt3.Syntax.Basic
 
+namespace Gt3
+
 def Tm.wkn {k} (j : ℕ) : Tm k → Tm (k + 1)
   | .fv x => .fv x
   | .bv i => if i < j then .bv i.castSucc else .bv i.succ
@@ -259,3 +261,5 @@ theorem Tm.smul_succArrow (σ : VSubst) {k} (C : Tm (k + 1))
 theorem Tm.smul_succArrow_open (σ : VSubst) {k} (C : Tm (k + 1)) (x : String) (hx : σ.IdAt x)
   : σ • ((Tm.succArrow C).open x) = (Tm.succArrow (σ • C)).open x
   := by rw [ls_open, smul_succArrow, lst_succArrow, hx, open_succArrow, lst_of_fv]
+
+end Gt3

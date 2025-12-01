@@ -2,6 +2,8 @@ import Gt3.JEq.Basic
 import Gt3.HasTy.Factor
 import Gt3.Syntax.LstBar
 
+namespace Gt3
+
 theorem Ctx.HasTy.valid {Γ A a} (h : HasTy Γ A a) : Tm.Valid a := by
   induction h <;> simp [Tm.forall_cf_open_valid_iff] at * <;> simp [*]
 
@@ -425,3 +427,5 @@ theorem Ctx.RwEq.is_wf {Γ} {a b : Tm 0} (h : RwEq Γ a b) (hA : IsWf Γ a)
 
 theorem Ctx.RwEq.wf_iff {Γ} {a b : Tm 0} (h : RwEq Γ a b)
   : IsWf Γ a ↔ IsWf Γ b := ⟨h.is_wf, h.symm.is_wf⟩
+
+end Gt3

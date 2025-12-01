@@ -1,5 +1,7 @@
 import Gt3.JEq.Regular
 
+namespace Gt3
+
 theorem Ctx.SEq.lset_cons {Γ x A a b} (hx : x ∉ Γ.dv) (hab : JEq Γ A a b)
   : SEq Γ (.lset a x) (.lset b x) (Γ.cons x A) := by
   have hA := hab.regular
@@ -166,4 +168,6 @@ theorem Ctx.TyEq.succArrow' {Γ : Ctx} {C C' : Tm 1} {ℓ} {L : Finset String}
 theorem Ctx.TyEq.succArrow {Γ : Ctx} {C C' : Tm 1} {L : Finset String}
   (hC : ∀ x ∉ L, TyEq (Γ.cons x .nats) (C.open x) (C'.open x))
   : ∀ x ∉ L, TyEq (Γ.cons x .nats) ((Tm.succArrow C).open x) ((Tm.succArrow C').open x)
-  :=have ⟨_, hC⟩ := TyEq.max_univ' hC; Ctx.TyEq.succArrow' (fun x hx => (hC x hx).cast_level)
+  := have ⟨_, hC⟩ := TyEq.max_univ' hC; Ctx.TyEq.succArrow' (fun x hx => (hC x hx).cast_level)
+
+end Gt3

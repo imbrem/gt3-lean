@@ -1,5 +1,7 @@
 import Gt3.Syntax.Basic
 
+namespace Gt3
+
 inductive Ctx : Type
 | nil : Ctx
 | cons (Γ : Ctx) (x : String) (A : Tm 0) : Ctx
@@ -339,3 +341,5 @@ theorem Ctx.Sub.lookup {Γ Δ : Ctx} {x A}
   := ((choose hΓΔ).lookup hΔ.choose).toProp
 
 theorem Ctx.Sub.lsub {Γ Δ : Ctx} (h : Ctx.Sub Γ Δ) : Ctx.LSub Γ Δ := fun _ _ hx => h.lookup hx
+
+end Gt3

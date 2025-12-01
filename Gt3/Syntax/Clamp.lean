@@ -1,5 +1,7 @@
 import Gt3.Syntax.Erase
 
+namespace Gt3
+
 def Tm.clamp {m} (k : ℕ) : Tm m → Tm k
   | .fv x => .fv x
   | .bv i => if h : i < k then .bv (i.castLT h) else .invalid
@@ -63,3 +65,5 @@ theorem Tm.clamp_castLE {lo hi k : ℕ} (h : lo ≤ hi) (t : Tm lo)
 theorem OTm.clamp_clamp_zero {k : ℕ} (t : OTm) : (t.clamp k).clamp 0 = t.clamp 0 := by
   rw [OTm.clamp_clamp, <-(t.clamp 0).castLE_refl]
   congr <;> simp
+
+end Gt3

@@ -1,5 +1,7 @@
 import Gt3.Syntax.Clamp
 
+namespace Gt3
+
 inductive Tm.Valid : ∀ {k}, Tm k → Prop
   | fv (x) : Valid (.fv x)
   | bv (i) : Valid (.bv i)
@@ -571,3 +573,5 @@ theorem Tm.LstBar.split {l r} {a b : Tm l} {a' b' : Tm r}
   := by induction h with
   | refl => exact ⟨c, .refl, .refl⟩
   | lst h v I => have ⟨c, hac, hcb⟩ := I; exact ⟨c.lst v, hac.lst v, hcb.lst v⟩
+
+end Gt3

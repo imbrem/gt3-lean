@@ -5,6 +5,8 @@ import Mathlib.Algebra.Group.Action.Defs
 
 import Gt3.Universe.Level
 
+namespace Gt3
+
 inductive Tm : ℕ → Type
   | fv {k : ℕ} (x : String) : Tm k
   | bv {k : ℕ} (i : Fin k) : Tm k
@@ -1328,3 +1330,5 @@ def Tm.lcIndFvs
   | .invalid => invalid
 termination_by depth t
 decreasing_by all_goals { simp only [Tm.depth, Tm.depth_open]; omega }
+
+end Gt3

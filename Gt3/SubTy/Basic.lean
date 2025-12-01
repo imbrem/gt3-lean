@@ -1,5 +1,9 @@
 import Gt3.JEq.Basic
 
+namespace Gt3
+
+/-
+
 inductive Ctx.SubTy : Ctx → Tm 0 → Tm 0 → Prop
   | refl {Γ A} (hA : IsTy Γ A) : SubTy Γ A A
   | cast_level {Γ S ℓ} (hS : SubTy Γ S (.univ ℓ)) : SubTy Γ S (.univ (ℓ + 1))
@@ -126,3 +130,7 @@ theorem Ctx.CmpTy.of_diamond {Γ A B C} (hA : SubTy Γ A C) (hB : SubTy Γ B C) 
 
 theorem Ctx.CmpTy.diamond_iff {Γ A B} : CmpTy Γ A B ↔ ∃C, SubTy Γ A C ∧ SubTy Γ B C
   := ⟨diamond, fun ⟨_, ⟨h, h'⟩⟩ => of_diamond h h'⟩
+
+-/
+
+end Gt3
