@@ -1,7 +1,9 @@
-import Mathlib.Data.List.Basic
-import Mathlib.Data.List.OfFn
+import Gt3.Syntax.General.Tag
+import Gt3.Syntax.General.Tree
+import Gt3.Syntax.General.Core
 
 namespace Gt3
+/-
 
 class NumChildren (α : Type _) where
   numChildren : α → ℕ
@@ -275,5 +277,7 @@ inductive STree (α : ℕ → Type _) : Type _
 --TODO: ShapeTrees
 
 --TODO: ShapeTreesWithVars
+
+-/
 
 end Gt3
