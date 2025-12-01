@@ -1,6 +1,8 @@
 import Gt3.Syntax.General.Tag
 import Gt3.Syntax.General.Tree
 import Gt3.Syntax.General.Core
+import Gt3.Syntax.General.Var
+import Gt3.Syntax.General.DTree
 
 namespace Gt3
 /-

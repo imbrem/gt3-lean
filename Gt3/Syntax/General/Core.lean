@@ -22,7 +22,7 @@ instance CoreSize.ofN3 : OfNat CoreSize 3 := ⟨⟨3, by decide⟩⟩
 
 instance CoreSize.ofN4 : OfNat CoreSize 4 := ⟨⟨4, by decide⟩⟩
 
-instance CoreSize.instNumChildren : NumChildren CoreSize := instNumChildrenFin
+instance CoreSize.instNumChildren : NumChildren CoreSize := instBinderListFin.toNumChildren
 
 /-- The possible shapes for a node in the GT3 core calculus -/
 inductive CoreShape : Type
