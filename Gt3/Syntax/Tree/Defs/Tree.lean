@@ -1,3 +1,4 @@
+import Gt3.Syntax.Tree.Defs.Index
 import Gt3.Syntax.Tree.Children
 
 namespace Gt3
