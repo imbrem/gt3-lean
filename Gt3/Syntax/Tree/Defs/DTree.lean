@@ -90,4 +90,9 @@ theorem Tree.toD_toF {α} [BinderList α] {k}
   (t : Tree α) : (t.toD k).toF = t
   := by induction t generalizing k; simp only [toD, DTree.toF, *]
 
+def DNode.mapChildren {α} [∀ n, BinderList (α n)] {β β' : ℕ → Type _} {k}
+  (f : ∀ k, β k → β' k)
+  (n : DNode α β k) : DNode α β' k :=
+  ⟨n.tag, fun i => f _ (n.children i)⟩
+
 end Gt3

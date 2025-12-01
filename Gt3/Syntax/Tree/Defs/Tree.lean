@@ -2,7 +2,7 @@ import Gt3.Syntax.Tree.Children
 
 namespace Gt3
 
-open NumChildren BinderList HasChildren
+open NumChildren BinderList HasChildren CastLE
 
 /-- A single node -/
 structure Node (α : Type _) [NumChildren α] (β : Type _) : Type _ where
@@ -108,6 +108,14 @@ instance Node.mapTag_numChildrenHom {α α' β} [NumChildren α] [NumChildren α
 instance Node.mapChildren_numChildrenHom {α β β'} [NumChildren α]
   (f : β → β') : NumChildrenHom (Functor.map (f := Node α) f) where
   numChildren_hom _ := rfl
+
+-- instance Node.instCastLE {ι} [PartialOrder ι] {α}
+--   [∀ n, BinderList (α n)] {β} [BindCastLE α] [CastLE β]
+--   : BindCastLE (fun k : ι => Node (α k) (β k)) where
+--   castLE h n := ⟨castLE h n.tag, fun i => castLE h (n.children (i.cast sorry))⟩
+--   castLE_refl | ⟨_, _⟩ => by sorry
+--   castLE_castLE h1 h2 | ⟨_, _⟩ => by sorry
+--   castLE_hom h := sorry
 
 instance Node.mapToTree_numChildrenHom {α α' β} [NumChildren α] [NumChildren α']
   (f : α → α') [hf : NumChildrenHom f] (g : β → Tree α') : NumChildrenHom (Node.mapToTree f g) where
