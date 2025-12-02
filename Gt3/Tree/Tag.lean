@@ -166,6 +166,8 @@ class BinderListHom {α β : Type _} [BinderList α] [BinderList β]
   (f : α → β) : Prop extends NumChildrenHom f where
   binderList_hom : ∀ t, binderList (f t) = binderList t
 
+attribute [simp] BinderListHom.binderList_hom
+
 instance BinderListHom.id {α} [BinderList α] : BinderListHom (fun x : α => x) where
   binderList_hom _ := rfl
 

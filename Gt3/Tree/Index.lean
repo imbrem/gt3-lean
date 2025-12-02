@@ -9,9 +9,14 @@ class CastLE {ι : Type _} [PartialOrder ι] (α : ι → Type _) where
   castLE_castLE {i j k} (h1 : i ≤ j) (h2 : j ≤ k) (x : α i)
     : castLE h2 (castLE h1 x) = castLE (le_trans h1 h2) x := by simp
 
+open CastLE
+
+abbrev CastLE.castSucc {α : ℕ → Type _} [CastLE α] {k : ℕ} : α k → α (k + 1) :=
+  castLE (Nat.le_succ k)
+
 class BindCastLE {ι : Type _} [PartialOrder ι] (α : ι → Type _) [∀ n, BinderList (α n)]
   extends CastLE α where
-  castLE_hom {i j} (h : i ≤ j) : BinderListHom (castLE h)
+  castLE_binderHom {i j} (h : i ≤ j) : BinderListHom (castLE h)
     := by simp only [CastLE.castLE]; infer_instance
 
 class Erase {ι : Type _} (α : ι → Type _) (β : Type _) where
@@ -21,7 +26,7 @@ open Erase
 
 attribute [simp] CastLE.castLE_refl CastLE.castLE_castLE
 
-attribute [instance] BindCastLE.castLE_hom
+attribute [instance] BindCastLE.castLE_binderHom
 
 instance CastLE.instConst {ι : Type _} [PartialOrder ι] (α : Type _)
   : CastLE (ι := ι) (fun _ => α) where

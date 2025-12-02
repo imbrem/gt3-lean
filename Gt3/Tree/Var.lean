@@ -1,8 +1,9 @@
 import Gt3.Tree.Node
+import Gt3.Tree.Index
 
 namespace Gt3
 
-open NumChildren BinderList HasChildren
+open NumChildren BinderList HasChildren CastLE
 
 /-- A variable or a value -/
 inductive Var (ι : Type _) (α : Type _) : Type _
@@ -204,6 +205,12 @@ inductive IxF₂ (α : List ℕ → ℕ → Type _) : List ℕ → ℕ → Type 
 /-- Extend a family with de-Bruijn indices -/
 def IxF (α : List ℕ → Type _) : List ℕ → ℕ → Type _ := IxF₂ (fun bs _ => α bs)
 
+@[match_pattern]
+abbrev IxF.bv {α} {k} (i : Fin k) : IxF α [] k := IxF₂.bv i
+
+@[match_pattern]
+abbrev IxF.val {α} {bs k} (h : α bs) : IxF α bs k := IxF₂.val h
+
 /-- Extend a binary family with variables and de-Bruijn indices -/
 def LnF₂ (ι : Type _) (α : List ℕ → ℕ → Type _) : List ℕ → ℕ → Type _ := IxF₂ (VarF₂ ι α)
 
@@ -221,5 +228,136 @@ abbrev LnF.bv {ι α} {k} (i : Fin k) : LnF ι α [] k := LnF₂.bv i
 abbrev LnF.fv {ι α} {k} (x : ι) : LnF ι α [] k := LnF₂.fv x
 
 abbrev LnF.val {ι α} {k bs} (h : α bs) : LnF ι α bs k := LnF₂.val h
+
+instance IxF₂.instCastLE {α} [ha : ∀ {bs}, CastLE (α bs)] {bs} : CastLE (IxF₂ α bs) where
+  castLE h
+  | .bv i => .bv (i.castLE h)
+  | .val v => .val (castLE h v)
+  castLE_refl x := by cases x <;> simp
+  castLE_castLE _ _ x := by cases x <;> simp
+
+@[simp]
+theorem IxF₂.castLE_bv {α} [ha : ∀ {bs}, CastLE (α bs)] {lo hi} (h : lo ≤ hi) (i : Fin lo)
+  : castLE h (IxF₂.bv (α := α) i) = IxF₂.bv (i.castLE h)
+  := rfl
+
+@[simp]
+theorem IxF₂.castLE_val {α} [ha : ∀ {bs}, CastLE (α bs)] {lo hi} (h : lo ≤ hi) {bs} (v : α bs lo)
+  : castLE h (IxF₂.val (α := α) v) = IxF₂.val (castLE h v)
+  := rfl
+
+instance IxF₂.instNumChildren {α} [∀ {bs k}, NumChildren (α bs k)] {bs k}
+  : NumChildren (IxF₂ α bs k) where
+  numChildren
+    | .bv _ => 0
+    | .val h => numChildren h
+
+@[simp]
+theorem IxF₂.numChildren_bv {α} [∀ {bs k}, NumChildren (α bs k)] {k} (i : Fin k)
+  : numChildren (IxF₂.bv (α := α) i) = 0
+  := rfl
+
+@[simp]
+theorem IxF₂.numChildren_val {α} [∀ {bs k}, NumChildren (α bs k)] {bs k} (v : α bs k)
+  : numChildren (IxF₂.val (α := α) v) = numChildren v
+  := rfl
+
+instance IxF₂.instBinderList {α} [∀ {bs k}, BinderList (α bs k)] {bs k}
+  : BinderList (IxF₂ α bs k) where
+  binderList
+    | .bv _ => []
+    | .val h => binderList h
+  getBinder
+    | .bv _ => unreachable!
+    | .val h => getBinder h
+  getBinder_eq h i := by cases h <;> simp only [getBinder_eq] <;> rfl
+
+@[simp]
+theorem IxF₂.binderList_bv {α} [∀ {bs k}, BinderList (α bs k)] {k} (i : Fin k)
+  : binderList (IxF₂.bv (α := α) i) = []
+  := rfl
+
+@[simp]
+theorem IxF₂.binderList_val {α} [∀ {bs k}, BinderList (α bs k)] {bs k} (v : α bs k)
+  : binderList (IxF₂.val (α := α) v) = binderList v
+  := rfl
+
+@[simp]
+theorem IxF₂.getBinder_val {α} [∀ {bs k}, BinderList (α bs k)] {bs k} (v : α bs k)
+  : getBinder (IxF₂.val (α := α) v) = getBinder v
+  := rfl
+
+instance IxF₂.instBindCastLE
+  {α} [∀ {bs k}, BinderList (α bs k)] [ha : ∀ {bs}, BindCastLE (α bs)] {bs}
+  : BindCastLE (IxF₂ α bs) where
+  castLE_binderHom _ := BinderListHom.mk' (fun x => by cases x <;> simp)
+
+instance IxF.instCastLE {α bs} : CastLE (IxF α bs) := IxF₂.instCastLE
+
+@[simp]
+theorem IxF.castLE_bv {α} {lo hi} (h : lo ≤ hi) (i : Fin lo)
+  : castLE h (IxF.bv (α := α) i) = IxF.bv (i.castLE h)
+  := rfl
+
+@[simp]
+theorem IxF.castLE_val {α} {lo hi} (h : lo ≤ hi) {bs} (v : α bs)
+  : castLE h (IxF.val (α := α) v) = IxF.val v
+  := rfl
+
+instance IxF.instNumChildren {α bs k} [∀ {bs}, NumChildren (α bs)] : NumChildren (IxF α bs k)
+  := IxF₂.instNumChildren
+
+@[simp]
+theorem IxF.numChildren_bv {α} [∀ {bs}, NumChildren (α bs)] {k} (i : Fin k)
+  : numChildren (IxF.bv (α := α) i) = 0
+  := rfl
+
+@[simp]
+theorem IxF.numChildren_val {α} [∀ {bs}, NumChildren (α bs)] {bs k} (v : α bs)
+  : numChildren (IxF.val (α := α) (k := k) v) = numChildren v
+  := rfl
+
+instance IxF.instBinderList {α bs k} [∀ {bs}, BinderList (α bs)] : BinderList (IxF α bs k)
+  := IxF₂.instBinderList
+
+@[simp]
+theorem IxF.binderList_bv {α} [∀ {bs}, BinderList (α bs)] {k} (i : Fin k)
+  : binderList (IxF.bv (α := α) i) = []
+  := rfl
+
+@[simp]
+theorem IxF.binderList_val {α} [∀ {bs}, BinderList (α bs)] {bs k} (v : α bs)
+  : binderList (IxF.val (α := α) (k := k) v) = binderList v
+  := rfl
+
+instance IxF.instBindCastLE {α bs} [∀ {bs}, BinderList (α bs)] : BindCastLE (IxF α bs)
+  := IxF₂.instBindCastLE
+
+instance LnF.instCastLE {ι α bs} : CastLE (LnF ι α bs)
+  := IxF.instCastLE
+
+def IxF.lastCases {α bs k} {motive : ∀ {bs}, IxF α bs (k + 1) → Type _}
+  (last : motive (.bv (Fin.last k)))
+  (bv : ∀ i : Fin k, motive (.bv i.castSucc))
+  (val : ∀ h : α bs, motive (.val h))
+  : (h : IxF α bs (k + 1)) → motive h
+  | .bv i => i.lastCases last bv
+  | .val h => val h
+
+def IxF.lastCases' {α bs k} {motive : ∀ (bs), IxF α bs (k + 1) → Type _}
+  (last : motive [] (.bv (Fin.last k)))
+  (rest : ∀ h : IxF α bs k, motive bs (castSucc h))
+  : (h : IxF α bs (k + 1)) → motive bs h
+  | .bv i => i.lastCases last (fun i => rest (.bv i))
+  | .val h => rest (.val h)
+
+def LnF.lastCases' {ι α bs k} {motive : ∀ (bs), LnF ι α bs (k + 1) → Type _}
+  (last : motive [] (.bv (Fin.last k)))
+  (rest : ∀ h : LnF ι α bs k, motive bs (castSucc h))
+  : (h : LnF ι α bs (k + 1)) → motive bs h
+  := IxF.lastCases' last rest
+
+def LnF.open {ι α k bs} (x : ι) : LnF ι α bs (k + 1) → LnF ι α bs k
+  := LnF.lastCases' (motive := fun bs _ => LnF ι α bs k) (LnF.fv x) id
 
 end Gt3
