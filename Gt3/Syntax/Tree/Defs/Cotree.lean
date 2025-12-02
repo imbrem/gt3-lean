@@ -337,6 +337,12 @@ def Cotree (ι : Type _) (α : Type _) [BinderList α] : Type _ := Quotient (PCo
 
 def PCotree.toCotree {ι α} [BinderList α] (t : PCotree ι α) : Cotree ι α := ⟦t⟧
 
+instance PCotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList α]
+  : Inhabited (PCotree ι α) := ⟨default, fun _ => default⟩
+
+instance Cotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList α]
+  : Inhabited (Cotree ι α) := ⟨PCotree.instInhabited.default.toCotree⟩
+
 /-- A pre-cotree over a given partial address space -/
 structure PCotree? (ι : Type _) (α : Type _) [NumChildren α] : Type _ where
   ix : ι
@@ -428,6 +434,25 @@ instance PCotree?.setoid (ι α) [BinderList α] : Setoid (PCotree? ι α) where
 def Cotree? (ι : Type _) (α : Type _) [BinderList α] : Type _
   := Quotient (PCotree?.setoid ι α)
 
+instance PCotree?.instEmptyCollection {ι α} [Inhabited ι] [BinderList α]
+  : EmptyCollection (PCotree? ι α) where
+  emptyCollection := {
+    ix := default,
+    getNode := fun _ => none
+  }
+
+instance PCotree?.instInhabited {ι α} [Inhabited ι] [BinderList α]
+  : Inhabited (PCotree? ι α) := ⟨∅⟩
+
+def PCotree?.toCotree? {ι α} [BinderList α] (t : PCotree? ι α) : Cotree? ι α := ⟦t⟧
+
+instance Cotree?.instEmptyCollection {ι α} [Inhabited ι] [BinderList α]
+  : EmptyCollection (Cotree? ι α) where
+  emptyCollection := PCotree?.toCotree? (∅ : PCotree? ι α)
+
+instance Cotree?.instInhabited {ι α} [Inhabited ι] [BinderList α]
+  : Inhabited (Cotree? ι α) := ⟨∅⟩
+
 /-- A pre-cotree over a finite address space -/
 structure PFCotree (α : Type _) [NumChildren α] where
   size : ℕ
@@ -460,6 +485,17 @@ instance PFCotree.setoid (α) [BinderList α] : Setoid (PFCotree α) where
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
 
 def FCotree (α : Type _) [BinderList α] : Type _ := Quotient (PFCotree.setoid α)
+
+instance PFCotree.toFCotree {α} [BinderList α] (t : PFCotree α) : FCotree α := ⟦t⟧
+
+instance PFCotree.instInhabited {α} [Inhabited α] [BinderList α]
+  : Inhabited (PFCotree α) := ⟨{
+    size := 1,
+    cotree := default
+  }⟩
+
+instance FCotree.instInhabited {α} [Inhabited α] [BinderList α]
+  : Inhabited (FCotree α) := ⟨PFCotree.toFCotree (default : PFCotree α)⟩
 
 /-- A pre-cotree over a finite partial address space -/
 structure PFCotree? (α : Type _) [NumChildren α] where
@@ -510,5 +546,24 @@ instance PFCotree?.setoid (α) [BinderList α] : Setoid (PFCotree? α) where
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
 
 def FCotree? (α : Type _) [BinderList α] : Type _ := Quotient (PFCotree?.setoid α)
+
+def PFCotree?.toFCotree? {α} [BinderList α] (t : PFCotree? α) : FCotree? α := ⟦t⟧
+
+instance PFCotree?.instEmptyCollection {α} [Inhabited α] [BinderList α]
+  : EmptyCollection (PFCotree? α) where
+  emptyCollection := {
+    size := 1,
+    cotree := ∅
+  }
+
+instance PFCotree?.instInhabited {α} [Inhabited α] [BinderList α]
+  : Inhabited (PFCotree? α) := ⟨∅⟩
+
+instance FCotree?.instEmptyCollection {α} [Inhabited α] [BinderList α]
+  : EmptyCollection (FCotree? α) where
+  emptyCollection := PFCotree?.toFCotree? (∅ : PFCotree? α)
+
+instance FCotree?.instInhabited {α} [Inhabited α] [BinderList α]
+  : Inhabited (FCotree? α) := ⟨∅⟩
 
 end Gt3

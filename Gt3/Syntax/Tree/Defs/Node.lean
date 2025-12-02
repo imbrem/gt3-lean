@@ -54,4 +54,7 @@ instance Node.mapChildren_numChildrenHom {α β β'} [NumChildren α]
   (f : β → β') : NumChildrenHom (Functor.map (f := Node α) f) where
   numChildren_hom _ := rfl
 
+instance Node.instInhabited {α} [Inhabited α] [NumChildren α] {β} [Inhabited β]
+  : Inhabited (Node α β) := ⟨⟨default, fun _ => default⟩⟩
+
 end Gt3
