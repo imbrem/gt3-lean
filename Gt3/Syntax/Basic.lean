@@ -4,6 +4,7 @@ import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Algebra.Group.Action.Defs
 
 import Gt3.Universe.Level
+import Gt3.Syntax.Tag
 
 namespace Gt3
 
@@ -31,6 +32,8 @@ inductive Tm : ℕ → Type
   | natrec {k : ℕ} (C s : Tm (k + 1)) (z n : Tm k) : Tm k
   | has_ty {k : ℕ} (A a : Tm k) : Tm k
   | invalid {k : ℕ} : Tm k
+
+-- def Tm : ℕ → Type := DCoreTree BTm
 
 def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
   | .fv x => .fv x
@@ -514,7 +517,7 @@ theorem Tm.lst_castAdd_succ {k : ℕ} (n : ℕ) (t : Tm k) (v : Tm 0)
 @[simp]
 theorem Tm.lst_cast_zero {k : ℕ} (t : Tm 0) (v : Tm 0)
   : (t.castLE (Nat.zero_le (k + 1))).lst v = t.castLE (Nat.zero_le k)
-  := by rw [<-castLE_castLE (m := k), lst_cast_succ]
+  := by rw [<-castLE_castLE (m := k), lst_cast_succ]; omega
 
 theorem Tm.open_cast_succ {k : ℕ} (t : Tm k) (x : String)
   : (t.castLE (Nat.le_succ k)).open x = t
@@ -526,12 +529,12 @@ theorem Tm.open_castSucc {k : ℕ} (t : Tm k) (x : String)
 
 theorem Tm.open_cast_lt {lo hi : ℕ} (h : lo < hi + 1) (t : Tm lo) (x : String)
   : (t.castLE (le_of_lt h)).open x = t.castLE (m := hi) (by omega)
-  := by rw [<-castLE_castLE (m := hi), open_cast_succ]
+  := by rw [<-castLE_castLE (m := hi), open_cast_succ]; omega
 
 @[simp]
 theorem Tm.open_cast_zero {k : ℕ} (t : Tm 0) (x : String)
   : (t.castLE (Nat.zero_le (k + 1))).open x = t.castLE (Nat.zero_le k)
-  := by rw [<-castLE_castLE (m := k), open_cast_succ]
+  := by rw [<-castLE_castLE (m := k), open_cast_succ]; omega
 
 -- @[simp]
 -- theorem Tm.open_coe_succ {k : ℕ} (t : Tm k) (x : String)

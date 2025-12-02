@@ -9,12 +9,12 @@ inductive Var (ι : Type _) (α : Type _) : Type _
   | fv (x : ι) : Var ι α
   | val (h : α) : Var ι α
 
-instance {ι α} [NumChildren α] : NumChildren (Var ι α) where
+instance Var.instNumChildren {ι α} [NumChildren α] : NumChildren (Var ι α) where
   numChildren
     | .fv _ => 0
     | .val h => numChildren h
 
-instance {ι α} [BinderList α] : BinderList (Var ι α) where
+instance Var.instBinderList {ι α} [BinderList α] : BinderList (Var ι α) where
   binderList
     | .fv _ => []
     | .val h => binderList h
@@ -34,12 +34,12 @@ inductive Ix (α : ℕ → Type _) : ℕ → Type _
   | bv {k} (i : Fin k) : Ix α k
   | val {k} (h : α k) : Ix α k
 
-instance {α} [∀ k, NumChildren (α k)] {k} : NumChildren (Ix α k) where
+instance Ix.instNumChildren {α} [∀ k, NumChildren (α k)] {k} : NumChildren (Ix α k) where
   numChildren
     | .bv _ => 0
     | .val h => numChildren h
 
-instance {α} [∀ k, BinderList (α k)] {k} : BinderList (Ix α k) where
+instance Ix.instBinderList {α} [∀ k, BinderList (α k)] {k} : BinderList (Ix α k) where
   binderList
     | .bv _ => []
     | .val h => binderList h
@@ -127,5 +127,64 @@ instance IxAt.instLawfulMonad {k} : LawfulMonad (IxAt k) where
   bind_assoc x f g := by cases x <;> rfl
   bind_map x f := by cases x <;> rfl
   pure_bind x f := by rfl
+
+/-- A locally-nameless term -/
+def Ln (ι : Type _) (α : ℕ → Type _) : ℕ → Type _ := Ix (fun n => Var ι (α n))
+
+@[match_pattern]
+def Ln.bv {ι α} {k} (i : Fin k) : Ln ι α k := Ix.bv i
+
+@[match_pattern]
+def Ln.fv {ι α} {k} (x : ι) : Ln ι α k := Ix.val (Var.fv x)
+
+@[match_pattern]
+def Ln.val {ι α} {k} (h : α k) : Ln ι α k := Ix.val (Var.val h)
+
+-- @[eliminator]
+-- def Ln.casesOn {ι α k} (t : Ln ι α k)
+--   (f_bv : Fin k → Sort _)
+--   (f_fv : ι → Sort _)
+--   (f_val : α k → Sort _)
+--   : Sort _ :=
+--   match t with
+--   | Ix.bv i => f_bv i
+--   | Ix.val (Var.fv x) => f_fv x
+--   | Ix.val (Var.val h) => f_val h
+
+def Ln.map {ι ι' α α'} {k k'}
+  (f : Fin k → Fin k')
+  (g : ι → ι')
+  (h : α k → α' k') :
+  Ln ι α k → Ln ι' α' k' :=
+  Ix.map f (Var.map g h)
+
+abbrev LnAt (k : ℕ) (ι : Type _) (α : Type _) := Ln ι (fun _ => α) k
+
+abbrev LnAt.bv {k : ℕ} {ι α} (i : Fin k) : LnAt k ι α := Ln.bv i
+
+abbrev LnAt.fv {k : ℕ} {ι α} (x : ι) : LnAt k ι α := Ln.fv x
+
+abbrev LnAt.val {k : ℕ} {ι α} (h : α) : LnAt k ι α := Ln.val h
+
+def LnAt.map {k k' ι ι' α α'}
+  (f : Fin k → Fin k')
+  (g : ι → ι')
+  (h : α → α') :
+  LnAt k ι α → LnAt k' ι' α' :=
+  Ln.map f g h
+
+instance LnAt.instFunctor {k ι} : Functor (LnAt k ι) where
+  map := LnAt.map id id
+
+-- instance LnAt.instLawfulFunctor {k ι} : LawfulFunctor (LnAt k ι) where
+--   map_const := rfl
+--   id_map x := by cases x <;> sorry
+--   comp_map _ _ x := by cases x <;> sorry
+
+instance Ln.instNumChildren {ι α} [∀ k, NumChildren (α k)] {k} : NumChildren (Ln ι α k)
+  := Ix.instNumChildren
+
+instance Ln.instBinderList {ι α} [∀ k, BinderList (α k)] {k} : BinderList (Ln ι α k)
+  := Ix.instBinderList
 
 end Gt3
