@@ -92,12 +92,12 @@ instance {α β} (mem : α → β) : Determ Eq (readMem mem) where
   determ {x y₁ y₂} h₁ h₂ := by cases h₁; cases h₂; rfl
 
 def Node.SimUpto (stop : Prop) {α β} [BinderList α] [BinderList β] (rel : α → β → Prop) {ι₁ ι₂}
-  (lhs : ι₁ → Node α ι₁) (rhs : ι₂ → Node β ι₂) : ι₁ → ι₂ → Prop
-  := fun i₁ i₂ => ∀ n, Node.SimRelUpto stop rel (readMem lhs) (readMem rhs) n i₁ i₂
+  (lhs : ι₁ → Node α ι₁) (rhs : ι₂ → Node β ι₂) (gas : ℕ) : ι₁ → ι₂ → Prop
+  := Node.SimRelUpto stop rel (readMem lhs) (readMem rhs) gas
 
 def Node.Sim {α β} [BinderList α] [BinderList β] (rel : α → β → Prop) {ι₁ ι₂}
-  (lhs : ι₁ → Node α ι₁) (rhs : ι₂ → Node β ι₂) (i₁ : ι₁) (i₂ : ι₂) : Prop
-  := Node.SimRel rel (readMem lhs) (readMem rhs) i₁ i₂
+  (lhs : ι₁ → Node α ι₁) (rhs : ι₂ → Node β ι₂) : ι₁ → ι₂ → Prop
+  := Node.SimRel rel (readMem lhs) (readMem rhs)
 
 def Node.FinSim {α β} [BinderList α] [BinderList β] (rel : α → β → Prop) {ι₁ ι₂}
   (lhs : ι₁ → Node α ι₁) (rhs : ι₂ → Node β ι₂) : ι₁ → ι₂ → Prop
@@ -337,6 +337,70 @@ variable {stop : Prop} {α β} [BinderList α] [BinderList β]
 
 namespace Node
 
+theorem SimUpto.map_lhs {gas}
+  {i₁ i₂} (f : ι₁ → ι₁') (g : ι₁' → ι₁)
+  (hfg : ∀ i, g (f i) = i)
+  : SimUpto stop rel lhs rhs gas i₁ i₂
+  → SimUpto stop rel (Node.mapChildren f ∘ lhs ∘ g) rhs gas (f i₁) i₂
+  | .done _ _ hs => .done (f i₁) i₂ hs
+  | .node (n₁ := n₁) hn₁ hn₂ h_tag h_numChildren h_children =>
+    .node (lhs := readMem (Node.mapChildren f ∘ lhs ∘ g))
+          (rhs := readMem rhs)
+          (n₁ := n₁.mapChildren f)
+          (by simp only [hfg, implies_true, readMem, Function.comp_apply] at *; rw [hn₁]) hn₂
+          (by simp [mapChildren, h_tag]) (by simp [mapChildren, h_numChildren])
+          (fun j => map_lhs f g hfg (h_children j))
+
+theorem SimUpto.map_rhs {gas}
+  {i₁ i₂} (f : ι₂ → ι₂') (g : ι₂' → ι₂)
+  (hfg : ∀ i, g (f i) = i)
+  : SimUpto stop rel lhs rhs gas i₁ i₂
+  → SimUpto stop rel lhs (Node.mapChildren f ∘ rhs ∘ g) gas i₁ (f i₂)
+  | .done _ _ hs => .done i₁ (f i₂) hs
+  | .node (n₂ := n₂) hn₁ hn₂ h_tag h_numChildren h_children =>
+    .node (lhs := readMem lhs)
+          (rhs := readMem (Node.mapChildren f ∘ rhs ∘ g))
+          (n₂ := n₂.mapChildren f)
+          hn₁
+          (by simp only [hfg, implies_true, readMem, Function.comp_apply] at *; rw [hn₂])
+          (by simp [mapChildren, h_tag]) (by simp [mapChildren, h_numChildren])
+          (fun j => map_rhs f g hfg (h_children j))
+
+theorem SimUpto.map_both
+  {gas} {ι ι'} (f : ι → ι') (g : ι' → ι)
+  (hfg : ∀ i, g (f i) = i)
+  {lhs : ι → Node α ι}
+  {rhs : ι → Node β ι}
+  {i₁ i₂}
+  : SimUpto stop rel lhs rhs gas i₁ i₂
+  → SimUpto stop rel (Node.mapChildren f ∘ lhs ∘ g) (Node.mapChildren f ∘ rhs ∘ g) gas (f i₁) (f i₂)
+  := fun h => (h.map_lhs f g hfg).map_rhs f g hfg
+
+theorem Sim.map_lhs
+  {ι₁'} (f : ι₁ → ι₁') (g : ι₁' → ι₁)
+  (hfg : ∀ i, g (f i) = i)
+  {i₁ i₂}
+  : Sim rel lhs rhs i₁ i₂
+  → Sim rel (Node.mapChildren f ∘ lhs ∘ g) rhs (f i₁) i₂
+  := fun h n => SimUpto.map_lhs f g hfg (h n)
+
+theorem Sim.map_rhs
+  {ι₂'} (f : ι₂ → ι₂') (g : ι₂' → ι₂)
+  (hfg : ∀ i, g (f i) = i)
+  {i₁ i₂}
+  : Sim rel lhs rhs i₁ i₂
+  → Sim rel lhs (Node.mapChildren f ∘ rhs ∘ g) i₁ (f i₂)
+  := fun h n => SimUpto.map_rhs f g hfg (h n)
+
+theorem Sim.map_both
+  {ι ι'} (f : ι → ι') (g : ι' → ι)
+  (hfg : ∀ i, g (f i) = i)
+  {lhs : ι → Node α ι} {rhs : ι → Node β ι}
+  {i₁ i₂}
+  : Sim rel lhs rhs i₁ i₂
+  → Sim rel (Node.mapChildren f ∘ lhs ∘ g) (Node.mapChildren f ∘ rhs ∘ g) (f i₁) (f i₂)
+  := fun h n => SimUpto.map_both f g hfg (h n)
+
 end Node
 
 end Sim
@@ -437,7 +501,6 @@ instance PCotree.setoid (ι α) [BinderList α] : Setoid (PCotree ι α) where
   r := PCotree.Sim Eq
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
 
-
 theorem PCotree.eqv_tag {ι α} [BinderList α]
   {t₁ t₂ : PCotree ι α} (h : t₁ ≈ t₂) : t₁.tag = t₂.tag := Sim.tag h
 
@@ -454,6 +517,54 @@ theorem PCotree.eqv_children {ι α} [BinderList α]
   {t₁ t₂ : PCotree ι α} (h : t₁ ≈ t₂) (j)
   : (getChild (β := PCotree ι α) t₁ j) ≈ (getChild t₂ (j.cast (PCotree.eqv_numChildren h)))
   := Sim.children h j
+
+theorem PCotree.neZero {n} {α} [NumChildren α]
+  (t : PCotree (Fin n) α) : NeZero n :=
+  by cases n with
+     | zero => exact t.ix.elim0
+     | succ _ => infer_instance
+
+def PCotree.mapIx {ι₁ ι₂ α} [NumChildren α]
+  (f : ι₁ → ι₂) (g : ι₂ → ι₁)
+  (t : PCotree ι₁ α) : PCotree ι₂ α where
+  ix := f t.ix
+  getNode i := (t.getNode (g i)).mapChildren f
+
+theorem PCotree.mapIx_sim_eq {ι₁ ι₂ α} [BinderList α]
+  (f : ι₁ → ι₂) (g : ι₂ → ι₁)
+  (hfg : ∀ i, g (f i) = i)
+  (t : PCotree ι₁ α) :
+  t.Sim Eq (t.mapIx f g) := by
+  exact Node.Sim.map_rhs f g hfg (Sim.refl t)
+
+theorem PCotree.mapIx_eqv {ι₁ ι₂ α} [BinderList α]
+  {f : ι₁ → ι₂} {g : ι₂ → ι₁}
+  (hfg : ∀ i, g (f i) = i)
+  {t t' : PCotree ι₁ α} (h : t ≈ t') :
+  (t.mapIx f g) ≈ (t'.mapIx f g)
+  := ((t.mapIx_sim_eq f g hfg).symm.trans h).trans (t'.mapIx_sim_eq f g hfg)
+
+def PCotree.finToNat {n} {α} [NumChildren α] (t : PCotree (Fin n) α) : PCotree ℕ α
+  := t.mapIx Fin.val (have _ := t.neZero; Fin.ofNat n)
+
+theorem PCotree.finToNat_sim_eq {n} {α} [BinderList α] (t : PCotree (Fin n) α) :
+  t.Sim Eq t.finToNat
+  :=
+  have _  := t.neZero;
+  PCotree.mapIx_sim_eq Fin.val (Fin.ofNat n) (fun i => by simp) t
+
+theorem PCotree.finToNat_eqv {n} {α} [BinderList α] {t t' : PCotree (Fin n) α} (h : t ≈ t') :
+  t.finToNat ≈ t'.finToNat :=
+  have _ := t.neZero;
+  PCotree.mapIx_eqv (fun i => by simp) h
+
+--TODO: mapIx; mapIx
+
+--TODO: fintag and friends;
+  -- Fin n × ℕ ≅ ℕ
+  -- ℕ × ℕ ≅ ℕ
+  -- `Encodable` and associated lore
+  -- General ℕ-ification
 
 def Cotree (ι : Type _) (α : Type _) [BinderList α] : Type _ := Quotient (PCotree.setoid ι α)
 
@@ -491,6 +602,26 @@ instance PCotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList
 
 instance Cotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList α]
   : Inhabited (Cotree ι α) := ⟨PCotree.instInhabited.default.toCotree⟩
+
+theorem Cotree.neZero {n} {α} [BinderList α]
+  (t : Cotree (Fin n) α) : NeZero n := by induction t using Quot.ind with | mk t => exact t.neZero
+
+def Cotree.mapIx {ι₁ ι₂ α} [BinderList α]
+  (f : ι₁ → ι₂) (g : ι₂ → ι₁) (hfg : ∀ i, g (f i) = i)
+  (t : Cotree ι₁ α) : Cotree ι₂ α :=
+  Quotient.liftOn t (fun t => (t.mapIx f g).toCotree) fun _ _ h
+    => Quotient.sound <| PCotree.mapIx_eqv hfg h
+
+@[simp]
+theorem Cotree.mapIx_self {ι α} [BinderList α]
+  (f g : ι → ι) (hfg : ∀ i, g (f i) = i)
+  (t : Cotree ι α) :
+  t.mapIx f g hfg = t := by induction t using Quot.ind with | mk t =>
+  exact Quotient.sound (PCotree.mapIx_sim_eq f g hfg t).symm
+
+def Cotree.finToNat {n} {α} [BinderList α] (t : Cotree (Fin n) α) : Cotree ℕ α :=
+  Quotient.liftOn t (fun t => t.finToNat.toCotree) fun _ _ h
+    => Quotient.sound <| PCotree.finToNat_eqv h
 
 /-- A pre-cotree over a given partial address space -/
 structure PCotree? (ι : Type _) (α : Type _) [NumChildren α] : Type _ where
