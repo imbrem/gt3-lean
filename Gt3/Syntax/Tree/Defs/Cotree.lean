@@ -329,9 +329,13 @@ theorem PCotree.Sim.trans {ι₁ ι₂ ι₃ α} [BinderList α]
   (h2 : PCotree.Sim rel t₂ t₃) : PCotree.Sim rel t₁ t₃ :=
   Node.SimRel.trans h1 h2
 
-instance PCotree.instSetoid {ι α} [BinderList α] : Setoid (PCotree ι α) where
+instance PCotree.setoid (ι α) [BinderList α] : Setoid (PCotree ι α) where
   r := PCotree.Sim Eq
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
+
+def Cotree (ι : Type _) (α : Type _) [BinderList α] : Type _ := Quotient (PCotree.setoid ι α)
+
+def PCotree.toCotree {ι α} [BinderList α] (t : PCotree ι α) : Cotree ι α := ⟦t⟧
 
 /-- A pre-cotree over a given partial address space -/
 structure PCotree? (ι : Type _) (α : Type _) [NumChildren α] : Type _ where
@@ -417,9 +421,12 @@ theorem PCotree?.Sim.trans {ι₁ ι₂ ι₃ α} [BinderList α]
   | Or.inr ⟨h1_undef1, _⟩, Or.inr ⟨_, h2_undef2⟩ =>
     Or.inr ⟨h1_undef1, h2_undef2⟩
 
-instance PCotree?.instSetoid {ι α} [BinderList α] : Setoid (PCotree? ι α) where
+instance PCotree?.setoid (ι α) [BinderList α] : Setoid (PCotree? ι α) where
   r := PCotree?.Sim Eq
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
+
+def Cotree? (ι : Type _) (α : Type _) [BinderList α] : Type _
+  := Quotient (PCotree?.setoid ι α)
 
 /-- A pre-cotree over a finite address space -/
 structure PFCotree (α : Type _) [NumChildren α] where
@@ -448,9 +455,11 @@ theorem PFCotree.Sim.trans {α} [BinderList α]
   (h2 : PFCotree.Sim rel t₂ t₃) : PFCotree.Sim rel t₁ t₃ :=
   PCotree.Sim.trans h1 h2
 
-instance PFCotree.instSetoid {α} [BinderList α] : Setoid (PFCotree α) where
+instance PFCotree.setoid (α) [BinderList α] : Setoid (PFCotree α) where
   r := PFCotree.Sim Eq
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
+
+def FCotree (α : Type _) [BinderList α] : Type _ := Quotient (PFCotree.setoid α)
 
 /-- A pre-cotree over a finite partial address space -/
 structure PFCotree? (α : Type _) [NumChildren α] where
@@ -496,8 +505,10 @@ theorem PFCotree?.Sim.trans {α} [BinderList α]
   (h2 : PFCotree?.Sim rel t₂ t₃) : PFCotree?.Sim rel t₁ t₃ :=
   PCotree?.Sim.trans h1 h2
 
-instance PFCotree?.instSetoid {α} [BinderList α] : Setoid (PFCotree? α) where
+instance PFCotree?.setoid (α) [BinderList α] : Setoid (PFCotree? α) where
   r := PFCotree?.Sim Eq
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
+
+def FCotree? (α : Type _) [BinderList α] : Type _ := Quotient (PFCotree?.setoid α)
 
 end Gt3
