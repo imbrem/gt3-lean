@@ -62,76 +62,76 @@ def CoreShape.size : CoreShape → CoreSize
 instance CoreShape.instNumChildrenHom : NumChildrenHom CoreShape.size where
   numChildren_hom h := by cases h <;> rfl
 
-inductive HTm : Type
-  | univ (ℓ : ULevel) : HTm
-  | empty  : HTm
-  | unit  : HTm
-  | null  : HTm
-  | eqn  : HTm
-  | pi : HTm
-  | sigma : HTm
-  | abs : HTm
-  | app : HTm
-  | pair : HTm
-  | fst : HTm
-  | snd : HTm
-  | dite : HTm
-  | trunc : HTm
-  | choose : HTm
-  | nats : HTm
-  | zero : HTm
-  | succ : HTm
-  | natrec : HTm
-  | has_ty  : HTm
-  | invalid  : HTm
+inductive CoreTag : Type
+  | univ (ℓ : ULevel) : CoreTag
+  | empty  : CoreTag
+  | unit  : CoreTag
+  | null  : CoreTag
+  | eqn  : CoreTag
+  | pi : CoreTag
+  | sigma : CoreTag
+  | abs : CoreTag
+  | app : CoreTag
+  | pair : CoreTag
+  | fst : CoreTag
+  | snd : CoreTag
+  | dite : CoreTag
+  | trunc : CoreTag
+  | choose : CoreTag
+  | nats : CoreTag
+  | zero : CoreTag
+  | succ : CoreTag
+  | natrec : CoreTag
+  | has_ty  : CoreTag
+  | invalid  : CoreTag
 
-inductive BTm : List ℕ → Type
-  | univ (ℓ : ULevel) : BTm []
-  | empty  : BTm []
-  | unit  : BTm []
-  | null  : BTm  []
-  | eqn  : BTm [0, 0]
-  | pi : BTm [0, 1]
-  | sigma : BTm [0, 1]
-  | abs : BTm [0, 1]
-  | app : BTm [0, 0]
-  | pair : BTm [0, 0]
-  | fst : BTm [0]
-  | snd : BTm [0]
-  | dite : BTm [0, 1, 1]
-  | trunc : BTm [0]
-  | choose : BTm [0, 1]
-  | nats : BTm []
-  | zero : BTm []
-  | succ : BTm [0]
-  | natrec : BTm [1, 1, 0, 0]
-  | has_ty  : BTm [0, 0]
-  | invalid  : BTm []
+inductive LCoreTag : ℕ → Type
+  | univ (ℓ : ULevel) : LCoreTag 0
+  | empty  : LCoreTag 0
+  | unit  : LCoreTag 0
+  | null  : LCoreTag 0
+  | eqn  : LCoreTag 2
+  | pi : LCoreTag 2
+  | sigma : LCoreTag 2
+  | abs : LCoreTag 2
+  | app : LCoreTag 2
+  | pair : LCoreTag 2
+  | fst : LCoreTag 1
+  | snd : LCoreTag 1
+  | dite : LCoreTag 3
+  | trunc : LCoreTag 1
+  | choose : LCoreTag 2
+  | nats : LCoreTag 0
+  | zero : LCoreTag 0
+  | succ : LCoreTag 1
+  | natrec : LCoreTag 4
+  | has_ty  : LCoreTag 2
+  | invalid  : LCoreTag 0
 
-inductive STm : ℕ → Type
-  | univ (ℓ : ULevel) : STm 0
-  | empty  : STm 0
-  | unit  : STm 0
-  | null  : STm 0
-  | eqn  : STm 2
-  | pi : STm 2
-  | sigma : STm 2
-  | abs : STm 2
-  | app : STm 2
-  | pair : STm 2
-  | fst : STm 1
-  | snd : STm 1
-  | dite : STm 3
-  | trunc : STm 1
-  | choose : STm 2
-  | nats : STm 0
-  | zero : STm 0
-  | succ : STm 1
-  | natrec : STm 4
-  | has_ty  : STm 2
-  | invalid  : STm 0
+inductive DCoreTag : List ℕ → Type
+  | univ (ℓ : ULevel) : DCoreTag []
+  | empty  : DCoreTag []
+  | unit  : DCoreTag []
+  | null  : DCoreTag  []
+  | eqn  : DCoreTag [0, 0]
+  | pi : DCoreTag [0, 1]
+  | sigma : DCoreTag [0, 1]
+  | abs : DCoreTag [0, 1]
+  | app : DCoreTag [0, 0]
+  | pair : DCoreTag [0, 0]
+  | fst : DCoreTag [0]
+  | snd : DCoreTag [0]
+  | dite : DCoreTag [0, 1, 1]
+  | trunc : DCoreTag [0]
+  | choose : DCoreTag [0, 1]
+  | nats : DCoreTag []
+  | zero : DCoreTag []
+  | succ : DCoreTag [0]
+  | natrec : DCoreTag [1, 1, 0, 0]
+  | has_ty  : DCoreTag [0, 0]
+  | invalid  : DCoreTag []
 
-def BTm.coreShape {bs : List ℕ} : BTm bs → CoreShape
+def DCoreTag.coreShape {bs : List ℕ} : DCoreTag bs → CoreShape
   | .univ _ => .constant
   | .empty => .constant
   | .unit => .constant
@@ -154,7 +154,7 @@ def BTm.coreShape {bs : List ℕ} : BTm bs → CoreShape
   | .has_ty => .binary
   | .invalid => .constant
 
-def STm.coreShape {k : ℕ} : STm k → CoreShape
+def LCoreTag.coreShape {k : ℕ} : LCoreTag k → CoreShape
   | .univ _ => .constant
   | .empty => .constant
   | .unit => .constant
@@ -177,7 +177,7 @@ def STm.coreShape {k : ℕ} : STm k → CoreShape
   | .has_ty => .binary
   | .invalid => .constant
 
-def HTm.coreShape : HTm → CoreShape
+def CoreTag.coreShape : CoreTag → CoreShape
   | .univ _ => .constant
   | .empty => .constant
   | .unit => .constant
@@ -200,7 +200,7 @@ def HTm.coreShape : HTm → CoreShape
   | .has_ty => .binary
   | .invalid => .constant
 
-def BTm.toHTm {bs : List ℕ} : BTm bs → HTm
+def LCoreTag.toCoreTag {k : ℕ} : LCoreTag k → CoreTag
   | .univ ℓ => .univ ℓ
   | .empty => .empty
   | .unit => .unit
@@ -223,7 +223,7 @@ def BTm.toHTm {bs : List ℕ} : BTm bs → HTm
   | .has_ty => .has_ty
   | .invalid => .invalid
 
-def BTm.toSTm {bs : List ℕ} : BTm bs → STm (bs.length)
+def DCoreTag.toLCoreTag {bs : List ℕ} : DCoreTag bs → LCoreTag (bs.length)
   | .univ ℓ => .univ ℓ
   | .empty => .empty
   | .unit => .unit
@@ -246,33 +246,10 @@ def BTm.toSTm {bs : List ℕ} : BTm bs → STm (bs.length)
   | .has_ty => .has_ty
   | .invalid => .invalid
 
-def STm.toHTm {k : ℕ} : STm k → HTm
-  | .univ ℓ => .univ ℓ
-  | .empty => .empty
-  | .unit => .unit
-  | .null => .null
-  | .eqn => .eqn
-  | .pi => .pi
-  | .sigma => .sigma
-  | .abs => .abs
-  | .app => .app
-  | .pair => .pair
-  | .fst => .fst
-  | .snd => .snd
-  | .dite => .dite
-  | .trunc => .trunc
-  | .choose => .choose
-  | .nats => .nats
-  | .zero => .zero
-  | .succ => .succ
-  | .natrec => .natrec
-  | .has_ty => .has_ty
-  | .invalid => .invalid
+def DCoreTag.toCoreTag {bs : List ℕ} (x : DCoreTag bs) : CoreTag
+  := x.toLCoreTag.toCoreTag
 
-@[simp]
-theorem BTm.toSTm_toHTm {bs : List ℕ} (b : BTm bs) : b.toSTm.toHTm = b.toHTm := by cases b <;> rfl
-
-instance HTm.instNumChildren : NumChildren HTm where
+instance CoreTag.instNumChildren : NumChildren CoreTag where
   numChildren
     | .univ _ => 0
     | .empty => 0
@@ -296,13 +273,13 @@ instance HTm.instNumChildren : NumChildren HTm where
     | .has_ty => 2
     | .invalid => 0
 
-instance STm.numChildren {n} : NumChildren (STm n) where
-  numChildren _ := n
+instance LCoreTag.instNumChildren {k : ℕ} : NumChildren (LCoreTag k) where
+  numChildren _ := k
 
-instance BTm.numChildren {bs : List ℕ} : NumChildren (BTm bs) where
+instance DCoreTag.instNumChildren {bs : List ℕ} : NumChildren (DCoreTag bs) where
   numChildren _ := bs.length
 
-instance HTm.instBinderList : BinderList HTm where
+instance CoreTag.instBinderList : BinderList CoreTag where
   binderList
     | .univ _ => []
     | .empty => []
@@ -326,10 +303,33 @@ instance HTm.instBinderList : BinderList HTm where
     | .has_ty => [0, 0]
     | .invalid => []
 
-instance STm.instBinderList {n} : BinderList (STm n) where
-  binderList x := binderList x.toHTm
+instance LCoreTag.instBinderList {k : ℕ} : BinderList (LCoreTag k) where
+  binderList x := binderList x.toCoreTag
 
-instance BTm.instBinderList {bs : List ℕ} : BinderList (BTm bs) where
-  binderList x := bs
+instance DCoreTag.instBinderList {bs : List ℕ} : BinderList (DCoreTag bs) where
+  binderList _ := bs
+
+instance CoreTag.instNumChildrenHomCoreShape : NumChildrenHom CoreTag.coreShape where
+  numChildren_hom h := by cases h <;> rfl
+
+instance LCoreTag.instNumChildrenHomCoreShape {k : ℕ}
+  : NumChildrenHom (LCoreTag.coreShape (k := k)) where
+  numChildren_hom h := by cases h <;> rfl
+
+instance DCoreTag.instNumChildrenHomCoreShape {bs : List ℕ}
+  : NumChildrenHom (DCoreTag.coreShape (bs := bs)) where
+  numChildren_hom h := by cases h <;> rfl
+
+instance LCoreTag.instBinderListHomToCoreTag {k : ℕ}
+  : BinderListHom (LCoreTag.toCoreTag (k := k))
+  := BinderListHom.mk' fun x => by cases x <;> rfl
+
+instance DCoreTag.instBinderListHomToLCoreTag {bs : List ℕ}
+  : BinderListHom (DCoreTag.toLCoreTag (bs := bs))
+  := BinderListHom.mk' fun x => by cases x <;> rfl
+
+instance DCoreTag.instBinderListHomToCoreTag {bs : List ℕ}
+  : BinderListHom (DCoreTag.toCoreTag (bs := bs))
+  := BinderListHom.mk' fun x => by cases x <;> rfl
 
 end Gt3

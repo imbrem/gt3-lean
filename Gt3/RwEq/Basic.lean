@@ -1,6 +1,7 @@
 import Gt3.JEq.Basic
 import Gt3.HasTy.Factor
 import Gt3.Syntax.LstBar
+import Gt3.Syntax.LcInd
 
 namespace Gt3
 
