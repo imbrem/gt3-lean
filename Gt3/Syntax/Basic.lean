@@ -57,13 +57,13 @@ abbrev Tm2.null {k : ℕ} : Tm2 k := .constant (.val (.null))
 abbrev Tm2.eqn {k : ℕ} (a b : Tm2 k) : Tm2 k := .binary (.val (.eqn)) a b
 
 @[match_pattern]
-abbrev Tm2.pi {k : ℕ} (A : Tm2 k) (B : Tm2 (k + 1)) : Tm2 k := .binder (.val (.pi)) B A
+abbrev Tm2.pi {k : ℕ} (A : Tm2 k) (B : Tm2 (k + 1)) : Tm2 k := .binder (.val (.pi)) A B
 
 @[match_pattern]
-abbrev Tm2.sigma {k : ℕ} (A : Tm2 k) (B : Tm2 (k + 1)) : Tm2 k := .binder (.val (.sigma)) B A
+abbrev Tm2.sigma {k : ℕ} (A : Tm2 k) (B : Tm2 (k + 1)) : Tm2 k := .binder (.val (.sigma)) A B
 
 @[match_pattern]
-abbrev Tm2.abs {k : ℕ} (A : Tm2 k) (b : Tm2 (k + 1)) : Tm2 k := .binder (.val (.abs)) b A
+abbrev Tm2.abs {k : ℕ} (A : Tm2 k) (b : Tm2 (k + 1)) : Tm2 k := .binder (.val (.abs)) A b
 
 @[match_pattern]
 abbrev Tm2.app {k : ℕ} (f a : Tm2 k) : Tm2 k := .binary (.val (.app)) f a
@@ -84,7 +84,7 @@ abbrev Tm2.dite {k : ℕ} (φ : Tm2 k) (l r : Tm2 (k + 1)) : Tm2 k := .ite (.val
 abbrev Tm2.trunc {k : ℕ} (A : Tm2 k) : Tm2 k := .unary (.val (.trunc)) A
 
 @[match_pattern]
-abbrev Tm2.choose {k : ℕ} (A : Tm2 k) (φ : Tm2 (k + 1)) : Tm2 k := .binder (.val (.choose)) φ A
+abbrev Tm2.choose {k : ℕ} (A : Tm2 k) (φ : Tm2 (k + 1)) : Tm2 k := .binder (.val (.choose)) A φ
 
 @[match_pattern]
 abbrev Tm2.nats {k : ℕ} : Tm2 k := .constant (.val (.nats))
