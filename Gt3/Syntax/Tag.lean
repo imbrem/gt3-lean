@@ -77,20 +77,20 @@ inductive CoreTree (α : List ℕ → Type _) : Type _ where
       : CoreTree α
 
 /-- A core-shaped de-Bruijn tree -/
-inductive DCoreTree (α : List ℕ → Type) : ℕ → Type _ where
-  | constant {k} (h : α [] ) : DCoreTree α k
-  | unary {k} (h : α [0]) (arg : DCoreTree α k) : DCoreTree α k
-  | binary {k} (h : α [0, 0]) (left right : DCoreTree α k) : DCoreTree α k
-  | binder {k} (h : α [0, 1])
+inductive DCoreTree (α : List ℕ → ℕ → Type _) : ℕ → Type _ where
+  | constant {k} (h : α [] k) : DCoreTree α k
+  | unary {k} (h : α [0] k) (arg : DCoreTree α k) : DCoreTree α k
+  | binary {k} (h : α [0, 0] k) (left right : DCoreTree α k) : DCoreTree α k
+  | binder {k} (h : α [0, 1] k)
       (body : DCoreTree α (k + 1))
       (ty : DCoreTree α k)
       : DCoreTree α k
-  | ite {k} (h : α [0, 1, 1])
+  | ite {k} (h : α [0, 1, 1] k)
       (cond : DCoreTree α k)
       (thenBr : DCoreTree α (k + 1))
       (elseBr : DCoreTree α (k + 1))
       : DCoreTree α k
-  | natrec {k} (h : α [1, 1, 0, 0])
+  | natrec {k} (h : α [1, 1, 0, 0] k)
       (mot : DCoreTree α (k + 1))
       (succCase : DCoreTree α (k + 1))
       (zeroCase : DCoreTree α k)

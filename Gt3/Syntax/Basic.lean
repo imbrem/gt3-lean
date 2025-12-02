@@ -4,7 +4,7 @@ import Mathlib.Data.Finset.Lattice.Basic
 import Mathlib.Algebra.Group.Action.Defs
 
 import Gt3.Universe.Level
-import Gt3.Syntax.Tag
+import Gt3.Syntax.Core
 
 namespace Gt3
 
@@ -33,7 +33,235 @@ inductive Tm : ℕ → Type
   | has_ty {k : ℕ} (A a : Tm k) : Tm k
   | invalid {k : ℕ} : Tm k
 
--- def Tm : ℕ → Type := DCoreTree BTm
+def Tm2 : ℕ → Type := DCoreTree (LnF String BTm)
+
+@[match_pattern]
+abbrev Tm2.fv {k : ℕ} (x : String) : Tm2 k := .constant (.fv x)
+
+@[match_pattern]
+abbrev Tm2.bv {k : ℕ} (i : Fin k) : Tm2 k := .constant (.bv i)
+
+@[match_pattern]
+abbrev Tm2.univ {k : ℕ} (ℓ : ULevel) : Tm2 k := .constant (.val (.univ ℓ))
+
+@[match_pattern]
+abbrev Tm2.empty {k : ℕ} : Tm2 k := .constant (.val (.empty))
+
+@[match_pattern]
+abbrev Tm2.unit {k : ℕ} : Tm2 k := .constant (.val (.unit))
+
+@[match_pattern]
+abbrev Tm2.null {k : ℕ} : Tm2 k := .constant (.val (.null))
+
+@[match_pattern]
+abbrev Tm2.eqn {k : ℕ} (a b : Tm2 k) : Tm2 k := .binary (.val (.eqn)) a b
+
+@[match_pattern]
+abbrev Tm2.pi {k : ℕ} (A : Tm2 k) (B : Tm2 (k + 1)) : Tm2 k := .binder (.val (.pi)) B A
+
+@[match_pattern]
+abbrev Tm2.sigma {k : ℕ} (A : Tm2 k) (B : Tm2 (k + 1)) : Tm2 k := .binder (.val (.sigma)) B A
+
+@[match_pattern]
+abbrev Tm2.abs {k : ℕ} (A : Tm2 k) (b : Tm2 (k + 1)) : Tm2 k := .binder (.val (.abs)) b A
+
+@[match_pattern]
+abbrev Tm2.app {k : ℕ} (f a : Tm2 k) : Tm2 k := .binary (.val (.app)) f a
+
+@[match_pattern]
+abbrev Tm2.pair {k : ℕ} (a b : Tm2 k) : Tm2 k := .binary (.val (.pair)) a b
+
+@[match_pattern]
+abbrev Tm2.fst {k : ℕ} (p : Tm2 k) : Tm2 k := .unary (.val (.fst)) p
+
+@[match_pattern]
+abbrev Tm2.snd {k : ℕ} (p : Tm2 k) : Tm2 k := .unary (.val (.snd)) p
+
+@[match_pattern]
+abbrev Tm2.dite {k : ℕ} (φ : Tm2 k) (l r : Tm2 (k + 1)) : Tm2 k := .ite (.val (.dite)) φ l r
+
+@[match_pattern]
+abbrev Tm2.trunc {k : ℕ} (A : Tm2 k) : Tm2 k := .unary (.val (.trunc)) A
+
+@[match_pattern]
+abbrev Tm2.choose {k : ℕ} (A : Tm2 k) (φ : Tm2 (k + 1)) : Tm2 k := .binder (.val (.choose)) φ A
+
+@[match_pattern]
+abbrev Tm2.nats {k : ℕ} : Tm2 k := .constant (.val (.nats))
+
+@[match_pattern]
+abbrev Tm2.zero {k : ℕ} : Tm2 k := .constant (.val (.zero))
+
+@[match_pattern]
+abbrev Tm2.succ {k : ℕ} (n : Tm2 k) : Tm2 k := .unary (.val (.succ)) n
+
+@[match_pattern]
+abbrev Tm2.natrec {k : ℕ} (C s : Tm2 (k + 1)) (z n : Tm2 k) : Tm2 k :=
+  DCoreTree.natrec (.val (.natrec)) C s z n
+
+@[match_pattern]
+abbrev Tm2.has_ty {k : ℕ} (A a : Tm2 k) : Tm2 k := .binary (.val (.has_ty)) A a
+
+@[match_pattern]
+abbrev Tm2.invalid {k : ℕ} : Tm2 k := .constant (.val (.invalid))
+
+@[cases_eliminator]
+def Tm2.casesOn {k : ℕ} (t : Tm2 k)
+  {motive : Tm2 k → Type _}
+  (fv : ∀ x, motive (.fv x))
+  (bv : ∀ i, motive (.bv i))
+  (univ : ∀ ℓ, motive (.univ ℓ))
+  (empty : motive .empty)
+  (unit : motive .unit)
+  (null : motive .null)
+  (eqn : ∀ a b, motive (.eqn a b))
+  (pi : ∀ A B, motive (.pi A B))
+  (sigma : ∀ A B, motive (.sigma A B))
+  (abs : ∀ A b, motive (.abs A b))
+  (app : ∀ f a, motive (.app f a))
+  (pair : ∀ a b, motive (.pair a b))
+  (fst : ∀ p, motive (.fst p))
+  (snd : ∀ p, motive (.snd p))
+  (dite : ∀ φ l r, motive (.dite φ l r))
+  (trunc : ∀ A, motive (.trunc A))
+  (choose : ∀ A φ, motive (.choose A φ))
+  (nats : motive .nats)
+  (zero : motive .zero)
+  (succ : ∀ n, motive (.succ n))
+  (natrec : ∀ C s z n, motive (.natrec C s z n))
+  (has_ty : ∀ A a, motive (.has_ty A a))
+  (invalid : motive .invalid)
+  : motive t := match t with
+  | .fv x => fv x
+  | .bv i => bv i
+  | .univ ℓ => univ ℓ
+  | .empty => empty
+  | .unit => unit
+  | .null => null
+  | .eqn a b => eqn a b
+  | .pi A B => pi A B
+  | .sigma A B => sigma A B
+  | .abs A b => abs A b
+  | .app f a => app f a
+  | .pair a b => pair a b
+  | .fst p => fst p
+  | .snd p => snd p
+  | .dite φ l r => dite φ l r
+  | .trunc A => trunc A
+  | .choose A φ => choose A φ
+  | .nats => nats
+  | .zero => zero
+  | .succ n => succ n
+  | .natrec C s z n => natrec C s z n
+  | .has_ty A a => has_ty A a
+  | .invalid => invalid
+
+@[induction_eliminator]
+def Tm2.inductionOn {k : ℕ} (t : Tm2 k)
+  {motive : ∀ k, Tm2 k → Sort _}
+  (fv : ∀ {k} x, motive k (.fv x))
+  (bv : ∀ {k} i, motive k (.bv i))
+  (univ : ∀ {k} ℓ, motive k (.univ ℓ))
+  (empty : ∀ {k}, motive k .empty)
+  (unit : ∀ {k}, motive k .unit)
+  (null : ∀ {k}, motive k .null)
+  (eqn : ∀ {k} a b, motive k a → motive k b → motive k (.eqn a b))
+  (pi : ∀ {k} A B, motive k A → motive (k + 1) B → motive k (.pi A B))
+  (sigma : ∀ {k} A B, motive k A → motive (k + 1) B → motive k (.sigma A B))
+  (abs : ∀ {k} A b, motive k A → motive (k + 1) b → motive k (.abs A b))
+  (app : ∀ {k} f a, motive k f → motive k a → motive k (.app f a))
+  (pair : ∀ {k} a b, motive k a → motive k b → motive k (.pair a b))
+  (fst : ∀ {k} p, motive k p → motive k (.fst p))
+  (snd : ∀ {k} p, motive k p → motive k (.snd p))
+  (dite : ∀ {k} φ l r, motive k φ → motive (k + 1) l → motive (k + 1) r → motive k (.dite φ l r))
+  (trunc : ∀ {k} A, motive k A → motive k (.trunc A))
+  (choose : ∀ {k} A φ, motive k A → motive (k + 1) φ → motive k (.choose A φ))
+  (nats : ∀ {k}, motive k .nats)
+  (zero : ∀ {k}, motive k .zero)
+  (succ : ∀ {k} n, motive k n → motive k (.succ n))
+  (natrec : ∀ {k} C s z n,
+    motive (k + 1) C → motive (k + 1) s → motive k z → motive k n →
+    motive k (.natrec C s z n))
+  (has_ty : ∀ {k} A a, motive k A → motive k a → motive k (.has_ty A a))
+  (invalid : ∀ {k}, motive k .invalid)
+  : motive k t := match t with
+  | .fv x => fv x
+  | .bv i => bv i
+  | .univ ℓ => univ ℓ
+  | .empty => empty
+  | .unit => unit
+  | .null => null
+  | .eqn a b => eqn a b
+    (inductionOn a fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn b fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .pi A B => pi A B
+    (inductionOn A fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn B fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .sigma A B => sigma A B
+    (inductionOn A fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn B fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .abs A b => abs A b
+    (inductionOn A fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn b fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .app f a => app f a
+    (inductionOn f fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn a fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .pair a b => pair a b
+    (inductionOn a fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn b fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .fst p => fst p
+    (inductionOn p fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .snd p => snd p
+    (inductionOn p fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .dite φ l r => dite φ l r
+    (inductionOn φ fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn l fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn r fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .trunc A => trunc A
+    (inductionOn A fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .choose A φ => choose A φ
+    (inductionOn A fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn φ fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .nats => nats
+  | .zero => zero
+  | .succ n => succ n
+    (inductionOn n fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .natrec C s z n => natrec C s z n
+    (inductionOn C fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn s fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn z fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn n fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .has_ty A a => has_ty A a
+    (inductionOn A fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+    (inductionOn a fv bv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
+      nats zero succ natrec has_ty invalid)
+  | .invalid => invalid
 
 def Tm.castLE {n m : ℕ} (h : n ≤ m) : Tm n → Tm m
   | .fv x => .fv x

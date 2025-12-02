@@ -187,4 +187,39 @@ instance Ln.instNumChildren {ι α} [∀ k, NumChildren (α k)] {k} : NumChildre
 instance Ln.instBinderList {ι α} [∀ k, BinderList (α k)] {k} : BinderList (Ln ι α k)
   := Ix.instBinderList
 
+/-- Extend a binding family with variables -/
+inductive VarF (ι : Type _) (α : List ℕ → Type _) : List ℕ → Type _
+  | fv (x : ι) : VarF ι α []
+  | val {bs} (h : α bs) : VarF ι α bs
+
+/-- Extend a binary family with variables -/
+abbrev VarF₂ (ι : Type _) {ν : Type _} (α : List ℕ → ν → Type _) (bs : List ℕ) (k : ν) : Type _
+  := VarF ι (fun bs => α bs k) bs
+
+/-- Extend a binary family with de-Bruijn indices -/
+inductive IxF₂ (α : List ℕ → ℕ → Type _) : List ℕ → ℕ → Type _
+  | bv {k} (i : Fin k) : IxF₂ α [] k
+  | val {bs k} (h : α bs k) : IxF₂ α bs k
+
+/-- Extend a family with de-Bruijn indices -/
+def IxF (α : List ℕ → Type _) : List ℕ → ℕ → Type _ := IxF₂ (fun bs _ => α bs)
+
+/-- Extend a binary family with variables and de-Bruijn indices -/
+def LnF₂ (ι : Type _) (α : List ℕ → ℕ → Type _) : List ℕ → ℕ → Type _ := IxF₂ (VarF₂ ι α)
+
+abbrev LnF₂.bv {ι α} {k} (i : Fin k) : LnF₂ ι α [] k := IxF₂.bv i
+
+abbrev LnF₂.fv {ι α} {k} (x : ι) : LnF₂ ι α [] k := IxF₂.val (VarF.fv x)
+
+abbrev LnF₂.val {ι α} {k bs} (h : α k bs) : LnF₂ ι α k bs := IxF₂.val (VarF.val h)
+
+/-- Extend a binding family with variables and de-Bruijn indices -/
+abbrev LnF (ι : Type) (α : List ℕ → Type _) : List ℕ → ℕ → Type _ := IxF (VarF ι α)
+
+abbrev LnF.bv {ι α} {k} (i : Fin k) : LnF ι α [] k := LnF₂.bv i
+
+abbrev LnF.fv {ι α} {k} (x : ι) : LnF ι α [] k := LnF₂.fv x
+
+abbrev LnF.val {ι α} {k bs} (h : α bs) : LnF ι α bs k := LnF₂.val h
+
 end Gt3
