@@ -83,6 +83,8 @@ def Node.Sim? {α β} [BinderList α] [BinderList β]
 
 def readMem {α β} (mem : α → β) (x : α) (y : β) : Prop := mem x = y
 
+def readMem.refl {α β} (mem : α → β) (x : α) : readMem mem x (mem x) := rfl
+
 instance {α β} (mem : α → β) : InhabAt ⊤ (readMem mem) where
   rel_inhab_at x _ := ⟨mem x, rfl⟩
 
@@ -101,7 +103,7 @@ def Node.FinSim {α β} [BinderList α] [BinderList β] (rel : α → β → Pro
   (lhs : ι₁ → Node α ι₁) (rhs : ι₂ → Node β ι₂) : ι₁ → ι₂ → Prop
   := fun i₁ i₂ => Node.FinSimRel rel (readMem lhs) (readMem rhs) i₁ i₂
 
-section Sim
+section SimRel
 
 variable {stop : Prop} {α β} [BinderList α] [BinderList β]
         {data data₁ data₂ : α → β → Type _}
@@ -298,6 +300,43 @@ theorem SimRel.trans {rel} [IsTrans α rel]
   : SimRel rel lhs rhs i₁ i₂
   := h1.gtrans IsTrans.trans h2
 
+-- theorem SimRelUpto.map_lhs
+--   {ι₁'} (map : ι₁ → ι₁' → Prop) [InhabAt ⊤ map]
+--   {gas} {i₁ i₂ i₁'} (hi' : map i₁ i₁')
+--   : SimRelUpto stop rel lhs rhs gas i₁ i₂
+--   → SimRelUpto stop rel (fun x y => ∃x', lhs (f x) (y.mapChildren f)) rhs gas i' i₂
+--   | .done _ _ hs => .done _ _ hs
+--   | .node hn₁ hn₂ h_tag h_numChildren h_children =>
+--     .node (lhs := fun x y => lhs (f x) (y.mapChildren f)) sorry hn₂ h_tag h_numChildren
+--       (fun j => map_lhs f _ sorry sorry)
+
+-- theorem SimRel.map_lhs
+--   {ι'} (f : ι' → ι₁)
+--   {i₁ i₂} (i') (hi' : f i' = i₁)
+--   : SimRel rel lhs rhs i₁ i₂ → SimRel rel (fun x y => lhs (f x) (y.mapChildren f)) rhs i' i₂
+--   := sorry
+
+end Node
+
+end SimRel
+
+section Sim
+
+variable {stop : Prop} {α β} [BinderList α] [BinderList β]
+        {data data₁ data₂ : α → β → Type _}
+        {rel rel₁ : α → β → Prop}
+        {ι₁ ι₂ ι₁' ι₂'}
+        {lhs : ι₁ → Node α ι₁} {rhs : ι₂ → Node β ι₂}
+        {i₁ : ι₁} {i₂ : ι₂} {n₁ n₂}
+
+-- TODO: map things using injections
+
+-- TODO: such mappings give us ≈ objects...
+
+-- TODO: letting us play ℕ games to build cotrees out of trees!
+
+namespace Node
+
 end Node
 
 end Sim
@@ -306,6 +345,24 @@ end Sim
 structure PCotree (ι : Type _) (α : Type _) [NumChildren α] : Type _ where
   ix : ι
   getNode : ι → Node α ι
+
+def PCotree.root {ι α} [NumChildren α] (t : PCotree ι α) : Node α ι := t.getNode t.ix
+
+def PCotree.tag {ι α} [NumChildren α] (t : PCotree ι α) : α := t.root.tag
+
+instance PCotree.instBinderList {ι α} [BinderList α] : BinderList (PCotree ι α) where
+  numChildren t := numChildren t.tag
+  binderList t := binderList t.tag
+  getBinder t := getBinder t.tag
+  getBinder_eq t := getBinder_eq t.tag
+
+instance PCotree.instFlatChildrenIx {ι α} [BinderList α]
+  : FlatChildren (PCotree ι α) ι where
+  getDChild t j := getChild (t.getNode t.ix) j
+
+instance PCotree.instFlatChildren {ι α} [BinderList α]
+  : FlatChildren (PCotree ι α) (PCotree ι α) where
+  getDChild t j := { ix := getChild t j, getNode := t.getNode }
 
 def PCotree.Sim {ι₁ ι₂ α β} [BinderList α] [BinderList β] (rel : α → β → Prop)
   (t₁ : PCotree ι₁ α) (t₂ : PCotree ι₂ β) : Prop
@@ -329,13 +386,105 @@ theorem PCotree.Sim.trans {ι₁ ι₂ ι₃ α} [BinderList α]
   (h2 : PCotree.Sim rel t₂ t₃) : PCotree.Sim rel t₁ t₃ :=
   Node.SimRel.trans h1 h2
 
+theorem PCotree.Sim.tag {ι₁ ι₂ α β} [BinderList α] [BinderList β]
+  {rel} {t₁ : PCotree ι₁ α} {t₂ : PCotree ι₂ β}
+  (h : PCotree.Sim rel t₁ t₂) : rel t₁.tag t₂.tag :=
+  let hsim := h 1
+  match hsim with
+  | .node hn₁ hn₂ h_tag _ _ => by
+    cases determ_eq hn₁ (readMem.refl t₁.getNode t₁.ix);
+    cases determ_eq hn₂ (readMem.refl t₂.getNode t₂.ix);
+    exact h_tag
+
+theorem PCotree.Sim.numChildren {ι₁ ι₂ α β} [BinderList α] [BinderList β]
+  {rel} {t₁ : PCotree ι₁ α} {t₂ : PCotree ι₂ β}
+  (h : PCotree.Sim rel t₁ t₂) : numChildren t₁ = numChildren t₂ :=
+  let hsim := h 1
+  match hsim with
+  | .node hn₁ hn₂ h_tag h_numChildren _ => by
+    cases determ_eq hn₁ (readMem.refl t₁.getNode t₁.ix);
+    cases determ_eq hn₂ (readMem.refl t₂.getNode t₂.ix);
+    exact h_numChildren
+
+theorem PCotree.Sim.childrenIx {ι₁ ι₂ α β} [BinderList α] [BinderList β]
+  {rel} {t₁ : PCotree ι₁ α} {t₂ : PCotree ι₂ β}
+  (h : PCotree.Sim rel t₁ t₂) (j) :
+  Node.Sim rel t₁.getNode t₂.getNode
+    (getChild t₁ j) (getChild t₂ (j.cast (PCotree.Sim.numChildren h)))
+  := fun n =>
+    let hsim := h (n + 1)
+    match hsim with
+    | .node hn₁ hn₂ h_tag h_numChildren h_children => by
+      cases determ_eq hn₁ (readMem.refl t₁.getNode t₁.ix);
+      cases determ_eq hn₂ (readMem.refl t₂.getNode t₂.ix);
+      exact h_children j
+
+theorem PCotree.Sim.children {ι₁ ι₂ α β} [BinderList α] [BinderList β]
+  {rel} {t₁ : PCotree ι₁ α} {t₂ : PCotree ι₂ β}
+  (h : PCotree.Sim rel t₁ t₂) (j) :
+  PCotree.Sim rel
+    (getChild (β := PCotree ι₁ α) t₁ j)
+    (getChild (β := PCotree ι₂ β) t₂ (j.cast (PCotree.Sim.numChildren h)))
+  := fun n =>
+    let hsim := h (n + 1)
+    match hsim with
+    | .node hn₁ hn₂ h_tag h_numChildren h_children => by
+      cases determ_eq hn₁ (readMem.refl t₁.getNode t₁.ix);
+      cases determ_eq hn₂ (readMem.refl t₂.getNode t₂.ix);
+      exact h_children j
+
 instance PCotree.setoid (ι α) [BinderList α] : Setoid (PCotree ι α) where
   r := PCotree.Sim Eq
   iseqv := ⟨Sim.refl, Sim.symm, Sim.trans⟩
 
+
+theorem PCotree.eqv_tag {ι α} [BinderList α]
+  {t₁ t₂ : PCotree ι α} (h : t₁ ≈ t₂) : t₁.tag = t₂.tag := Sim.tag h
+
+theorem PCotree.eqv_numChildren {ι α} [BinderList α]
+  {t₁ t₂ : PCotree ι α} (h : t₁ ≈ t₂) : numChildren t₁ = numChildren t₂ := Sim.numChildren h
+
+theorem PCotree.eqv_childrenIx {ι α} [BinderList α]
+  {t₁ t₂ : PCotree ι α} (h : t₁ ≈ t₂) (j) :
+  Node.Sim Eq t₁.getNode t₂.getNode
+    (getChild t₁ j) (getChild t₂ (j.cast (PCotree.eqv_numChildren h)))
+  := Sim.childrenIx h j
+
+theorem PCotree.eqv_children {ι α} [BinderList α]
+  {t₁ t₂ : PCotree ι α} (h : t₁ ≈ t₂) (j)
+  : (getChild (β := PCotree ι α) t₁ j) ≈ (getChild t₂ (j.cast (PCotree.eqv_numChildren h)))
+  := Sim.children h j
+
 def Cotree (ι : Type _) (α : Type _) [BinderList α] : Type _ := Quotient (PCotree.setoid ι α)
 
 def PCotree.toCotree {ι α} [BinderList α] (t : PCotree ι α) : Cotree ι α := ⟦t⟧
+
+def Cotree.tag {ι α} [BinderList α] (t : Cotree ι α) : α :=
+  Quotient.liftOn t (fun t => t.root.tag) fun _ _ h => h.tag
+
+instance Cotree.instBinderList {ι α} [BinderList α] : BinderList (Cotree ι α) where
+  numChildren t := numChildren t.tag
+  binderList t := binderList t.tag
+  getBinder t := getBinder t.tag
+  getBinder_eq t := getBinder_eq t.tag
+
+theorem PCotree.numChildren_toCotree {ι α} [BinderList α]
+  (t : PCotree ι α) : numChildren t.toCotree = numChildren t := rfl
+
+theorem PCotree.numChildren_quot {ι α} [BinderList α]
+  (t : PCotree ι α) : numChildren (α := Cotree ι α) ⟦t⟧ = numChildren t := rfl
+
+instance Cotree.instFlatChildren {ι α} [BinderList α]
+  : FlatChildren (Cotree ι α) (Cotree ι α) where
+  getDChild t := t.hrecOn (fun t j => PCotree.toCotree (getChild t j)) (
+    fun a b h => by
+      simp only [PCotree.numChildren_quot]
+      rw [Fin.heq_fun_iff]
+      · intro i
+        apply Quotient.sound
+        apply PCotree.eqv_children h i
+      apply PCotree.eqv_numChildren h
+  )
 
 instance PCotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList α]
   : Inhabited (PCotree ι α) := ⟨default, fun _ => default⟩
