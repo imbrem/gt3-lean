@@ -25,9 +25,9 @@ instance {ι α} [BinderList α] : BinderList (Var ι α) where
 
 instance {ι α β} [BinderList α] [HasChildren α β]
   : HasChildren (Var ι α) β where
-  getChild
+  getDChild
     | .fv _ => fun i => i.elim0
-    | .val h => getChild h
+    | .val h => getDChild h
 
 /-- A de-Bruijn index or a value -/
 inductive Ix (α : ℕ → Type _) : ℕ → Type _
@@ -50,9 +50,9 @@ instance {α} [∀ k, BinderList (α k)] {k} : BinderList (Ix α k) where
 
 instance {α} {β : ℕ → ℕ → Type _}
   [∀ k, BinderList (α k)] [∀ k, HasChildren (α k) (β k)] {k} : HasChildren (Ix α k) (β k) where
-  getChild
+  getDChild
     | .bv _ => fun i => i.elim0
-    | .val h => getChild h
+    | .val h => getDChild h
 
 def Var.map {ι ι' α α'} (f : ι → ι') (g : α → α') : Var ι α → Var ι' α'
   | .fv x => .fv (f x)

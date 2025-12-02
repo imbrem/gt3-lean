@@ -3,6 +3,7 @@ import Gt3.Syntax.Tree.Core
 import Gt3.Syntax.Tree.Defs.Tree
 import Gt3.Syntax.Tree.Defs.Var
 import Gt3.Syntax.Tree.Defs.DTree
+import Gt3.Syntax.Tree.Defs.Graph
 
 namespace Gt3
 /-

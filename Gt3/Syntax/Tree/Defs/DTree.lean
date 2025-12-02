@@ -17,7 +17,7 @@ instance {α} [∀ k, BinderList (α k)] {β} {k} : BinderList (DNode α β k) w
   getBinder_eq t := getBinder_eq t.tag
 
 instance {α} [∀ k, BinderList (α k)] {β} {k} : HasChildren (DNode α β k) (fun i => β (k + i)) where
-  getChild t i := t.children i
+  getDChild t i := t.children i
 
 /-- A tree of de-Bruijn nodes -/
 inductive DTree (α : ℕ → Type _) [∀ k, BinderList (α k)] : ℕ → Type _
@@ -31,7 +31,7 @@ instance {α} [∀ k, BinderList (α k)] {k} : BinderList (DTree α k) where
   getBinder_eq h i := by cases h; simp only [getBinder_eq]
 
 instance {α} [∀ k, BinderList (α k)] {k} : HasChildren (DTree α k) (fun b => DTree α (k + b))
-  where getChild | .node _ children => children
+  where getDChild | .node _ children => children
 
 def DNode.toTree {α} [∀ k, BinderList (α k)] {k}
   (n : DNode α (DTree α) k) : DTree α k :=
