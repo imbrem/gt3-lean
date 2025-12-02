@@ -222,7 +222,8 @@ theorem Ctx.KEq.st {Γ} {a a' b b' : OTm} {k} (hb : KEq Γ b b') (ha : KEq Γ a 
     split
     · exact ha
     · rfl
-  | _ =>  constructor <;> apply_assumption <;> (try apply wkn) <;> assumption
+  | natrec => sorry
+  | _ => constructor <;> apply_assumption <;> (try apply wkn) <;> assumption
 
 def Ctx.KHasTyUnder (Γ : Ctx) (A B b : OTm) : Prop
   := ∀ x ∉ Γ.dv, KHasTy (Γ.cons x (A.clamp 0)) (B.open 0 x) (b.open 0 x)
@@ -443,30 +444,30 @@ theorem Ctx.KHasTy.zero {Γ} (h : Ok Γ) : KHasTy Γ .nats .zero
 theorem Ctx.KHasTy.succ {Γ n} (hn : KHasTy Γ .nats n) : KHasTy Γ .nats (.succ n)
   := HasTy.succ hn
 
-theorem Ctx.KHasTy.natrec {Γ C s z n}
-  (hC : KIsTyUnder Γ .nats C)
-  (hs : KHasTyUnder Γ .nats (.arr C (C.st 0 (.succ (.bv 0)))) s)
-  (hz : KHasTy Γ (C.lst 0 .zero) z)
-  (hn : KHasTy Γ .nats n) : KHasTy Γ (C.lst 0 n) (.natrec C s z n)
-  := by
-  have ⟨_, hC'⟩ := hC.max_univ
-  apply HasTy.natrec (L := Γ.dv)
-  · intro x hx; convert (hC' x hx).get; simp only [OTm.clamp_succ_open]
-  · intro x hx; convert (hs x hx).get
-    · rw [
-        <-OTm.succArrow_zero, OTm.open_succArrow, OTm.clamp_arr, Tm.open_succArrow,
-        OTm.clamp_succ_open, OTm.clamp_lst
-      ]
-      · simp [OTm.clamp]
-      · simp [OTm.bvi]
-      · exact hC'.is_wf.bvi
-    · simp only [OTm.clamp_succ_open]
-  · convert hz.get; rw [OTm.clamp_lst (h := by simp [OTm.bvi])]; simp [OTm.clamp]
-  · exact hn.get
-  · rw [OTm.clamp_lst (h := hn.is_wf.lc)]
-    apply IsTy.lst_cf'
-    · intro x hx; convert (hC x hx).get; simp only [OTm.clamp_succ_open]
-    · exact hn.refl
+-- theorem Ctx.KHasTy.natrec {Γ C s z n}
+--   (hC : KIsTyUnder Γ .nats C)
+--   (hs : KHasTyUnder Γ .nats (.arr C (C.st 0 (.succ (.bv 0)))) s)
+--   (hz : KHasTy Γ (C.lst 0 .zero) z)
+--   (hn : KHasTy Γ .nats n) : KHasTy Γ (C.lst 0 n) (.natrec C s z n)
+--   := by
+--   have ⟨_, hC'⟩ := hC.max_univ
+--   apply HasTy.natrec (L := Γ.dv)
+--   · intro x hx; convert (hC' x hx).get; simp only [OTm.clamp_succ_open]
+--   · intro x hx; convert (hs x hx).get
+--     · rw [
+--         <-OTm.succArrow_zero, OTm.open_succArrow, OTm.clamp_arr, Tm.open_succArrow,
+--         OTm.clamp_succ_open, OTm.clamp_lst
+--       ]
+--       · simp [OTm.clamp]
+--       · simp [OTm.bvi]
+--       · exact hC'.is_wf.bvi
+--     · simp only [OTm.clamp_succ_open]
+--   · convert hz.get; rw [OTm.clamp_lst (h := by simp [OTm.bvi])]; simp [OTm.clamp]
+--   · exact hn.get
+--   · rw [OTm.clamp_lst (h := hn.is_wf.lc)]
+--     apply IsTy.lst_cf'
+--     · intro x hx; convert (hC x hx).get; simp only [OTm.clamp_succ_open]
+--     · exact hn.refl
 
 theorem Ctx.KHasTy.lst {Γ A B a b}
   (hb : KHasTyUnder Γ A B b) (ha : KHasTy Γ A a)
@@ -584,43 +585,43 @@ theorem Ctx.KIsWf.beta_dite_false {Γ l r}
   (hφ : KIsWf Γ (.dite .empty l r)) : KEq Γ (.dite .empty l r) (r.st 0 .null)
   := .wf_clamp (hφ.beta_dite_false_wf)
 
-theorem Ctx.KIsWf.beta_natrec_zero_wf {Γ C s z}
-  (h : KIsWf Γ (.natrec C s z .zero))
-   : KWEq Γ (.natrec C s z .zero) z := by
-  have ⟨hC, hs, hz, h0⟩ := h.inv_natrec;
-  exists (C.clamp 1).lst .zero
-  have ⟨_, hC'⟩ := IsTy.max_univ' hC;
-  have hC₀ := (JEq.lst_cf₁_k hC' (.zero hz.ok))
-  exact JEq.beta_natrec_zero'
-    (.natrec' hC'  (fun x hx => (hs x hx).refl) hz.refl (.zero hz.ok) hC₀) hz.refl
+-- theorem Ctx.KIsWf.beta_natrec_zero_wf {Γ C s z}
+--   (h : KIsWf Γ (.natrec C s z .zero))
+--    : KWEq Γ (.natrec C s z .zero) z := by
+--   have ⟨hC, hs, hz, h0⟩ := h.inv_natrec;
+--   exists (C.clamp 1).lst .zero
+--   have ⟨_, hC'⟩ := IsTy.max_univ' hC;
+--   have hC₀ := (JEq.lst_cf₁_k hC' (.zero hz.ok))
+--   exact JEq.beta_natrec_zero'
+--     (.natrec' hC'  (fun x hx => (hs x hx).refl) hz.refl (.zero hz.ok) hC₀) hz.refl
 
-theorem Ctx.KHasTy.beta_natrec_zero {Γ C s z}
-  (h : KIsWf Γ (.natrec C s z .zero))
-   : KEq Γ (.natrec C s z .zero) z := .wf_clamp (h.beta_natrec_zero_wf)
+-- theorem Ctx.KHasTy.beta_natrec_zero {Γ C s z}
+--   (h : KIsWf Γ (.natrec C s z .zero))
+--    : KEq Γ (.natrec C s z .zero) z := .wf_clamp (h.beta_natrec_zero_wf)
 
-theorem Ctx.KIsWf.beta_natrec_succ_wf {Γ C s z n}
-  (h : KIsWf Γ (.natrec C s z (.succ n)))
-   : KWEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n)) := by
-  have ⟨hC, hs, hz, hsn⟩ := h.inv_natrec;
-  have hn := hsn.inv_succ;
-  exists (C.clamp 1).lst (n.succ.clamp 0)
-  have ⟨_, hC'⟩ := IsTy.max_univ' hC;
-  have hCsn := (JEq.lst_cf₁_k hC' hsn.refl)
-  have hsnx := (JEq.lst_cf₁ (fun x hx => (hs x hx).refl) hn.refl)
-  convert JEq.beta_natrec_succ'
-    (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hsn.refl (JEq.lst_cf₁_k hC' hsn.refl))
-    (.app
-      (by convert hsnx; simp [Tm.succArrow, Tm.arr]; rfl)
-      (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl (JEq.lst_cf₁_k hC' hn.refl))
-      (by simp [Tm.lst_succIn]; exact IsTy.lst_cf' hC hsn.refl)
-    )
-  simp [OTm.clamp]
-  rw [OTm.st_eq_lst, OTm.clamp_lst] <;> convert hn.valid.otm_bvi using 0 <;> simp
+-- theorem Ctx.KIsWf.beta_natrec_succ_wf {Γ C s z n}
+--   (h : KIsWf Γ (.natrec C s z (.succ n)))
+--    : KWEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n)) := by
+--   have ⟨hC, hs, hz, hsn⟩ := h.inv_natrec;
+--   have hn := hsn.inv_succ;
+--   exists (C.clamp 1).lst (n.succ.clamp 0)
+--   have ⟨_, hC'⟩ := IsTy.max_univ' hC;
+--   have hCsn := (JEq.lst_cf₁_k hC' hsn.refl)
+--   have hsnx := (JEq.lst_cf₁ (fun x hx => (hs x hx).refl) hn.refl)
+--   convert JEq.beta_natrec_succ'
+--     (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hsn.refl (JEq.lst_cf₁_k hC' hsn.refl))
+--     (.app
+--       (by convert hsnx; simp [Tm.succArrow, Tm.arr]; rfl)
+--       (.natrec' hC' (fun x hx => (hs x hx).refl) hz.refl hn.refl (JEq.lst_cf₁_k hC' hn.refl))
+--       (by simp [Tm.lst_succIn]; exact IsTy.lst_cf' hC hsn.refl)
+--     )
+--   simp [OTm.clamp]
+--   rw [OTm.st_eq_lst, OTm.clamp_lst] <;> convert hn.valid.otm_bvi using 0 <;> simp
 
-theorem Ctx.KHasTy.beta_natrec_succ {Γ C s z n}
-  (h : KIsWf Γ (.natrec C s z (.succ n)))
-   : KEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n))
-   := .wf_clamp (h.beta_natrec_succ_wf)
+-- theorem Ctx.KHasTy.beta_natrec_succ {Γ C s z n}
+--   (h : KIsWf Γ (.natrec C s z (.succ n)))
+--    : KEq Γ (.natrec C s z (.succ n)) (.app (s.st 0 n) (.natrec C s z n))
+--    := .wf_clamp (h.beta_natrec_succ_wf)
 
 theorem Ctx.KHasTy.choose_spec_wf {Γ A φ}
   (hA : KIsInhab Γ A) (hφ : KIsPropUnder Γ A φ)

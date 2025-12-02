@@ -73,7 +73,7 @@ def OTm.clamp (k : ℕ) : OTm → Tm k
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.clamp k)
-  | .natrec C s z n => .natrec (C.clamp (k + 1)) (s.clamp (k + 1)) (z.clamp k) (n.clamp k)
+  | .natrec C s z n => .natrec (C.clamp (k + 1)) (s.clamp (k + 2)) (z.clamp k) (n.clamp k)
   | .has_ty A a => .has_ty (A.clamp k) (a.clamp k)
   | .invalid => .invalid
 
@@ -141,7 +141,7 @@ def Tm.bvi {k : ℕ} : Tm k → ℕ
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | .succ n => n.bvi
-  | .natrec C s z n => (C.bvi - 1) ⊔ (s.bvi - 1) ⊔ z.bvi ⊔ n.bvi
+  | .natrec C s z n => (C.bvi - 1) ⊔ (s.bvi - 2) ⊔ z.bvi ⊔ n.bvi
   | .has_ty A a => A.bvi ⊔ a.bvi
   | _ => 0
 
@@ -159,7 +159,7 @@ def OTm.bvi : OTm → ℕ
   | .trunc A => A.bvi
   | .choose A φ => A.bvi ⊔ (φ.bvi - 1)
   | .succ n => n.bvi
-  | .natrec C s z n => (C.bvi - 1) ⊔ (s.bvi - 1) ⊔ z.bvi ⊔ n.bvi
+  | .natrec C s z n => (C.bvi - 1) ⊔ (s.bvi - 2) ⊔ z.bvi ⊔ n.bvi
   | .has_ty A a => A.bvi ⊔ a.bvi
   | _ => 0
 
@@ -227,7 +227,7 @@ def OTm.open (k : ℕ) (x : String) : OTm → OTm
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.open k x)
-  | .natrec C s z n => .natrec (C.open (k + 1) x) (s.open (k + 1) x) (z.open k x) (n.open k x)
+  | .natrec C s z n => .natrec (C.open (k + 1) x) (s.open (k + 2) x) (z.open k x) (n.open k x)
   | .has_ty A a => .has_ty (A.open k x) (a.open k x)
   | .invalid => .invalid
 
@@ -305,7 +305,7 @@ def OTm.lst (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.lst k v)
-  | .natrec C s z n => .natrec (C.lst (k + 1) v) (s.lst (k + 1) v) (z.lst k v) (n.lst k v)
+  | .natrec C s z n => .natrec (C.lst (k + 1) v) (s.lst (k + 2) v) (z.lst k v) (n.lst k v)
   | .has_ty A a => .has_ty (A.lst k v) (a.lst k v)
   | .invalid => .invalid
 
@@ -402,7 +402,7 @@ def OTm.wkn (k : ℕ) : OTm → OTm
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.wkn k)
-  | .natrec C s z n => .natrec (C.wkn (k + 1)) (s.wkn (k + 1)) (z.wkn k) (n.wkn k)
+  | .natrec C s z n => .natrec (C.wkn (k + 1)) (s.wkn (k + 2)) (z.wkn k) (n.wkn k)
   | .has_ty A a => .has_ty (A.wkn k) (a.wkn k)
   | .invalid => .invalid
 
@@ -447,7 +447,7 @@ def OTm.close (k : ℕ) (x : String) : OTm → OTm
   | .zero => .zero
   | .succ n => .succ (n.close k x)
   | .natrec C s z n
-    => .natrec (C.close (k + 1) x) (s.close (k + 1) x)
+    => .natrec (C.close (k + 1) x) (s.close (k + 2) x)
                (z.close k x) (n.close k x)
   | .has_ty A a => .has_ty (A.close k x) (a.close k x)
   | .invalid => .invalid
@@ -549,7 +549,7 @@ def OTm.st (t : OTm) (k : ℕ) (v : OTm) : OTm := match t with
   | .zero => .zero
   | .succ n => .succ (n.st k v)
   | .natrec C s z n
-    => .natrec (C.st (k + 1) (v.wkn 0)) (s.st (k + 1) (v.wkn 0)) (z.st k v) (n.st k v)
+    => .natrec (C.st (k + 1) (v.wkn 0)) (s.st (k + 2) ((v.wkn 0).wkn 0)) (z.st k v) (n.st k v)
   | .has_ty A a => .has_ty (A.st k v) (a.st k v)
   | .invalid => .invalid
 

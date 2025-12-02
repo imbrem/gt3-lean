@@ -74,7 +74,9 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
   | succ {Γ n n'} : JEq Γ .nats n n' → JEq Γ .nats (.succ n) (.succ n')
   | natrec' {Γ ℓ C C' s s' z z' n n' ℓ' Cn} {L : Finset String}
     (hC : ∀x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
-    (hs : ∀x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s'.open x))
+    (hs : ∀x ∉ L, ∀y ∉ insert x L,
+      JEq ((Γ.cons x .nats).cons y (C.open x)) (C.lst (.succ (.fv x)))
+        ((s.open x).open y) ((s'.open x).open y))
     (hz : JEq Γ (C.lst .zero) z z')
     (hn : JEq Γ .nats n n')
     (hCn : JEq Γ (.univ ℓ') (C.lst n) Cn)
@@ -139,8 +141,8 @@ inductive Ctx.JEq : Ctx → Tm 0 → Tm 0 → Tm 0 → Prop
     : JEq Γ Cz (.natrec C s z .zero) z
   | beta_natrec_succ' {Γ C s z n Csn}
     (lhs_wf : JEq Γ Csn (.natrec C s z (.succ n)) (.natrec C s z (.succ n)))
-    (rhs_wf : JEq Γ Csn ((s.lst n).app (.natrec C s z n)) ((s.lst n).app (.natrec C s z n)))
-    : JEq Γ Csn (.natrec C s z (.succ n)) ((s.lst n).app (.natrec C s z n))
+    (rhs_wf : JEq Γ Csn ((s.lst n).lst (.natrec C s z n)) ((s.lst n).lst (.natrec C s z n)))
+    : JEq Γ Csn (.natrec C s z (.succ n)) ((s.lst n).lst (.natrec C s z n))
   -- Specification
   | choose_spec' {Γ A φ φc ℓ} {L : Finset String}
     (hA : JEq Γ (.univ ℓ) A A)
@@ -392,7 +394,8 @@ theorem Ctx.JEq.choose {Γ} {A A' : Tm 0} {φ φ' : Tm 1} {ℓ : ULevel} {L : Fi
 
 theorem Ctx.JEq.natrec {Γ ℓ C C' s s' z z' n n' Cn} {L : Finset String}
   (hC : ∀ x ∉ L, JEq (Γ.cons x .nats) (.univ ℓ) (C.open x) (C'.open x))
-    (hs : ∀ x ∉ L, JEq (Γ.cons x .nats) ((Tm.succArrow C).open x) (s.open x) (s'.open x))
+    (hs : ∀ x ∉ L, ∀ y ∉ insert x L, JEq ((Γ.cons x .nats).cons y (C.open x))
+      (C.lst (.succ (.fv x))) ((s.open x).open y) ((s'.open x).open y))
     (hz : JEq Γ (C.lst .zero) z z')
     (hn : JEq Γ .nats n n')
     (hCn : TyEq Γ (C.lst n) Cn)

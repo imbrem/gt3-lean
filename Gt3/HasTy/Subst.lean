@@ -97,6 +97,7 @@ theorem Ctx.HasTy.ls_clamped {K : Finset String} {Γ σ Δ} (hσ : S1 Γ σ Δ) 
   | fv _ hx => exact hx.s1 hσ
   | cast => apply cast <;> (first | apply_assumption | apply TyEq.ls1) <;> assumption
   | transfer hA hB IA => exact (IA hσ).transfer (hB.ls1 hσ)
+  | natrec => sorry
   | _ =>
     constructor <;>
     first

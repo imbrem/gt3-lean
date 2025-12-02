@@ -84,7 +84,7 @@ theorem Tm.Valid.succ_iff {k} {n : Tm k} : Valid (.succ n) ↔ Valid n
   := ⟨fun h => by cases h; assumption, fun h => by constructor; assumption⟩
 
 @[simp]
-theorem Tm.Valid.natrec_iff {k} {C : Tm (k + 1)} {s : Tm (k + 1)} {z n : Tm k}
+theorem Tm.Valid.natrec_iff {k} {C : Tm (k + 1)} {s : Tm (k + 2)} {z n : Tm k}
   : Valid (.natrec C s z n) ↔ Valid C ∧ Valid s ∧ Valid z ∧ Valid n
   := ⟨fun h => by cases h; simp [*], fun h => by constructor <;> simp [*]⟩
 

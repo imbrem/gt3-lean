@@ -42,6 +42,7 @@ theorem Ctx.JEq.us (σ : ULevel.Subst) {Γ A a b} (h : Ctx.JEq Γ A a b)
     · assumption
     · assumption
     · assumption
+  | natrec' => sorry
   | _ => simp at *; constructor <;> assumption
 
 theorem Ctx.TyEq.us (σ : ULevel.Subst) {Γ A B} (h : Ctx.TyEq Γ A B)

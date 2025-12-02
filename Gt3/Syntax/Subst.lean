@@ -23,7 +23,7 @@ def Tm.wkn {k} (j : ℕ) : Tm k → Tm (k + 1)
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.wkn j)
-  | .natrec C s z n => .natrec (C.wkn (j + 1)) (s.wkn (j + 1)) (z.wkn j) (n.wkn j)
+  | .natrec C s z n => .natrec (C.wkn (j + 1)) (s.wkn (j + 2)) (z.wkn j) (n.wkn j)
   | .has_ty A a => .has_ty (A.wkn j) (a.wkn j)
   | .invalid => .invalid
 
@@ -156,7 +156,7 @@ def Tm.st {k : ℕ} (t : Tm (k + 1)) (v : Tm k) : Tm k := match t with
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.st v)
-  | .natrec C s z n => .natrec (C.st (↑₀ v)) (s.st (↑₀ v)) (z.st v) (n.st v)
+  | .natrec C s z n => .natrec (C.st (↑₀ v)) (s.st (↑₀ (↑₀ v))) (z.st v) (n.st v)
   | .has_ty A a => .has_ty (A.st v) (a.st v)
   | .invalid => .invalid
 

@@ -6,7 +6,9 @@ import Gt3.Syntax.LcInd
 namespace Gt3
 
 theorem Ctx.HasTy.valid {Γ A a} (h : HasTy Γ A a) : Tm.Valid a := by
-  induction h <;> simp [Tm.forall_cf_open_valid_iff] at * <;> simp [*]
+  induction h with
+  | natrec => sorry
+  | _ => simp [Tm.forall_cf_open_valid_iff] at * <;> simp [*]
 
 theorem Ctx.IsWf.valid {Γ a} (h : IsWf Γ a) : Tm.Valid a := have ⟨_, h⟩ := h.has_ty; h.valid
 
@@ -71,7 +73,8 @@ inductive Ctx.LRwEq : Ctx → Tm 0 → Tm 0 → Prop
   | succ {Γ} {n n'} : LRwEq Γ n n' → LRwEq Γ (.succ n) (.succ n')
   | natrec {Γ} {C C' s  s' z  z' n n'} {L : Finset String}
     : (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (C.open y) (C'.open y))
-    →  (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, LRwEq (Γ.cons x X) (s.open y) (s'.open y))
+    →  (∀x ∉ L, ∀X ∈ RwTy Γ, ∀y ∉ L, ∀z ∉ L,
+      LRwEq (Γ.cons x X) ((s.open y).open z) ((s'.open y).open z))
     → LRwEq Γ z z' → LRwEq Γ n n' → LRwEq Γ (.natrec C s z n) (.natrec C' s' z' n')
   | has_ty {Γ} {A A' a a'} : LRwEq Γ A A' → LRwEq Γ a a' → LRwEq Γ (.has_ty A a) (.has_ty A' a')
   | invalid {Γ} : LRwEq Γ .invalid .invalid
@@ -82,6 +85,7 @@ theorem Ctx.LRwEq.jeq_or {Γ} {A a b : Tm 0} (h : LRwEq Γ a b) (hab : HasTy Γ 
   : JEq Γ A a b
   := by induction h generalizing A with
   | wf h => exact hab.elim h.ltr h.rtr
+  | natrec => sorry
   | trans _ _ Iac Icb =>
     cases hab with
     | inl ha => have Iab := Iac (.inl ha); exact Iab.trans (Icb (.inl Iab.rhs_ty))
@@ -159,6 +163,7 @@ theorem Ctx.RwTy.psub {Γ Δ} (h : Γ.PSub Δ) {X} (hX : X ∈ RwTy Δ) : X ∈ 
 @[refl]
 theorem Ctx.LRwEq.refl {Γ a} : LRwEq Γ a a
   := by induction a using Tm.lcIndCof ∅ generalizing Γ with
+  | natrec => sorry
   | _ => constructor <;> first | exact ∅ | intros ; apply_assumption <;> simp
 
 @[simp]
@@ -370,10 +375,10 @@ theorem Ctx.RwEq.lst_bar {Γ Δ} (h : PSub Γ Δ) {k} {a b : Tm k} {a' b'}
       · apply Tm.LstBar.open; assumption
     }
     · {
-      intro x hx X hX y hy
+      intro x hx X hX y hy z hz
       apply Is
       · exact h.skip hx (hX h.left_ok)
-      · apply Tm.LstBar.open; assumption
+      · apply Tm.LstBar.open; apply Tm.LstBar.open; assumption
     }
     --TODO: weird order...
     · apply In <;> assumption

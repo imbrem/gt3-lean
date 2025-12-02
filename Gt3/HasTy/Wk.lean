@@ -6,6 +6,7 @@ namespace Gt3
 theorem Ctx.HasTy.psub {Γ Δ} (h : PSub Γ Δ) {A a : Tm 0} (hab : HasTy Δ A a)
   : HasTy Γ A a := by induction hab generalizing Γ with
   | transfer hA hB IA => exact (IA h).transfer (hB.psub h)
+  | natrec => sorry
   | _ =>
     constructor <;> first
     | apply_assumption <;> assumption

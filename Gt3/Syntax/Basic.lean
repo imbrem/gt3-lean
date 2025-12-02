@@ -29,7 +29,7 @@ inductive Tm : ℕ → Type
   | nats {k : ℕ} : Tm k
   | zero {k : ℕ} : Tm k
   | succ {k : ℕ} (n : Tm k) : Tm k
-  | natrec {k : ℕ} (C s : Tm (k + 1)) (z n : Tm k) : Tm k
+  | natrec {k : ℕ} (C : Tm (k + 1)) (s : Tm (k + 2)) (z n : Tm k) : Tm k
   | has_ty {k : ℕ} (A a : Tm k) : Tm k
   | invalid {k : ℕ} : Tm k
 
@@ -447,7 +447,7 @@ theorem Tm.open_succ {k : ℕ} (n : Tm (k + 1)) (x : String)
   := by simp [«open»]
 
 @[simp]
-theorem Tm.open_natrec {k : ℕ} (C : Tm (k + 2)) (s : Tm (k + 2)) (z : Tm (k + 1)) (n : Tm (k + 1))
+theorem Tm.open_natrec {k : ℕ} (C : Tm (k + 2)) (s : Tm (k + 3)) (z : Tm (k + 1)) (n : Tm (k + 1))
   (x : String) : (Tm.natrec (k := (k + 1)) C s z n).open x =
   .natrec (C.open x) (s.open x) (z.open x) (n.open x) := by simp [«open»]
 
@@ -580,7 +580,7 @@ theorem Tm.lst_succ {k : ℕ} (n : Tm (k + 1)) (v : Tm 0)
   := by simp [lst]
 
 @[simp]
-theorem Tm.lst_natrec {k : ℕ} (C : Tm (k + 2)) (s : Tm (k + 2)) (z : Tm (k + 1)) (n : Tm (k + 1))
+theorem Tm.lst_natrec {k : ℕ} (C : Tm (k + 2)) (s : Tm (k + 3)) (z : Tm (k + 1)) (n : Tm (k + 1))
   (v : Tm 0) : (Tm.natrec (k := (k + 1)) C s z n).lst v =
   .natrec (C.lst v) (s.lst v) (z.lst v) (n.lst v) := by simp [lst]
 
@@ -619,8 +619,8 @@ def Tm.succIndOn {motive : ∀ k, Tm (k + 1) → Sort*}
   (nats : ∀ {k}, motive k .nats)
   (zero : ∀ {k}, motive k .zero)
   (succ : ∀ {k} (n : Tm (k + 1)), motive k n → motive k (.succ n))
-  (natrec : ∀ {k} (C : Tm (k + 2)) (s : Tm (k + 2)) (z : Tm (k + 1)) (n : Tm (k + 1)),
-    motive (k + 1) C → motive (k + 1) s → motive k z → motive k n → motive k (.natrec C s z n))
+  (natrec : ∀ {k} (C : Tm (k + 2)) (s : Tm (k + 3)) (z : Tm (k + 1)) (n : Tm (k + 1)),
+    motive (k + 1) C → motive (k + 2) s → motive k z → motive k n → motive k (.natrec C s z n))
   (has_ty : ∀ {k} (A a : Tm (k + 1)), motive k A → motive k a → motive k (.has_ty A a))
   (invalid : ∀ {k}, motive k .invalid)
   {k : ℕ} (t : Tm (k + 1)) : motive k t

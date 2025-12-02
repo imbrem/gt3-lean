@@ -93,8 +93,9 @@ def Tm.lcIndCof (L : Finset String)
   (nats : motive .nats)
   (zero : motive .zero)
   (succ : ∀ (n : Tm 0), motive n → motive (.succ n))
-  (natrec : ∀ (C s : Tm 1) (z n : Tm 0),
-    (∀ x ∉ L, motive (C.open x)) → (∀ x ∉ L, motive (s.open x)) → motive z → motive n →
+  (natrec : ∀ (C : Tm 1) (s : Tm 2) (z n : Tm 0),
+    (∀ x ∉ L, motive (C.open x))
+      → (∀ x ∉ L, ∀ y ∉ insert x L, motive ((s.open x).open y)) → motive z → motive n →
     motive (.natrec C s z n))
   (has_ty : ∀ (A a : Tm 0), motive A → motive a → motive (.has_ty A a))
   (invalid : motive .invalid)
@@ -174,7 +175,8 @@ def Tm.lcIndCof (L : Finset String)
   | .natrec C s z n => natrec C s z n
     (fun x _ => (C.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst
       snd dite trunc choose nats zero succ natrec has_ty invalid)
-    (fun x _ => (s.open x).lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst
+    (fun x _ y _ => ((s.open x).open y).lcIndCof
+      L fv univ empty unit null eqn pi sigma abs app pair fst
       snd dite trunc choose nats zero succ natrec has_ty invalid)
     (z.lcIndCof L fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc
       choose nats zero succ natrec has_ty invalid)
@@ -214,9 +216,10 @@ def Tm.lcIndFvs
   (nats : motive .nats)
   (zero : motive .zero)
   (succ : ∀ (n : Tm 0), motive n → motive (.succ n))
-  (natrec : ∀ (C s : Tm 1) (z n : Tm 0),
-    (∀ x ∉ C.fvs, motive (C.open x)) → (∀ x ∉ s.fvs, motive (s.open x)) → motive z → motive n →
-    motive (.natrec C s z n))
+  (natrec : ∀ (C : Tm 1) (s : Tm 2) (z n : Tm 0),
+    (∀ x ∉ C.fvs, motive (C.open x))
+      → (∀ x ∉ s.fvs, ∀ y ∉ insert x s.fvs, motive ((s.open x).open y)) → motive z → motive n
+      → motive (.natrec C s z n))
   (has_ty : ∀ (A a : Tm 0), motive A → motive a → motive (.has_ty A a))
   (invalid : motive .invalid)
   (t : Tm 0) : motive t
@@ -295,7 +298,7 @@ def Tm.lcIndFvs
   | .natrec C s z n => natrec C s z n
     (fun x _ => (C.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
       fst snd dite trunc choose nats zero succ natrec has_ty invalid)
-    (fun x _ => (s.open x).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
+    (fun x _ y _ => ((s.open x).open y).lcIndFvs fv univ empty unit null eqn pi sigma abs app pair
       fst snd dite trunc choose nats zero succ natrec has_ty invalid)
     (z.lcIndFvs fv univ empty unit null eqn pi sigma abs app pair fst snd dite trunc choose
       nats zero succ natrec has_ty invalid)

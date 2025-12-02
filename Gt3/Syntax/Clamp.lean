@@ -23,7 +23,7 @@ def Tm.clamp {m} (k : ℕ) : Tm m → Tm k
   | .nats => .nats
   | .zero => .zero
   | .succ n => .succ (n.clamp k)
-  | .natrec C s z n => .natrec (C.clamp (k + 1)) (s.clamp (k + 1)) (z.clamp k) (n.clamp k)
+  | .natrec C s z n => .natrec (C.clamp (k + 1)) (s.clamp (k + 2)) (z.clamp k) (n.clamp k)
   | .has_ty A a => .has_ty (A.clamp k) (a.clamp k)
   | .invalid => .invalid
 
