@@ -24,14 +24,14 @@ theorem UExpr.uv_not_eqv_zero (u : String) : ¬ (UExpr.uv u ≈ 0) := by intro h
 theorem UExpr.isZero_iff {u : UExpr} : u.isZero ↔ u ≈ 0 := by
   induction u with
   | imax a b Ia Ib =>
-    simp [isZero]
+    simp only [isZero]
     convert Ib using 1
     apply forall_congr'
     intro v
     simp [Nat.imax]
     omega
   | max a b Ia Ib =>
-    simp [isZero, *]
+    simp only [isZero, Bool.and_eq_true, Ia, Ib]
     constructor
     · intro h v; simp [h.1 v, h.2 v]
     · intro h; constructor <;> intro v <;> have hv := h v <;> simp at hv <;> simp [*]
@@ -135,7 +135,7 @@ theorem UExpr.eval_eqOn_subset
   induction a with
   | uv u => simp at ha; simp [h u ha]
   | imax _ _ Ia Ib =>
-    simp at ha
+    simp only [uvs] at ha
     split at ha
     case isTrue h => rw [UExpr.eval_imax_zero, UExpr.eval_imax_zero] <;> assumption
     case isFalse h =>
@@ -179,7 +179,7 @@ theorem UExpr.evalOnly1_increasing {u : String} {ℓ : UExpr}
   | imax a b Ia Ib =>
     simp at hu
     split at hu <;> simp at hu
-    simp [Nat.imax]
+    simp only [evalOnly1, Nat.imax]
     cases n with
     | zero => simp
     | succ n =>
