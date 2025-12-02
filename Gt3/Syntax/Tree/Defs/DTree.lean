@@ -1,9 +1,8 @@
-import Gt3.Syntax.Tree.Defs.Tree
+import Gt3.Tree.Basic
 
 namespace Gt3
 
 open NumChildren BinderList HasChildren
-
 
 /-- A single de-Bruijn node -/
 structure DNode (α : ℕ → Type _) [∀ k, BinderList (α k)] (β : ℕ → Type _) (k : ℕ) : Type _ where

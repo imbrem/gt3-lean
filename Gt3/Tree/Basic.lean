@@ -1,8 +1,8 @@
-import Gt3.Syntax.Tree.Defs.Node
+import Gt3.Tree.Node
 
 namespace Gt3
 
-open NumChildren BinderList HasChildren CastLE
+open NumChildren BinderList HasChildren
 
 /-- A tree of nodes -/
 structure Tree (α : Type _) [NumChildren α] : Type _ where

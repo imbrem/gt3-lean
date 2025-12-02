@@ -1,4 +1,4 @@
-import Gt3.Syntax.Tree.Children
+import Gt3.Tree.Node
 
 namespace Gt3
 

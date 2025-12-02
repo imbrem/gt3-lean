@@ -1,8 +1,8 @@
-import Gt3.Syntax.Tree.Defs.Node
+import Gt3.Tree.Node
 
 namespace Gt3
 
-open NumChildren BinderList HasChildren FlatChildren CastLE
+open NumChildren BinderList HasChildren FlatChildren
 
 inductive Node.SimRelUpto
   (stop : Prop) {α β} [BinderList α] [BinderList β] (rel : α → β → Prop) {ι₁ ι₂}
