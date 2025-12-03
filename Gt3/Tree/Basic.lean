@@ -14,13 +14,13 @@ abbrev Tree.node {α} [NumChildren α]
   (tag : α) (children : Fin (numChildren tag) → Tree α) : Tree α :=
   ⟨tag, children⟩
 
-instance {α} [NumChildren α] : NumChildren (Tree α) where
+instance Tree.instNumChildren {α} [NumChildren α] : NumChildren (Tree α) where
   numChildren t := numChildren t.tag
 
-instance {α} [BinderList α] : BinderList (Tree α) where
+instance Tree.instBinderList {α} [BinderList α] : BinderList (Tree α) where
   binderList t := binderList t.tag
 
-instance {α} [BinderList α] : FlatChildren (Tree α) (Tree α) where
+instance Tree.instFlatChildren {α} [BinderList α] : FlatChildren (Tree α) (Tree α) where
   getDChild t := t.children
 
 def Node.toTree {α} [NumChildren α] (n : Node α (Tree α)) : Tree α :=
@@ -84,6 +84,6 @@ instance Tree.map_numChildrenHom {α α'} [NumChildren α] [NumChildren α']
 
 instance Tree.map_binderListHom {α α'} [BinderList α] [BinderList α']
   (f : α → α') [hf : BinderListHom f] : BinderListHom (Tree.map f) where
-  binderList_hom t := by cases t ; simp [binderList, map, hf.binderList_hom]
+  binderList_hom t := by cases t ; simp [binderList, map]
 
 end Gt3

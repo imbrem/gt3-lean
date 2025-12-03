@@ -5,6 +5,7 @@ import Gt3.Syntax.Basic
 import Gt3.Syntax.Erase
 import Gt3.Syntax.Subst
 import Gt3.Tree.Basic
+import Gt3.Tree.Assoc
 import Gt3.Cotree.Basic
 import Gt3.DTree.Basic
 import Gt3.Syntax.Tag
