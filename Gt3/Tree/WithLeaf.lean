@@ -51,4 +51,18 @@ instance Sum.instLeaves {τ₁ τ₂ ℓ}
     | .inl t1 => leaves t1
     | .inr t2 => leaves t2
 
+class LeafHom {τ₁ τ₂ ℓ} [Leaves τ₁ ℓ] [Leaves τ₂ ℓ] (f : τ₁ → τ₂) where
+  leaves_hom : ∀ t : τ₁, leaves (f t) = leaves t
+
+attribute [simp] LeafHom.leaves_hom
+
+instance LeafHom.id {τ ℓ} [Leaves τ ℓ] : LeafHom (fun t => t : τ → τ) where
+  leaves_hom _ := rfl
+
+instance LeafHom.comp {τ₁ τ₂ τ₃ ℓ}
+  [Leaves τ₁ ℓ] [Leaves τ₂ ℓ] [Leaves τ₃ ℓ]
+  {f : τ₁ → τ₂} {g : τ₂ → τ₃}
+  [LeafHom f] [LeafHom g] : LeafHom (g ∘ f) where
+  leaves_hom t := by simp
+
 end Gt3
