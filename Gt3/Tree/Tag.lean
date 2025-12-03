@@ -357,51 +357,65 @@ instance BinderListHom.instSumSwap {α β} [BinderList α] [BinderList β]
   : BinderListHom (Sum.swap (α := α) (β := β)) where
   binderList_hom h := by cases h <;> rfl
 
-/-- A node or tag which does not introduce binders -/
-class NonBinding (α : Type _) [BinderList α] : Prop where
-  getBinder_eq_zero : ∀ (t : α) (i : Fin (numChildren t)), getBinder t i = 0
+/-- A node or tag which has a constant number of binders -/
+class BoundValues (α : Type _) extends BinderList α where
+  boundValues : α → ℕ
+  getBinder_eq_boundValues : ∀ (t : α) (i : Fin (numChildren t)), getBinder t i = boundValues t
 
-attribute [simp] NonBinding.getBinder_eq_zero
+open BoundValues
+
+/-- A node or tag which does not introduce binders -/
+class NonBinding (α : Type _) [BoundValues α] : Prop where
+  boundValues_eq_zero : ∀ (t : α) , boundValues t = 0
+
+@[simp]
+theorem NonBinding.getBinder_eq_zero {α} [BoundValues α] [NonBinding α]
+  (t : α) (i : Fin (numChildren t)) : getBinder t i = 0 :=
+  by rw [getBinder_eq_boundValues, NonBinding.boundValues_eq_zero t]
+
+instance instBoundValuesNat : BoundValues ℕ where
+  boundValues _ := 0
+  getBinder_eq_boundValues _ _ := rfl
 
 instance instNonBindingNat : NonBinding ℕ where
-  getBinder_eq_zero _ _ := rfl
+  boundValues_eq_zero _ := rfl
 
-instance instNonBindingFin {k} : NonBinding (Fin k) where
-  getBinder_eq_zero _ _ := rfl
+-- instance instNonBindingFin {k} : NonBinding (Fin k) where
+--   boundValues_eq_zero _ := rfl
 
-open NonBinding
+-- open NonBinding
 
-instance instNonBindingOption {α} [BinderList α] [NonBinding α]
-  : NonBinding (Option α) where
-  getBinder_eq_zero
-    | .none => fun i => i.elim0
-    | .some a => getBinder_eq_zero a
+-- instance instNonBindingOption {α} [BinderList α] [NonBinding α]
+--   : NonBinding (Option α) where
+--   getBinder_eq_zero
+--     | .none => fun i => i.elim0
+--     | .some a => getBinder_eq_zero a
 
-instance instNonBindingSum {α β} [BinderList α] [BinderList β] [NonBinding α] [NonBinding β]
-  : NonBinding (Sum α β) where
-  getBinder_eq_zero
-    | .inl a => getBinder_eq_zero a
-    | .inr b => getBinder_eq_zero b
+-- instance instNonBindingSum {α β} [BinderList α] [BinderList β] [NonBinding α] [NonBinding β]
+--   : NonBinding (Sum α β) where
+--   getBinder_eq_zero
+--     | .inl a => getBinder_eq_zero a
+--     | .inr b => getBinder_eq_zero b
 
-instance instNonBindingLenTag {Len : Type _} [BinderList Len] [NonBinding Len] {α : Len → Type _}
-  : NonBinding (LenTag α) where
-  getBinder_eq_zero wc i := getBinder_eq_zero wc.len i
+-- instance instNonBindingLenTag {Len : Type _} [BinderList Len] [NonBinding Len] {α : Len → Type _}
+--   : NonBinding (LenTag α) where
+--   getBinder_eq_zero wc i := getBinder_eq_zero wc.len i
 
-theorem NonBinding.binderList_eq_replicate {α} [BinderList α] [NonBinding α]
-  (t : α) : binderList t = List.replicate (numChildren t) 0 := by
-  apply List.ext_getElem
-  · simp
-  · intro i h h'
-    convert NonBinding.getBinder_eq_zero t ⟨i, (by convert h; simp)⟩
-    · rw [getBinder_eq]
-      simp only [Fin.getElem!_fin, List.getElem!_eq_getElem?_getD, Nat.default_eq_zero]
-      rw [List.getElem?_eq_getElem]
-      · simp
-      exact h
-    · simp
+-- theorem NonBinding.binderList_eq_replicate {α} [BinderList α] [NonBinding α]
+--   (t : α) : binderList t = List.replicate (numChildren t) 0 := by
+--   apply List.ext_getElem
+--   · simp
+--   · intro i h h'
+--     convert NonBinding.getBinder_eq_zero t ⟨i, (by convert h; simp)⟩
+--     · rw [getBinder_eq]
+--       simp only [Fin.getElem!_fin, List.getElem!_eq_getElem?_getD, Nat.default_eq_zero]
+--       rw [List.getElem?_eq_getElem]
+--       · simp
+--       exact h
+--     · simp
 
-instance BinderListHom.instNumChildren {α : Type _} [BinderList α] [NonBinding α]
-  : BinderListHom (numChildren (α := α)) where
-  binderList_hom _ := by simp [binderList_eq_replicate, NumChildrenHom.numChildren_hom]
+-- instance BinderListHom.instNumChildren {α : Type _} [BinderList α] [NonBinding α]
+--   : BinderListHom (numChildren (α := α)) where
+--   binderList_hom _ := by simp [binderList_eq_replicate, NumChildrenHom.numChildren_hom]
 
 end Gt3
