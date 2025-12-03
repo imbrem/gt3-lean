@@ -20,6 +20,10 @@ instance Tree.instNumChildren {α} [NumChildren α] : NumChildren (Tree α) wher
 instance Tree.instBinderList {α} [BinderList α] : BinderList (Tree α) where
   binderList t := binderList t.tag
 
+instance Tree.instGetTag {α} [BinderList α] : GetTag (Tree α) α where
+  getTag t := t.tag
+  binderList_getTag _ := rfl
+
 instance Tree.instFlatChildren {α} [BinderList α] : FlatChildren (Tree α) (Tree α) where
   getDChild t := t.children
 
@@ -80,7 +84,7 @@ def Tree.map {α α'} [NumChildren α] [NumChildren α']
 
 instance Tree.map_numChildrenHom {α α'} [NumChildren α] [NumChildren α']
   (f : α → α') [hf : NumChildrenHom f] : NumChildrenHom (Tree.map f) where
-  numChildren_hom t := by cases t ; simp [numChildren, map, hf.numChildren_hom]
+  numChildren_hom t := by cases t ; simp [numChildren, map]
 
 instance Tree.map_binderListHom {α α'} [BinderList α] [BinderList α']
   (f : α → α') [hf : BinderListHom f] : BinderListHom (Tree.map f) where

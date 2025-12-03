@@ -2,7 +2,7 @@ import Gt3.Tree.Tag
 
 namespace Gt3
 
-open NumChildren BinderList
+open NumChildren BinderList GetTag
 
 /-- A node equipped with a set of children of indexed type `β` -/
 class HasChildren (α : Type _) [BinderList α] (β : ℕ → Type _) where
@@ -29,10 +29,29 @@ instance Node.instNumChildren {α} [NumChildren α] {β} : NumChildren (Node α 
 instance Node.instBinderList {α} [BinderList α] {β} : BinderList (Node α β) where
   binderList n := binderList n.tag
 
+instance Node.instGetTag {α} [BinderList α] {β} : GetTag (Node α β) α where
+  getTag n := n.tag
+  binderList_getTag _ := rfl
+
 instance Node.instHasChildren {α} [BinderList α] {β} : HasChildren (Node α β) (fun _ => β) where
   getDChild n := n.children
 
 instance Node.instFlatChildren {α} [BinderList α] {β} : FlatChildren (Node α β) β where
+
+class GetNode (α : Type _) [BinderList α]
+              (τ : Type _) [BinderList τ] [h : GetTag α τ] (β : Type _) [FlatChildren α β] where
+  getNode (this : α) : Node τ β
+    := { tag := getTag this, children j := getChild this (j.cast (by simp)) }
+  getNode_tag (this : α) : (getNode this).tag = getTag this
+  getNode_children (this : α) (i : Fin (numChildren (getNode this).tag)) :
+    (getNode this).children i = getChild this (i.cast (by simp [getNode_tag]))
+
+instance instGetNode {α τ : Type _} [BinderList α] [BinderList τ]
+  [h : GetTag α τ] {β : Type _} [FlatChildren α β] : GetNode α τ β where
+  getNode_tag _ := by rfl
+  getNode_children _ _ := by rfl
+
+open GetNode
 
 def Node.map {α α' β β'} [NumChildren α] [NumChildren α']
   (f : α → α') [hf : NumChildrenHom f]
@@ -69,6 +88,5 @@ instance Node.mapChildren_numChildrenHom {α β β'} [NumChildren α]
 
 instance Node.instInhabited {α} [Inhabited α] [NumChildren α] {β} [Inhabited β]
   : Inhabited (Node α β) := ⟨⟨default, fun _ => default⟩⟩
-
 
 end Gt3

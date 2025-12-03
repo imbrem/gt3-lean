@@ -46,6 +46,21 @@ theorem BinderList.numChildren_binderList {α} [BinderList α] (t : α)
   : numChildren (binderList t) = numChildren t
   := by simp only [numChildren, binderList_length]
 
+/-- Get this object's tag -/
+class GetTag (α : Type _) [BinderList α] (τ : outParam (Type _)) [BinderList τ] where
+  getTag : α → τ
+  binderList_getTag : ∀ t, binderList (getTag t) = binderList t
+
+instance instGetTagNat : GetTag ℕ ℕ where
+  getTag n := n
+  binderList_getTag _ := rfl
+
+instance instGetTagList : GetTag (List ℕ) (List ℕ) where
+  getTag l := l
+  binderList_getTag _ := rfl
+
+open GetTag
+
 structure LenTag {Len : Type _} (α : Len → Type _) : Type _ where
   len : Len
   tag : α len
@@ -59,6 +74,12 @@ instance LenTag.instBinderList
   binderList wc := binderList wc.len
   getBinder wc := getBinder wc.len
   getBinder_eq wc i := getBinder_eq wc.len i
+
+instance instGetTagLenTag {Len} {α : Len → Type _}
+  [BinderList Len] [∀ l, BinderList (α l)]
+  : GetTag (LenTag α) (LenTag α) where
+  getTag wc := wc
+  binderList_getTag _ := rfl
 
 structure NumChildren.WithLen
   (Len : Type _ := ℕ) [NumChildren Len] (α : Type _) [NumChildren α] : Type _
@@ -114,14 +135,12 @@ instance HasBind.instBinderList {Len : Type _} [BinderList Len] {α} [BinderList
   getBinder _ := getBinder len
   getBinder_eq _ i := getBinder_eq len i
 
-/-- Coerce this object's tags -/
-class CoeTag (α β : Type _) where
-  coeTag : α → β
-
 /-- A homomorphism on tree tags -/
 class NumChildrenHom {α β : Type _} [NumChildren α] [NumChildren β]
   (f : α → β) : Prop where
   numChildren_hom : ∀ t, numChildren (f t) = numChildren t
+
+attribute [simp] NumChildrenHom.numChildren_hom
 
 instance NumChildrenHom.id {α} [NumChildren α] : NumChildrenHom (fun x : α => x) where
   numChildren_hom _ := rfl
@@ -197,14 +216,16 @@ instance BinderListHom.instComp {α β γ : Type _} [BinderList α] [BinderList 
   : BinderListHom (g ∘ f) := BinderListHom.comp hf hg
 
 instance BinderListHom.instBinderList {α : Type _} [BinderList α]
-  : BinderListHom (binderList (α := α)) where
-  binderList_hom _ := rfl
-  numChildren_hom _ := by rw [numChildren_binderList]
+  : BinderListHom (binderList (α := α))
+  := BinderListHom.mk' fun _ => rfl
+
+instance BinderListHom.instGetTag {α τ} [BinderList α] [BinderList τ]
+  [hf : GetTag α τ] : BinderListHom (getTag (α := α))
+  := BinderListHom.mk' hf.binderList_getTag
 
 instance BinderListHom.instTagLen {Len : Type _} [BinderList Len] {α : Len → Type _}
-  : BinderListHom (α := LenTag α) LenTag.len where
-  binderList_hom _ := rfl
-  numChildren_hom _ := rfl
+  : BinderListHom (α := LenTag α) LenTag.len
+  := BinderListHom.mk' fun _ => rfl
 
 instance BinderListHom.instTagWithBind {Len : Type _} [BinderList Len] {α : Type _} [BinderList α]
   : BinderListHom (α := WithBind Len α) WithBind.len where

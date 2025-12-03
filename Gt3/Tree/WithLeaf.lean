@@ -1,8 +1,4 @@
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Setoid.Basic
-import Mathlib.Logic.Lemmas
-
-import Gt3.Tree.Basic
+import Gt3.Tree.Node
 
 namespace Gt3
 
@@ -34,6 +30,24 @@ instance WithLeaf.instHasChildren
 
 instance WithLeaf.instFlatChildren
   {ι β} [BinderList ι] [FlatChildren ι β] {ℓ} : FlatChildren (WithLeaf ι ℓ) β where
+
+def WithLeaf.mapBranch {ι₁ ι₂ ℓ} (f : ι₁ → ι₂) (t : WithLeaf ι₁ ℓ) : WithLeaf ι₂ ℓ :=
+  match t with
+  | .branch b => .branch (f b)
+  | .leaf l => .leaf l
+
+def WithLeaf.mapLeaf {ι ℓ₁ ℓ₂} (f : ℓ₁ → ℓ₂) (t : WithLeaf ι ℓ₁) : WithLeaf ι ℓ₂ :=
+  match t with
+  | .branch b => .branch b
+  | .leaf l => .leaf (f l)
+
+inductive WithLeaf.liftRel {ι₁ ι₂ ℓ₁ ℓ₂}
+  (branch : ι₁ → ι₂ → Prop) (leaf : ℓ₁ → ℓ₂ → Prop)
+  : WithLeaf ι₁ ℓ₁ → WithLeaf ι₂ ℓ₂ → Prop
+  | branch {b₁ b₂} (h : branch b₁ b₂)
+    : liftRel branch leaf (WithLeaf.branch b₁) (WithLeaf.branch b₂)
+  | leaf {l₁ l₂} (h : leaf l₁ l₂)
+    : liftRel branch leaf (WithLeaf.leaf l₁) (WithLeaf.leaf l₂)
 
 class Leaves (τ : Type _) (ℓ : outParam (Type _)) where
   leaves : τ → List ℓ
