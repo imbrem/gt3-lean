@@ -104,7 +104,7 @@ theorem SimIxRelUpto.gtrans
     exact .node hn₁ hn₃ (hrel _ _ _ h1_tag h2_tag) (h1_numChildren.trans h2_numChildren)
       (fun j => gtrans hrel (h1_children j) (h2_children (j.cast h1_numChildren)))
 
-theorem SimRel.gtrans
+theorem SimIxRel.gtrans
   [AddrVals.Det μ₁ ι₁ (Node α₁ ι₁)]
   [AddrVals.Det μ₂ ι₂ (Node α₂ ι₂)]
   [AddrVals.Det μ₃ ι₃ (Node α₃ ι₃)]
@@ -119,10 +119,13 @@ end GTrans
 
 end MultiAddr
 
+section SingleAddr
+
 variable
   {α μ ι}
   [BinderList α]
-  [AddrVals μ ι (Node α ι)] [AddrVals μ₁ ι₁ (Node α ι₁)] [AddrVals μ₂ ι₂ (Node α ι₂)]
+  [AddrVals μ ι (Node α ι)]
+  [AddrVals μ₁ ι₁ (Node α ι₁)] [AddrVals μ₂ ι₂ (Node α ι₂)] [AddrVals μ₃ ι₃ (Node α ι₃)]
   {stop gas}
   {rel : α → α → Prop}
   {addr : μ} {lhs : μ₁} {rhs : μ₂}
@@ -151,5 +154,29 @@ theorem SimIxRelUpto.symm [IsSymm α rel]
 theorem SimIxRel.symm {rel} [IsSymm α rel]
   {i₁ : ι₁} {i₂ : ι₂} (h : SimIxRel rel lhs rhs i₁ i₂) : SimIxRel rel rhs lhs i₂ i₁
   := fun n => (h n).symm
+
+variable
+  {lhs : μ₁} {mid : μ₂} {rhs : μ₃}
+
+theorem SimIxRelUpto.trans {rel} [IsTrans α rel]
+  [AddrVals.Det μ₁ ι₁ (Node α ι₁)]
+  [AddrVals.Det μ₂ ι₂ (Node α ι₂)]
+  [AddrVals.Det μ₃ ι₃ (Node α ι₃)]
+  {gas} {i₁ : ι₁} {i₂ : ι₂} {i₃ : ι₃}
+  (h1 : SimIxRelUpto stop rel lhs mid gas i₁ i₂)
+  (h2 : SimIxRelUpto stop rel mid rhs gas i₂ i₃)
+  : SimIxRelUpto stop rel lhs rhs gas i₁ i₃
+  := h1.gtrans IsTrans.trans h2
+
+theorem SimIxRel.trans {rel} [IsTrans α rel]
+  [AddrVals.Det μ₁ ι₁ (Node α ι₁)]
+  [AddrVals.Det μ₂ ι₂ (Node α ι₂)]
+  [AddrVals.Det μ₃ ι₃ (Node α ι₃)] {i₁ : ι₁} {i₂ : ι₂} {i₃ : ι₃}
+  (h1 : SimIxRel rel lhs mid i₁ i₂)
+  (h2 : SimIxRel rel mid rhs i₂ i₃)
+  : SimIxRel rel lhs rhs i₁ i₃
+  := h1.gtrans IsTrans.trans h2
+
+end SingleAddr
 
 end Gt3

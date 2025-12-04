@@ -82,6 +82,8 @@ theorem AddrVal.getVals?_eq
   : av.getVal? m i = some (av.getVal m i) :=
   by rw [<-AddrVal?.mem_getVals_iff_some, AddrVal.mem_getVals_iff_eq]
 
+attribute [simp] AddrVal.mem_getVals_iff_eq AddrVal?.mem_getVals_iff_some
+
 instance AddrVal.instInhab (μ ι α) [av : AddrVal μ ι α] : AddrVals.Inhab μ ι α where
   map_mem := by simp [mem_getVals_iff_eq]
 
