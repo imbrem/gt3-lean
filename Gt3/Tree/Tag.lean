@@ -51,6 +51,10 @@ class GetTag (α : Type _) [BinderList α] (τ : outParam (Type _)) [BinderList 
   getTag : α → τ
   binderList_getTag : ∀ t, binderList (getTag t) = binderList t
 
+theorem GetTag.numChildren_getTag {α τ} [BinderList α] [BinderList τ]
+  [h : GetTag α τ] (t : α) : numChildren (getTag t) = numChildren t :=
+  by rw [<-binderList_length, h.binderList_getTag, binderList_length]
+
 instance instGetTagNat : GetTag ℕ ℕ where
   getTag n := n
   binderList_getTag _ := rfl

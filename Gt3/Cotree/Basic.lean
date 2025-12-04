@@ -1,4 +1,5 @@
 import Gt3.Tree.Node
+import Gt3.Cotree.SimIx
 
 namespace Gt3
 
