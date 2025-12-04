@@ -9,6 +9,8 @@ import Gt3.Tree.Assoc
 import Gt3.Cotree.Basic
 import Gt3.DTree.Basic
 import Gt3.WTree.Basic
+import Gt3.Graph.Basic
+import Gt3.Graph.Dominance
 import Gt3.Syntax.Tag
 import Gt3.JEq.Basic
 import Gt3.JEq.Wk
