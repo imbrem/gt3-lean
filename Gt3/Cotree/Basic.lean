@@ -1,5 +1,6 @@
 import Gt3.Tree.Node
 import Gt3.Cotree.SimIx
+import Gt3.Graph.Basic
 
 namespace Gt3
 
@@ -92,9 +93,9 @@ open NumChildren BinderList HasChildren FlatChildren
 -- end Sim
 
 /-- A pre-cotree over a given address space -/
-structure PCotree (ι : Type _) (α : Type _) [NumChildren α] : Type _ where
+structure PCotree (ι : Type _) (α : Type _) [NumChildren α] : Type _
+  extends Graph ι α where
   ix : ι
-  getNode : ι → Node α ι
 
 def PCotree.root {ι α} [NumChildren α] (t : PCotree ι α) : Node α ι := t.getNode t.ix
 
@@ -212,6 +213,13 @@ def PCotree.mapIx {ι₁ ι₂ α} [NumChildren α]
   ix := f t.ix
   getNode i := (t.getNode (g i)).mapChildren f
 
+--NOTE: _this_ should be an operation on cotrees!
+
+def PCotree.mapTags {ι α α'} [NumChildren α] [NumChildren α']
+  (f : α → α') [NumChildrenHom f] (t : PCotree ι α) : PCotree ι α' where
+  ix := t.ix
+  getNode i := (t.getNode i).mapTag f
+
 -- theorem PCotree.mapIx_sim_eq {ι₁ ι₂ α} [BinderList α]
 --   (f : ι₁ → ι₂) (g : ι₂ → ι₁)
 --   (hfg : ∀ i, g (f i) = i)
@@ -280,7 +288,11 @@ instance Cotree.instFlatChildren {ι α} [BinderList α]
   )
 
 instance PCotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList α]
-  : Inhabited (PCotree ι α) := ⟨default, fun _ => default⟩
+  : Inhabited (PCotree ι α) where
+  default := {
+    ix := default
+    getNode _ := default
+  }
 
 instance Cotree.instInhabited {ι α} [Inhabited α] [Inhabited ι] [BinderList α]
   : Inhabited (Cotree ι α) := ⟨PCotree.instInhabited.default.toCotree⟩
