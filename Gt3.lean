@@ -30,3 +30,4 @@ import Gt3.RwEq.Erase
 import Gt3.RwEq.Universe
 import Gt3.Telescope.Defs
 import Gt3.HOL.Basic
+import Gt3.Lisp.Basic
